@@ -1,0 +1,31 @@
+{
+  "branches": ["master"],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "feat", "section": "Features" },
+            { "type": "fix", "section": "Bug Fixes" },
+            { "type": "chore", "section": "Dependencies Added" },
+            { "type": "docs", "section": "Documentations Updates" },
+            { "type": "style", "hidden": true },
+            { "type": "refactor", "section": "Code Improvements" },
+            { "type": "perf", "hidden": true },
+            { "type": "test", "section": "Test Changes" }
+          ]
+        }
+      },
+      [
+        "@semantic-release/changelog",
+        {
+            "changelogFile": "CHANGELOG.md"
+        }
+      ]
+    ],
+    "@semantic-release/release-notes-generator",
+    "@semantic-release/github"
+  ]
+}
