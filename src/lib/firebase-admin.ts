@@ -7,14 +7,15 @@ if (!admin.apps.length) {
       credential: admin.credential.cert({
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECTID,
         clientEmail: process.env.NEXTAUTH_FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        privateKey: process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY?.replace(
+          /\\n/g,
+          '\n',
+        ),
       }),
     });
     console.log('Firebase Admin initialized successfully');
-
-  } catch(error) {
+  } catch (error) {
     console.error('Firebase Admin initialization error:', error);
-
   }
 }
 

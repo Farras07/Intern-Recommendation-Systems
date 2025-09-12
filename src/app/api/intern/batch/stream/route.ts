@@ -1,3 +1,3 @@
-import { internBatchStreamRouter } from '../../../route'
+import { internBatchStreamRouter } from '../../../route';
 
-export const { GET } = internBatchStreamRouter()
+export const { GET } = internBatchStreamRouter();

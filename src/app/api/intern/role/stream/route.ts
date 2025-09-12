@@ -1,3 +1,3 @@
-import { internRoleStreamRouter } from '../../../route'
+import { internRoleStreamRouter } from '../../../route';
 
-export const { GET } = internRoleStreamRouter()
+export const { GET } = internRoleStreamRouter();

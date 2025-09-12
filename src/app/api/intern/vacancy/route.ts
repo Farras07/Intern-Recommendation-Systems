@@ -1,3 +1,3 @@
-import { internVacancyRouter } from '../../route'
+import { internVacancyRouter } from '../../route';
 
-export const { POST, DELETE, PUT } = internVacancyRouter()
+export const { POST, DELETE, PUT } = internVacancyRouter();

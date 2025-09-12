@@ -1,3 +1,3 @@
-import { internBatchRouter } from '../../route'
+import { internBatchRouter } from '../../route';
 
-export const { POST, GET, DELETE, PUT } = internBatchRouter()
+export const { POST, GET, DELETE, PUT } = internBatchRouter();

@@ -1,31 +1,31 @@
-import { Home, Brain, Pencil, Users, BookUser } from "lucide-react"
+import { Home, Brain, Pencil, Users, BookUser } from 'lucide-react';
 
 const items = [
   {
-    title: "Home",
-    url: "/dashboard",
+    title: 'Home',
+    url: '/dashboard',
     icon: Home,
   },
   {
-    title: "Recommendation",
-    url: "/dashboard/recommendation",
+    title: 'Recommendation',
+    url: '/dashboard/recommendation',
     icon: Brain,
   },
   {
-    title: "Team",
-    url: "/dashboard/team",
+    title: 'Team',
+    url: '/dashboard/team',
     icon: Users,
   },
   {
-    title: "Vacancy",
-    url: "/dashboard/vacancy",
+    title: 'Vacancy',
+    url: '/dashboard/vacancy',
     icon: Pencil,
   },
   {
-    title: "Intern Data",
-    url: "/dashboard/intern",
+    title: 'Intern Data',
+    url: '/dashboard/intern',
     icon: BookUser,
   },
-]
+];
 
-export default items
+export default items;

@@ -1,5 +1,4 @@
 import Image from 'next/image';
-import Typography from '@/components/Typography';
 import { Button } from '@/components/ui/button';
 export default function Hero_Card() {
   return (

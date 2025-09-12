@@ -1,6 +1,3 @@
-import Image from 'next/image';
-import Typography from '@/components/Typography';
-
 import Navbar from '@/layouts/landing/Navbar';
 
 import Jumbotron from './(landing)/_containers/Jumbotron';

@@ -6,15 +6,7 @@ import { Poppins, Rubik, Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 
 import Providers from '@/lib/Providers';
-import SessionProviderServer from "@/components/SessionWrapperServer";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from '@tanstack/react-query'
-
-const queryClient = new QueryClient()
-
+import SessionProviderServer from '@/components/SessionWrapperServer';
 
 const poppins = Poppins({
   weight: ['400', '500', '600', '700', '800'],
@@ -58,9 +50,7 @@ export default function RootLayout({
     >
       <body>
         <SessionProviderServer>
-            <Providers>
-              {children}
-            </Providers>
+          <Providers>{children}</Providers>
         </SessionProviderServer>
       </body>
     </html>

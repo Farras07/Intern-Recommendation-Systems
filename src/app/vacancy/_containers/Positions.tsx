@@ -1,5 +1,4 @@
 import Typography from '@/components/Typography';
-import Herotext from '@/components/ui/Hero_Text';
 import Herocard from '../_components/Hero_Card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';

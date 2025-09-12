@@ -9,7 +9,6 @@ module.exports = {
   ],
   theme: {
     extend: {
-      
       colors: {
         typo: {
           dark: '#2A2A2A',
@@ -17,7 +16,7 @@ module.exports = {
           'blue-sky': '#458FFF',
         },
         gray: '#56585C',
-        lightgray:'#8F8C8C',
+        lightgray: '#8F8C8C',
         pastel: '#FFA982',
         yellow: '#FDDC5A',
         tangerine: '#FF5733',

@@ -1,5 +1,5 @@
-import { configureStore } from "@reduxjs/toolkit";
-import roleReducer from "./slice";
+import { configureStore } from '@reduxjs/toolkit';
+import roleReducer from './slice';
 
 export const store = configureStore({
   reducer: {

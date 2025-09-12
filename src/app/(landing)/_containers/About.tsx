@@ -43,12 +43,12 @@ export default function About() {
             className='mt-6 text-justify break-word max-w-full pr-4'
           >
             At our core, we help you make a lasting impact that resonates with
-            your audience. Whether you're launching a new venture or evolving an
-            existing one, we craft digital experiences that leave a mark. In a
-            rapidly shifting landscape, we empower you to grow strong — not just
-            to survive, but to lead. With shmart strategy, bold creativity, and
-            the right technology, we position your brand to thrive in today’s
-            digital world.
+            your audience. Whether you&apos;re launching a new venture or
+            evolving an existing one, we craft digital experiences that leave a
+            mark. In a rapidly shifting landscape, we empower you to grow strong
+            — not just to survive, but to lead. With shmart strategy, bold
+            creativity, and the right technology, we position your brand to
+            thrive in today&apos;s digital world.
           </Typography>
         </div>
       </section>

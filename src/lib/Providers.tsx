@@ -3,9 +3,8 @@ import { ModalProvider } from '@faceless-ui/modal';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Provider } from 'jotai';
 import { ReactNode } from 'react';
-import { Provider as ReduxProvider } from "react-redux";
-import { store } from "@/lib/redux/store";
-import { SessionProvider } from "next-auth/react"
+import { Provider as ReduxProvider } from 'react-redux';
+import { store } from '@/lib/redux/store';
 
 import Toast from '@/components/Toast';
 
@@ -22,15 +21,13 @@ const queryClient = new QueryClient();
 //   );
 // }
 
-const Providers = ({ children}: { children: ReactNode}) => {
+const Providers = ({ children }: { children: ReactNode }) => {
   return (
     <Provider>
       <ReduxProvider store={store}>
         <QueryClientProvider client={queryClient}>
           <Toast />
-          <ModalProvider transTime={250}>
-            {children}
-          </ModalProvider>
+          <ModalProvider transTime={250}>{children}</ModalProvider>
         </QueryClientProvider>
       </ReduxProvider>
     </Provider>

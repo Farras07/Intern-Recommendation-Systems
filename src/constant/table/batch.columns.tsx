@@ -1,36 +1,37 @@
-"use client"
+'use client';
 
-import * as React from 'react'
-import { ColumnDef } from "@tanstack/react-table"
-import { Button } from '@/components/ui/button'
-import { MoreHorizontal } from 'lucide-react'
-import { BatchTableTypes } from '@/types/BatchTypes'
-import _Fetch from '@/hooks/request.hooks'
+import * as React from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal } from 'lucide-react';
+import { BatchTableTypes } from '@/types/BatchTypes';
+import _Fetch from '@/hooks/request.hooks';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { DialogValueTypes } from '@/types/DialogTypes'
+} from '@/components/ui/dropdown-menu';
+import { DialogValueTypes } from '@/types/DialogTypes';
 
 type ColumnsBatchPropsType = {
-  dialogToggle: (props: DialogValueTypes) => void
-  setFormState: (props: any) => void
-}
+  dialogToggle: (props: DialogValueTypes) => void;
+  setFormState: (props: any) => void;
+};
 
-
-export const columnsBatch= ({ dialogToggle, setFormState }: ColumnsBatchPropsType ) : ColumnDef<BatchTableTypes>[] => [
+export const columnsBatch = ({
+  dialogToggle,
+  setFormState,
+}: ColumnsBatchPropsType): ColumnDef<BatchTableTypes>[] => [
   {
-    accessorKey: "no",
-    header: "No",
+    accessorKey: 'no',
+    header: 'No',
   },
   {
     accessorKey: 'batchId',
-    header: "Batch ID"
+    header: 'Batch ID',
   },
   {
     accessorKey: 'batchName',
@@ -38,74 +39,84 @@ export const columnsBatch= ({ dialogToggle, setFormState }: ColumnsBatchPropsTyp
   },
   {
     accessorKey: 'startDate',
-    header: "Start",
-    enableSorting: true
-
+    header: 'Start',
+    enableSorting: true,
   },
   {
     accessorKey: 'endDate',
     header: 'Deadline',
-    enableSorting: true
+    enableSorting: true,
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({row}) => {
-      const status = row.getValue<'Pending' | 'On Process' | 'Done' | 'Failed'>('status')
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const status = row.getValue<'Pending' | 'On Process' | 'Done' | 'Failed'>(
+        'status',
+      );
       const color =
-        status === 'Pending' ? 'bg-amber-500' :
-        status === 'Hiring' ? 'bg-blue-500' :
-        status === 'Done' ? 'bg-green-500' :
-        'bg-red-500'
+        status === 'Pending'
+          ? 'bg-amber-500'
+          : status === 'Hiring'
+            ? 'bg-blue-500'
+            : status === 'Done'
+              ? 'bg-green-500'
+              : 'bg-red-500';
 
-        return <div className={`w-4 h-4 rounded-full ${color}`} role='img' aria-label={status} title={status}/>
-      
-
-    }
+      return (
+        <div
+          className={`w-4 h-4 rounded-full ${color}`}
+          role='img'
+          aria-label={status}
+          title={status}
+        />
+      );
+    },
   },
   {
-    id: "actions",
+    id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const handleDeleteBatch = async() => {
-        const body = { batchId : row.original.batchId}
-        await _Fetch('/intern/batch', 'DELETE', body )
-      }
-      const handleEditBatch = async() => {
+      const handleDeleteBatch = async () => {
+        const body = { batchId: row.original.batchId };
+        await _Fetch('/intern/batch', 'DELETE', body);
+      };
+      const handleEditBatch = async () => {
         dialogToggle({
-          target: "Batch",
-          action: "Edit"
+          target: 'Batch',
+          action: 'Edit',
         });
         setFormState((prev: any) => ({
           ...prev,
           data: {
             ...row.original,
-            batchStartTime: new Date(row.original.startDate).toTimeString().split(" ")[0], // "HH:mm:ss"
-            batchEndTime: new Date(row.original.endDate).toTimeString().split(" ")[0], // "HH:mm:ss"
-
-          }
-
-        }))
-      }
+            batchStartTime: new Date(row.original.startDate)
+              .toTimeString()
+              .split(' ')[0], // "HH:mm:ss"
+            batchEndTime: new Date(row.original.endDate)
+              .toTimeString()
+              .split(' ')[0], // "HH:mm:ss"
+          },
+        }));
+      };
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+            <Button variant='ghost' className='h-8 w-8 p-0'>
+              <span className='sr-only'>Open menu</span>
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleEditBatch}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDeleteBatch}>Delete</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDeleteBatch}>
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
-  
-
-]
-
+];

@@ -1,17 +1,17 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type RoleType = "Admin" | "Judge";
+export type RoleType = 'Admin' | 'Judge';
 
 interface RoleState {
   value: RoleType;
 }
 
 const initialState: RoleState = {
-  value: "Admin",
+  value: 'Admin',
 };
 
 const roleSlice = createSlice({
-  name: "role",
+  name: 'role',
   initialState,
   reducers: {
     setRole: (state, action: PayloadAction<RoleType>) => {

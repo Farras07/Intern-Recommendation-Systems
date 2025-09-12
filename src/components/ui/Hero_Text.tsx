@@ -10,7 +10,7 @@ type HeroTextProps = {
   variant?: keyof typeof TypographyVariant;
   font?: keyof typeof FontVariant;
   weight?: keyof typeof FontWeight;
-  text: String;
+  text: string;
 };
 
 const Hero_Text: React.FC<HeroTextProps> = ({

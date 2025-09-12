@@ -1,3 +1,3 @@
-import { internVacancyStreamRouter } from '../../../route'
+import { internVacancyStreamRouter } from '../../../route';
 
-export const { GET } = internVacancyStreamRouter()
+export const { GET } = internVacancyStreamRouter();

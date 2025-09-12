@@ -1,12 +1,11 @@
 export enum role {
-    'Admin',
-    'Judges'
+  'Admin',
+  'Judges',
 }
 export type userData = {
-    id: string
-    name: string 
-    email: string
-    image: string
-    role: keyof typeof role
-}
-
+  id: string;
+  name: string;
+  email: string;
+  image: string;
+  role: keyof typeof role;
+};

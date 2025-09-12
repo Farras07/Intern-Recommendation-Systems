@@ -1,3 +1,3 @@
-import { userRouter } from '../route'
+import { userRouter } from '../route';
 
-export const { POST, GET } = userRouter()
+export const { POST, GET } = userRouter();

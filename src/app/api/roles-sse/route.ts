@@ -1,7 +1,7 @@
 // app/api/roles-sse/route.ts
-import { adminDb as db } from "@/lib/firebase-admin";
+import { adminDb as db } from '@/lib/firebase-admin';
 
-export const runtime = "nodejs"; // Make sure this runs on Node.js, not Edge
+export const runtime = 'nodejs'; // Make sure this runs on Node.js, not Edge
 
 export async function GET() {
   const stream = new ReadableStream({
@@ -10,27 +10,25 @@ export async function GET() {
 
       // Send SSE headers
       controller.enqueue(
-        encoder.encode(
-          "event: connected\ndata: Connected to SSE\n\n"
-        )
+        encoder.encode('event: connected\ndata: Connected to SSE\n\n'),
       );
 
       // Ping every 30s
       const keepAlive = setInterval(() => {
-        controller.enqueue(encoder.encode("event: ping\ndata: {}\n\n"));
+        controller.enqueue(encoder.encode('event: ping\ndata: {}\n\n'));
       }, 30000);
 
       // Firestore listener
-      const unsubscribe = db.collection("role").onSnapshot((snapshot) => {
-        const data = snapshot.docs.map((doc) => ({
+      const unsubscribe = db.collection('role').onSnapshot(snapshot => {
+        const data = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
         }));
 
         controller.enqueue(
           encoder.encode(
-            `event: roles_update\ndata: ${JSON.stringify(data)}\n\n`
-          )
+            `event: roles_update\ndata: ${JSON.stringify(data)}\n\n`,
+          ),
         );
       });
 
@@ -46,9 +44,9 @@ export async function GET() {
 
   return new Response(stream, {
     headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
     },
   });
 }
