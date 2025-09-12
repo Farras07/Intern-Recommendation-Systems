@@ -10,21 +10,21 @@
             { "type": "feat", "section": "Features" },
             { "type": "fix", "section": "Bug Fixes" },
             { "type": "chore", "section": "Dependencies Added" },
-            { "type": "docs", "section": "Documentations Updates" },
+            { "type": "docs", "section": "Documentation Updates" },
             { "type": "style", "hidden": true },
             { "type": "refactor", "section": "Code Improvements" },
             { "type": "perf", "hidden": true },
             { "type": "test", "section": "Test Changes" }
           ]
         }
-      },
-      [
-        "@semantic-release/changelog",
-        {
-          "changelogFile": "README.md",
-          "changelogTitle": "# Project History"
-        }
-      ]
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "README.md",
+        "changelogTitle": "# Project History"
+      }
     ],
     "@semantic-release/release-notes-generator",
     "@semantic-release/github"
