@@ -13,7 +13,7 @@ export default function Hero_Card() {
       <Button
         size={'xxl'}
         variant={'hero-card'}
-        className='absolute bottom-10 xl:bottom-32 left-1/2 -translate-x-1/2'
+        className='absolute bottom-10 xl:bottom-12 left-1/2 -translate-x-1/2'
       >
         Join Now!
       </Button>

@@ -15,15 +15,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import Loading from '@/app/Loading';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  isLoading?: boolean;
+  className?: {
+    table?: string;
+    header?: string;
+  };
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  isLoading,
+  className,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -33,13 +41,13 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className='overflow-hidden rounded-md border'>
-      <Table>
+      <Table className={className?.table}>
         <TableHeader>
           {table.getHeaderGroups().map(headerGroup => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map(header => {
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead className={className?.header} key={header.id}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -69,7 +77,7 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className='h-24 text-center'>
-                No results.
+                {isLoading ? <Loading /> : 'No Results'}
               </TableCell>
             </TableRow>
           )}

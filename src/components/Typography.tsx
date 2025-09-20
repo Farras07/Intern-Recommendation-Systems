@@ -21,6 +21,7 @@ export enum TypographyColor {
   'white',
   'dark',
   'blue-sky',
+  'lightgray',
 }
 
 export enum FontVariant {
@@ -91,6 +92,7 @@ export default function Typography<T extends React.ElementType>({
         color === 'white' && 'text-typo-white',
         color === 'dark' && 'text-typo-dark',
         color === 'blue-sky' && 'text-typo-blue-sky',
+        color === 'lightgray' && 'text-lightgray',
 
         // *=============== OTHERS ==================
         className,

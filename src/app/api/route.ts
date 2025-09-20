@@ -1,11 +1,14 @@
 // app/api/user/route.ts
 import UserServices from '@/Services/UserServices';
+import DriveServices from '@/Services/DriveServices';
 import InternServices from '@/Services/InternServices';
 import { adminDb as db } from '@/lib/firebase-admin';
+import { drive } from '@/lib/gapi';
 import UserHandler from './user/handler';
 import InternRoleHandler from './intern/role/handler';
 import InternRoleStreamHandler from './intern/role/stream/handler';
 import InternBatchHandler from './intern/batch/handler';
+import InternRegisterHandler from './intern/vacancy/register/handler';
 import InternBatchStreamHandler from './intern/batch/stream/handler';
 import InternVacancyHandler from './intern/vacancy/handler';
 import InternVacancyStreamHandler from './intern/vacancy/stream/handler';
@@ -13,10 +16,16 @@ import InternVacancyStreamHandler from './intern/vacancy/stream/handler';
 const userServices = new UserServices(db);
 const userHandler = new UserHandler(userServices);
 
+const driveServices = new DriveServices(drive);
+
 const internServices = new InternServices(db);
 const internVacancyHandler = new InternVacancyHandler(internServices);
 const internRoleHandler = new InternRoleHandler(internServices);
 const internBatchHandler = new InternBatchHandler(internServices);
+const internRegisterHandler = new InternRegisterHandler(
+  internServices,
+  driveServices,
+);
 const internBatchStreamHandler = new InternBatchStreamHandler(internServices);
 const internRoleStreamHandler = new InternRoleStreamHandler(internServices);
 const internVacancyStreamHandler = new InternVacancyStreamHandler(
@@ -28,12 +37,17 @@ export function userRouter() {
   const GET = userHandler.GET.bind(userHandler);
   return { POST, GET };
 }
+export function internRegisterRouter() {
+  const POST = internRegisterHandler.POST.bind(internRegisterHandler);
+  return { POST };
+}
 export function internVacancyRouter() {
   const POST = internVacancyHandler.POST.bind(internVacancyHandler);
   const DELETE = internVacancyHandler.DELETE.bind(internVacancyHandler);
   const PUT = internVacancyHandler.PUT.bind(internVacancyHandler);
+  const GET = internVacancyHandler.GET.bind(internVacancyHandler);
 
-  return { POST, DELETE, PUT };
+  return { POST, DELETE, PUT, GET };
 }
 export function internRoleRouter() {
   const POST = internRoleHandler.POST.bind(internRoleHandler);

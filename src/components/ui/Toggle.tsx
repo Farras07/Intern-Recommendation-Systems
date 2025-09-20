@@ -1,8 +1,7 @@
 'use client';
-import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/lib/redux/store';
-import { setRole } from '@/lib/redux/slice';
+import { setRole } from '@/lib/redux/slices/roleSlice';
 
 export default function RoleToggle() {
   const role = useSelector((state: RootState) => state.role.value);

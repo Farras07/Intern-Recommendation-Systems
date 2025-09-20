@@ -19,6 +19,7 @@ import { showToast, DANGER_TOAST, SUCCESS_TOAST } from '@/components/Toast';
 import _Fetch from '@/hooks/request.hooks';
 import { BatchTableTypes } from '@/types/BatchTypes';
 import { columnsBatch } from '@/constant/table//batch.columns';
+import { formatLocalDateTime } from '@/hooks/date-format.hooks';
 
 export default function Vacancy() {
   const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -64,12 +65,12 @@ export default function Vacancy() {
         vacancyData.map(async (data: any, index: number) => {
           let status = 'Pending';
           const { batch } = await _Fetch(
-            `/intern/batch?name=${data.batch}`,
+            `/intern/batch?id=${data.batch}`,
             'GET',
           );
 
-          const batchStartDateTime = new Date(batch.startDate);
-          const batchEndDateTime = new Date(batch.endDate);
+          const batchStartDateTime = new Date(batch.startDate._seconds * 1000);
+          const batchEndDateTime = new Date(batch.endDate._seconds * 1000);
           const currentDate = new Date();
 
           if (currentDate > batchEndDateTime) status = 'Done';
@@ -78,12 +79,14 @@ export default function Vacancy() {
             currentDate > batchStartDateTime
           )
             status = 'Hiring';
+          const { role } = await _Fetch(`/intern/role?id=${data.role}`, 'GET');
 
           return {
             ...data,
-            batchId: batch.batchId,
-            startDate: batch.startDate,
-            endDate: batch.endDate,
+            batch: batch.batchName,
+            role: role.title,
+            startDate: formatLocalDateTime(batchStartDateTime),
+            endDate: formatLocalDateTime(batchEndDateTime),
             no: index + 1,
             status,
           };
@@ -98,8 +101,8 @@ export default function Vacancy() {
       const fixData = batchData.map((data: any, index: number) => {
         let status = 'Pending';
 
-        const batchStartDateTime = new Date(data.startDate);
-        const batchEndDateTime = new Date(data.endDate);
+        const batchStartDateTime = new Date(data.startDate._seconds * 1000);
+        const batchEndDateTime = new Date(data.endDate._seconds * 1000);
         const currentDate = new Date();
 
         if (currentDate > batchEndDateTime) status = 'Done';
@@ -108,8 +111,8 @@ export default function Vacancy() {
 
         return {
           ...data,
-          startDate: data.startDate,
-          endDate: data.endDate,
+          startDate: formatLocalDateTime(batchStartDateTime),
+          endDate: formatLocalDateTime(batchEndDateTime),
           no: index + 1,
           status,
         };
@@ -149,9 +152,8 @@ export default function Vacancy() {
       toastMessage = 'Delete Vacancy Success';
       showToast(toastMessage, SUCCESS_TOAST);
     } catch (error) {
-      toastMessage = 'Delete Vacancy Failed';
+      toastMessage = `Delete Vacancy Failed: ${error}`;
       showToast(toastMessage, DANGER_TOAST);
-      console.log(error);
     }
   };
   return (

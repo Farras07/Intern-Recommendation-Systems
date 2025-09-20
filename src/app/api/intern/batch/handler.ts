@@ -30,9 +30,9 @@ export default class InternBatchHandler {
   async GET(req: Request) {
     try {
       const { searchParams } = new URL(req.url);
-      const batchName = searchParams.get('name');
-      console.log(batchName);
-      if (!batchName) {
+      const batchId = searchParams.get('id');
+      console.log(batchId);
+      if (!batchId) {
         const batchesData = await this._service.getBatches();
         return Success({
           statusCode: 200,
@@ -42,7 +42,7 @@ export default class InternBatchHandler {
           },
         });
       } else {
-        const batchData = await this._service.getSpecificBatch(batchName);
+        const batchData = await this._service.getSpecificBatch(batchId);
         return Success({
           statusCode: 200,
           message: 'Get Intern Batch Success',

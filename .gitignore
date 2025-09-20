@@ -42,3 +42,4 @@ next-env.d.ts
 
 # credential
 credentials.json
+credential.json

@@ -28,6 +28,27 @@ export default class InternVacancyHandler {
       });
     }
   }
+  async GET(req: Request) {
+    try {
+      const { searchParams } = new URL(req.url);
+      const filter = searchParams.get('filter');
+      if (filter) {
+        const vacancy = await this._service.getOpenVacancy();
+        return Success({
+          statusCode: 200,
+          message: 'Intern Vacancy Successfully Retrieved',
+          data: {
+            vacancy,
+          },
+        });
+      }
+    } catch (error: any) {
+      return Failed({
+        statusCode: error.statusCode,
+        message: error.message,
+      });
+    }
+  }
   async DELETE(req: Request) {
     try {
       const { searchParams } = new URL(req.url);

@@ -5,10 +5,10 @@ import About from './(landing)/_containers/About';
 
 export default function Home() {
   return (
-    <>
+    <section className='w-screen'>
       <Navbar />
       <Jumbotron />
       <About />
-    </>
+    </section>
   );
 }

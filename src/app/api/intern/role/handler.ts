@@ -28,16 +28,29 @@ export default class InternRoleHandler {
     }
   }
 
-  async GET() {
+  async GET(req: Request) {
     try {
-      const internRoles = await this._service.getAllRole();
-      return Success({
-        statusCode: 200,
-        message: 'Get Intern Role Success',
-        data: {
-          roles: internRoles,
-        },
-      });
+      const { searchParams } = new URL(req.url);
+      const roleId = searchParams.get('id');
+      if (!roleId) {
+        const internRoles = await this._service.getAllRole();
+        return Success({
+          statusCode: 200,
+          message: 'Get Intern Role Success',
+          data: {
+            roles: internRoles,
+          },
+        });
+      } else {
+        const internRoles = await this._service.getSpecificRoleById(roleId);
+        return Success({
+          statusCode: 200,
+          message: 'Get Intern Role Success',
+          data: {
+            role: internRoles,
+          },
+        });
+      }
     } catch (error: any) {
       return Failed({
         statusCode: error.statusCode,

@@ -7,7 +7,6 @@ import { MoreHorizontal } from 'lucide-react';
 import { VacancyTypes } from '@/types/JobTypes';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -15,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import _Fetch from '@/hooks/request.hooks';
-import { BatchTableTypes } from '@/types/BatchTypes';
 import { DialogValueTypes } from '@/types/DialogTypes';
 
 type ColumnsVacancyPropsType = {
@@ -36,8 +34,8 @@ export const columns = ({
     header: 'Vacancy ID',
   },
   {
-    accessorKey: 'batchId',
-    header: 'Batch ID',
+    accessorKey: 'batch',
+    header: 'Batch',
   },
   {
     accessorKey: 'role',

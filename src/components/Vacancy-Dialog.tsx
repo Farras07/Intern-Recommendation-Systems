@@ -12,7 +12,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,13 +23,11 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -77,6 +74,8 @@ export function DialogPopUp({
 
   const [batchData, setBatchData] = useState<BatchResponseType[]>([]);
   const [roleData, setRoleData] = useState<jobRoleType[]>([]);
+  console.log(roleData);
+  console.log(batchData);
 
   const formVacancy = useForm<z.infer<typeof formVacancySchema>>({
     resolver: zodResolver(formVacancySchema),
@@ -111,7 +110,6 @@ export function DialogPopUp({
 
   const onSubmitVacancy = async (values: z.infer<typeof formVacancySchema>) => {
     let toastMessage = '';
-    console.log(values);
     try {
       if (action === 'Add') {
         await addVacancySubmit(values);
@@ -160,9 +158,11 @@ export function DialogPopUp({
 
   const onSubmitRole = async (values: z.infer<typeof formRoleSchema>) => {
     let toastMessage = '';
+
     try {
       if (target === 'Role') {
         if (action === 'Add') {
+          console.log('heiii');
           await addRoleSubmit({
             title: values.roleTitle,
             description: values.roleDescription,
@@ -247,13 +247,18 @@ export function DialogPopUp({
     }
   }, [open, formVacancy]);
 
-  const selectedBatch = formVacancy.watch('batch');
-  const selectedRole = formVacancy.watch('role');
-  const { control, register } = formVacancy;
+  const selectedBatchId = formVacancy.watch('batch');
+  const selectedBatch = batchData.find(
+    batch => batch.batchId === selectedBatchId,
+  );
+  const selectedRoleId = formVacancy.watch('role');
+  const selectedRole = roleData.find(role => role.id === selectedRoleId);
+
+  const { control } = formVacancy;
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'skills', // This must match schema field
+    name: 'skills',
   });
 
   console.log(action);
@@ -282,13 +287,15 @@ export function DialogPopUp({
                 <FormField
                   control={formVacancy.control}
                   name='batch'
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem className='flex flex-col'>
                       <FormLabel>Batch</FormLabel>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant='outline'>
-                            {selectedBatch || 'Choose Batch'}
+                            {selectedBatch
+                              ? selectedBatch.batchName
+                              : 'Choose Batch'}
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -302,7 +309,7 @@ export function DialogPopUp({
                                   onClick={() =>
                                     formVacancy.setValue(
                                       'batch',
-                                      batch.batchName,
+                                      batch.batchId,
                                       { shouldValidate: true },
                                     )
                                   }
@@ -322,13 +329,13 @@ export function DialogPopUp({
                 <FormField
                   control={formVacancy.control}
                   name='role'
-                  render={({ field }) => (
+                  render={() => (
                     <FormItem className='flex flex-col'>
                       <FormLabel>Role</FormLabel>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant='outline'>
-                            {selectedRole || 'Choose Role'}
+                            {selectedRole ? selectedRole.title : 'Choose Role'}
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -340,7 +347,7 @@ export function DialogPopUp({
                                 <DropdownMenuItem
                                   key={role.id}
                                   onClick={() =>
-                                    formVacancy.setValue('role', role.title, {
+                                    formVacancy.setValue('role', role.id, {
                                       shouldValidate: true,
                                     })
                                   }
@@ -546,7 +553,9 @@ export function DialogPopUp({
                     Cancel
                   </Button>
                 </DialogClose>
-                <Button type='submit'>Save changes</Button>
+                <Button type='submit' className='cursor-pointer'>
+                  Save changes
+                </Button>
               </DialogFooter>
             </form>
           </Form>

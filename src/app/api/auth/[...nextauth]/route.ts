@@ -28,8 +28,13 @@ export const authOptions: NextAuthOptions = {
     newUser: '/dashboard',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       // First time the JWT callback runs, the user object is available
+      if (account) {
+        token.accessToken = account.access_token;
+        token.refreshToken = account.refresh_token; // only on first login
+        token.idToken = account.id_token;
+      }
       if (user) {
         token.id = user.id; // Custom ID from your DB or provider
         token.role = user.role || 'user'; // Default role
@@ -45,6 +50,9 @@ export const authOptions: NextAuthOptions = {
           session.user.id = token.id as string;
           session.user.role = userData.role;
           session.user.verified = userData.verified;
+          session.accessToken = token.accessToken as string;
+          session.refreshToken = token.refreshToken as string;
+          session.idToken = token.idToken as string;
         }
         return session;
       } catch (error: any) {

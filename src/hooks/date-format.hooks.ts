@@ -1,7 +1,6 @@
-export function formatLocalDateTime(isoString: string) {
-  const date = new Date(isoString);
+export function formatLocalDateTime(date: Date) {
   const options: Intl.DateTimeFormatOptions = {
-    weekday: 'short',
+    // weekday: 'short',
     month: 'short',
     day: '2-digit',
     year: 'numeric',

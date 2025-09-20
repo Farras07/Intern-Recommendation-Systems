@@ -5,11 +5,11 @@ import Positions from './_containers/Positions';
 
 export default function Vacancy() {
   return (
-    <>
+    <section className='w-screen'>
       <Navbar />
       <Hero />
       <Benefit />
       <Positions />
-    </>
+    </section>
   );
 }

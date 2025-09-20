@@ -1,16 +1,10 @@
-enum vacancyStatus {
-  'Pending',
-  'Hiring',
-  'Done',
-  'Failed',
-}
 export type VacancyTypes = {
   id: string;
   batchId: string;
   role: string;
   startDate: string;
   endDate: string;
-  status: keyof typeof vacancyStatus;
+  status: 'Pending' | 'Hiring' | 'Done' | 'Failed';
 };
 export type VacancyResponseTypes = {
   id: string;
@@ -18,7 +12,7 @@ export type VacancyResponseTypes = {
   role: string;
   startDate: string;
   endDate: string;
-  status: keyof typeof vacancyStatus;
+  status: 'Pending' | 'Hiring' | 'Done' | 'Failed';
   createdAt: string;
 };
 
@@ -26,4 +20,11 @@ export type jobRoleType = {
   id: string;
   title: string;
   description: string;
+};
+
+export type VacancyLandingType = {
+  role: string;
+  batch: string;
+  status: 'Pending' | 'Hiring' | 'Done' | 'Failed';
+  deadline: string;
 };
