@@ -6,11 +6,38 @@ export const formVacancySchema = z.object({
   skills: z
     .array(
       z.object({
-        priority: z.number().nonnegative().nonoptional(),
-        skillName: z.string().nonempty(),
+        priority: z
+          .number()
+          .nonnegative({ message: 'Negative priority is not allowed' })
+          .nonoptional({ message: 'priority is Required' }),
+        skillName: z.string().nonempty({ message: 'SkillName is Required' }),
       }),
     )
-    .min(1, 'Skills is Required'),
+    .min(1, 'Skills is Required')
+    .superRefine((skills, ctx) => {
+      const seen = new Map<string, number[]>();
+
+      skills.forEach((s, idx) => {
+        const name = s.skillName.toLowerCase().trim();
+        if (!seen.has(name)) {
+          seen.set(name, [idx]);
+        } else {
+          seen.get(name)?.push(idx);
+        }
+      });
+
+      for (const [name, indexes] of seen.entries()) {
+        if (indexes.length > 1) {
+          indexes.forEach(i =>
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Duplicate skill "${name}"`,
+              path: [i, 'skillName'], // highlight the specific input
+            }),
+          );
+        }
+      }
+    }),
 });
 
 export const formBatchSchema = z.object({
@@ -78,11 +105,48 @@ export const formSkillsQVacancySchema = z.object({
           })
           .or(z.literal(''))
           .optional(),
-        // cert: z.instanceof(File, { message: "Certificate is required!" })
-        //   .refine((file) => file.type === "application/pdf", {
-        //     message: "Only PDF files are allowed!",
-        //   })
-        //   .optional(),
+      }),
+    }),
+  ),
+});
+
+export const formInterviewSchema = z.object({
+  interviewRate: z.string().nonempty({ message: 'Interview is required!' }),
+});
+
+export const formUpdateGeneralVacancySchema = z.object({
+  name: z.string().optional(),
+  educationInstitution: z.string().optional(),
+  phone: z.string().optional(),
+});
+
+export const formUpdateSkillVacancySchema = z.object({
+  vacancy: z.array(
+    z.object({
+      id: z.string().optional(),
+      exp: z.string().optional(),
+      skills: z.array(
+        z.object({
+          skillName: z.string().optional(),
+          rate: z.string().optional(),
+        }),
+      ),
+      portofolioLink: z
+        .url({ message: 'Portfolio must be a valid URL!' })
+        .refine(val => val.startsWith('https://'), {
+          message: 'Portfolio link must start with https://',
+        })
+        .optional(),
+      achievement: z.object({
+        lvlRate: z.string().optional(),
+        champRate: z.string().optional(),
+        cert: z
+          .url({ message: 'Achievement certificate link must be a valid URL!' })
+          .refine(val => val.startsWith('https://'), {
+            message: 'Achievement certificate link must start with https://',
+          })
+          .or(z.literal(''))
+          .optional(),
       }),
     }),
   ),

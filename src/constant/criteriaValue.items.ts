@@ -6,7 +6,7 @@ export const experienceOptions: CriteriaOptionsType[] = [
   { label: '>2 Year(s)', value: 3 },
 ];
 
-export const generalOptions: CriteriaOptionsType[] = [
+export const likertScale: CriteriaOptionsType[] = [
   { label: 'Sangat Buruk/ Tidak Ada', value: 1 },
   { label: 'Buruk', value: 2 },
   { label: 'Sedang', value: 3 },

@@ -31,4 +31,33 @@ export default class InternRegisterHandler {
       });
     }
   }
+  async GET(req: Request) {
+    let registData;
+    try {
+      const { searchParams } = new URL(req.url);
+      const batchType = searchParams.get('batchType');
+      const roleId = searchParams.get('role');
+      if (batchType == 'active') {
+        const activeBatch = await this._service.getActiveBatch();
+        if (roleId)
+          registData = await this._service.getRegistration(activeBatch, roleId);
+        else registData = await this._service.getRegistration(activeBatch);
+      } else {
+        const allBatch = await this._service.getBatches();
+        if (roleId)
+          registData = await this._service.getRegistration(allBatch, roleId);
+        else registData = await this._service.getRegistration(allBatch);
+      }
+      return Success({
+        statusCode: 200,
+        message: 'Get Intern Register Success',
+        data: registData,
+      });
+    } catch (error: any) {
+      return Failed({
+        statusCode: error.statusCode,
+        message: error.message,
+      });
+    }
+  }
 }

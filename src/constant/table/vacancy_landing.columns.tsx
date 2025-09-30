@@ -51,29 +51,16 @@ export const columnsVacancyLanding = ({
     },
   },
   {
-    id: 'status',
+    // id: 'status',
     header: 'Status',
-    accessorFn: row => row.batch.status, // 👈 safe accessor
     size: 30,
-    cell: ({ row }) => {
-      const status = row.getValue<'Pending' | 'On Process' | 'Done' | 'Failed'>(
-        'status',
-      );
-      const color =
-        status === 'Pending'
-          ? 'bg-amber-500'
-          : status === 'Hiring'
-            ? 'bg-blue-500'
-            : status === 'Done'
-              ? 'bg-green-500'
-              : 'bg-red-500';
-
+    cell: () => {
       return (
         <div
-          className={`w-4 h-4 rounded-full ${color}`}
+          className={`w-4 h-4 rounded-full bg-blue-500`}
           role='img'
-          aria-label={status}
-          title={status}
+          aria-label={'Hiring'}
+          title={'Hiring'}
         />
       );
     },

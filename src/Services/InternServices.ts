@@ -8,9 +8,11 @@ import InvariantError from '@/exceptions/InvariantError';
 import {
   BatchPayloadAddType,
   BatchPayloadUpdateType,
+  BatchResponseType,
 } from '@/types/BatchTypes';
 import { formatLocalDateTimeServer } from '@/hooks/date-format.hooks';
 import { firestore } from 'firebase-admin';
+import { VacancyRegisType } from '@/types/registDataTypes';
 
 export default class InternServices {
   _db: typeof db;
@@ -113,32 +115,6 @@ export default class InternServices {
     }
   }
 
-  // async createBatch(payload: BatchPayloadAddType) {
-  //   try {
-  //     const id = `batch-${nanoid(5)}`;
-  //     const startDatePart = formatLocalDateTimeServer(
-  //       payload.batchStartDate,
-  //     ).split(',');
-  //     const endDatePart = formatLocalDateTimeServer(payload.batchEndDate).split(
-  //       ',',
-  //     );
-
-  //     const formattedStartDate = `${startDatePart[0]},${startDatePart[1]},${startDatePart[2]},${payload.batchStartTime}`;
-  //     const formattedEndDate = `${endDatePart[0]},${endDatePart[1]},${endDatePart[2]}, ${payload.batchEndTime}`;
-
-  //     await this._db.collection('batch').doc(id).set({
-  //       batchId: id,
-  //       batchName: payload.batchName,
-  //       startDate: formattedStartDate,
-  //       endDate: formattedEndDate,
-  //     });
-  //   } catch (error) {
-  //     if (!(error instanceof BaseError)) {
-  //       throw new InternalServerError(`Internal Server Error: ${error}`);
-  //     }
-  //     throw error;
-  //   }
-  // }
   async createBatch(payload: BatchPayloadAddType) {
     try {
       const id = `batch-${nanoid(5)}`;
@@ -149,9 +125,6 @@ export default class InternServices {
         ',',
       );
 
-      console.log(startDatePart);
-      console.log(endDatePart);
-
       const formattedStartDate = new Date(
         `${startDatePart[0]},${startDatePart[1]},${startDatePart[2]},${payload.batchStartTime}`,
       );
@@ -159,7 +132,6 @@ export default class InternServices {
         `${endDatePart[0]},${endDatePart[1]},${endDatePart[2]}, ${payload.batchEndTime}`,
       );
 
-      console.log(new Date(formattedStartDate));
       await this._db
         .collection('batch')
         .doc(id)
@@ -168,6 +140,7 @@ export default class InternServices {
           batchName: payload.batchName,
           startDate: firestore.Timestamp.fromDate(formattedStartDate),
           endDate: firestore.Timestamp.fromDate(formattedEndDate),
+          stage: 'Registration',
         });
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -222,7 +195,6 @@ export default class InternServices {
 
   async updateBatch(payload: BatchPayloadUpdateType) {
     try {
-      console.log(payload);
       const { batchId } = payload;
       const startDatePart = formatLocalDateTimeServer(
         payload.batchStartDate,
@@ -254,6 +226,76 @@ export default class InternServices {
       throw error;
     }
   }
+  async updateBatchStage(stage: string, id: string) {
+    try {
+      await this._db.collection('batch').doc(id).update({ stage });
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
+  async getOpenBatch() {
+    try {
+      const currentTime = new Date();
+      const batchSnap = await this._db
+        .collection('batch')
+        .where('endDate', '>', currentTime)
+        .get();
+
+      const batchOpen = batchSnap.docs
+        .map(doc => doc.data())
+        .filter(batch => batch.startDate.toDate() < currentTime);
+
+      if (batchSnap.empty) throw new NotFoundError('No active batch found!');
+      return batchOpen;
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+  async getActiveBatch() {
+    try {
+      const batchSnap = await this._db
+        .collection('batch')
+        .where('stage', '==', 'Registration')
+        .get();
+
+      if (batchSnap.empty) throw new NotFoundError('No active batch found!');
+      const batchActiveData = batchSnap.docs.map(doc => doc.data());
+
+      return batchActiveData;
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+  async getActiveBatchStage() {
+    try {
+      const batchStageSnap = await this._db
+        .collection('batch')
+        .where('stage', '!=', 'Finished')
+        .select('batchId', 'stage')
+        .get();
+
+      if (batchStageSnap.empty)
+        throw new NotFoundError('There are no active Batch!');
+
+      const batchActiveData = batchStageSnap.docs.map(doc => doc.data());
+      return batchActiveData;
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
 
   async createVacancy(payload: any) {
     try {
@@ -267,6 +309,23 @@ export default class InternServices {
           id,
           ...payload,
         });
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+  async getSpecificVacancy(id: string) {
+    try {
+      const vacancySnap = await this._db
+        .collection('vacancy')
+        .where('id', '==', id)
+        .select('role')
+        .get();
+      if (vacancySnap.empty) throw new NotFoundError('Vacancy Not Found!');
+      const vacancyData = vacancySnap.docs.map(docs => docs.data());
+      return vacancyData;
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
@@ -320,7 +379,7 @@ export default class InternServices {
                   name: batch.batchName,
                   startDate: batch.startDate._seconds,
                   endDate: batch.endDate._seconds,
-                  status: 'Hiring',
+                  stage: batch.stage,
                 },
                 role: {
                   id: role?.id,
@@ -357,14 +416,9 @@ export default class InternServices {
   }
   async updateVacancy(payload: any) {
     try {
-      console.log('brooooo');
-      const { batch, role, id, skills } = payload;
-      console.log(payload);
+      const { id, skills } = payload;
 
       await db.collection('vacancy').doc(id).update({
-        id,
-        batch,
-        role,
         skills,
       });
     } catch (error) {
@@ -377,13 +431,117 @@ export default class InternServices {
 
   async registerVacancy(data: any) {
     try {
-      console.log(data);
       const id = `apply-${nanoid(5)}`;
       await this._db
         .collection('register')
         .doc(id)
         .set({
           id,
+          ...data,
+        });
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+  async getRegistration(batchData: any, role?: string) {
+    try {
+      const registData = await Promise.all(
+        batchData.map(async (data: BatchResponseType) => {
+          const batchSnap = await this._db
+            .collection('register')
+            .where('batch', '==', data.batchId)
+            .get();
+
+          if (batchSnap.empty) return [];
+
+          // raw register data
+          const batchRegistData = batchSnap.docs.map(doc => doc.data());
+
+          // enrich vacancy with role
+          const enrichedRegistData = await Promise.all(
+            batchRegistData.map(async regis => {
+              const enrichedVacancies = await Promise.all(
+                (regis.vacancy ?? []).map(async (vacancy: VacancyRegisType) => {
+                  const roleVac = await this.getSpecificVacancy(vacancy.id);
+                  const roleData = await this.getSpecificRoleById(
+                    roleVac[0].role,
+                  );
+
+                  return {
+                    ...vacancy,
+                    role: {
+                      id: roleData.id,
+                      title: roleData.title,
+                    },
+                  };
+                }),
+              );
+
+              if (role) {
+                const hasRole = enrichedVacancies.some(v => v.role.id === role);
+                if (!hasRole) return null; // skip this regis if no match
+              }
+
+              return {
+                ...regis,
+                vacancy: enrichedVacancies,
+              };
+            }),
+          );
+
+          return enrichedRegistData.filter(r => r !== null);
+        }),
+      );
+
+      return registData.flat();
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
+  async getSpecificRegistration(id: string) {
+    try {
+      const regisSnap = await this._db
+        .collection('register')
+        .where('id', '==', id)
+        .get();
+
+      if (regisSnap.empty) throw new NotFoundError('Data Not Found!');
+      const regisData = regisSnap.docs.map(doc => doc.data())[0];
+      const enrichedRegisData = await Promise.all(
+        regisData.vacancy.map(async (data: VacancyRegisType) => {
+          const roleVac = await this.getSpecificVacancy(data.id);
+          const roleData = await this.getSpecificRoleById(roleVac[0].role);
+          return {
+            ...data,
+            role: {
+              id: roleData.id,
+              title: roleData.title,
+            },
+          };
+        }),
+      );
+      return { ...regisData, vacancy: enrichedRegisData };
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
+  async updateRegistrationData(id: string, data: any) {
+    try {
+      await db
+        .collection('register')
+        .doc(id)
+        .update({
           ...data,
         });
     } catch (error) {

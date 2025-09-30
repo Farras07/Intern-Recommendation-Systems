@@ -35,7 +35,7 @@ export default function Forms({
               dispatch(setStep({ type: 'Reset' }));
               onChangeSetPopup(false);
               dispatch(setResetRoleVacancy());
-              dispatch(setResetData({}));
+              dispatch(setResetData());
             }}
             size={70}
             className='cursor-pointer text-white transition-colors duration-500 hover:text-blue-500'

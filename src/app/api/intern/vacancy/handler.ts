@@ -41,6 +41,17 @@ export default class InternVacancyHandler {
             vacancy,
           },
         });
+      } else {
+        const filterid = searchParams.get('id');
+        console.log(filterid);
+        // const vacancy = await this._service.getOpenVacancy();
+        // return Success({
+        //   statusCode: 200,
+        //   message: 'Intern Vacancy Successfully Retrieved',
+        //   data: {
+        //     vacancy,
+        //   },
+        // });
       }
     } catch (error: any) {
       return Failed({

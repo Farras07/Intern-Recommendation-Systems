@@ -4,7 +4,7 @@ import { Maximize2, ChevronsRightLeft } from 'lucide-react';
 type CollapsibleContainerProps = {
   collapsible?: boolean;
   selfIndex: number;
-  onClick: () => void;
+  onClick?: () => void;
   activeIndex: number;
   className?: string;
   colSpan?: number | 'full';

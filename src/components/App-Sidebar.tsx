@@ -28,7 +28,6 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const { data: session } = useSession();
   const { name, image, role } = session?.user;
-  console.log(image);
 
   return (
     <Sidebar variant='floating' collapsible='icon'>

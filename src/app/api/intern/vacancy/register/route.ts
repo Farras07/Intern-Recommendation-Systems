@@ -1,3 +1,3 @@
 import { internRegisterRouter } from '../../../route';
 
-export const { POST } = internRegisterRouter();
+export const { POST, GET } = internRegisterRouter();

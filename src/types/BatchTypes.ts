@@ -34,4 +34,5 @@ export type BatchResponseType = {
   batchName: string;
   startDate: string;
   endDate: string;
+  stage?: string;
 };

@@ -12,7 +12,6 @@ type TeamCardProps = {
 
 export default function TeamCard(props: TeamCardProps) {
   const { name, image, role, email } = props;
-  console.log(props);
 
   return (
     <section

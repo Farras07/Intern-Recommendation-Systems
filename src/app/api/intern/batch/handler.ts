@@ -31,7 +31,6 @@ export default class InternBatchHandler {
     try {
       const { searchParams } = new URL(req.url);
       const batchId = searchParams.get('id');
-      console.log(batchId);
       if (!batchId) {
         const batchesData = await this._service.getBatches();
         return Success({
@@ -63,11 +62,11 @@ export default class InternBatchHandler {
       const payload = await req.json();
       await this._service.updateBatch(payload);
       return Success({
-        statusCode: 201,
-        message: 'Intern Role Successfully Created',
-        data: {},
+        statusCode: 200,
+        message: 'Intern Role Successfully Updated',
       });
     } catch (error: any) {
+      console.log(error);
       return Failed({
         statusCode: error.statusCode,
         message: error.message,

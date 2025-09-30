@@ -29,7 +29,6 @@ export default function SkillsQ() {
   const roleVacancyPick = useSelector(
     (state: RootState) => state.roleVacancyPick.data,
   );
-  console.log(roleVacancyPick);
   const formData = useSelector((state: RootState) => state.form.data);
 
   const { mutate } = useMutation({
@@ -63,20 +62,24 @@ export default function SkillsQ() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSkillsQVacancySchema>) => {
+    const batchId: string = roleVacancyPick[0].batch.id;
     const newData = roleVacancyPick.map((vacancy, index) => {
       const userData = values.skills[index];
+      if (userData.achievement.lvlRate === '')
+        userData.achievement.lvlRate = '1';
+      if (userData.achievement.champRate === '')
+        userData.achievement.champRate = '1';
 
       const mergedSkills = vacancy.skills.map(vacSkill => {
         const userSkill = userData.skillRate.find(
           s => s.skillName === vacSkill.skillName,
         );
-        return { ...vacSkill, ...userSkill };
+        return { ...userSkill };
       });
 
+      const { batch, role, ...restPropVac } = vacancy;
       return {
-        ...vacancy,
-        batch: vacancy.batch.id,
-        role: vacancy.role.id,
+        ...restPropVac,
         skills: mergedSkills,
         exp: userData.exp,
         portofolioLink: userData.portofolioLink,
@@ -85,9 +88,8 @@ export default function SkillsQ() {
     });
 
     const flattened = newData.flat();
-
     mutate(
-      { ...formData, vacancy: flattened },
+      { ...formData, batch: batchId, vacancy: flattened },
       {
         onSuccess: () => {
           showToast('Intern Register Success', SUCCESS_TOAST);

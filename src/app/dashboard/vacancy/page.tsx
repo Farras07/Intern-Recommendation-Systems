@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/layouts/dashboard/LayoutContainer';
 import CollapsibleContainer from '@/components/CollapsibleContainer';
 import handleToggleCollapsibleContainer from '@/hooks/resize-container.hooks';
-import { useSession } from 'next-auth/react';
 import Typography from '@/components/Typography';
-import DashboardNavbar from '@/components/DashboardNavbar';
-import { SessionUserData } from '@/types/SessionDataTypes';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash } from 'lucide-react';
 import { columns } from '@/constant/table/columns.table';
@@ -126,11 +123,6 @@ export default function Vacancy() {
     };
   }, []);
 
-  const { data: session } = useSession();
-
-  if (!session?.user) return null;
-  const { name }: SessionUserData = session.user as SessionUserData;
-
   const dialogToggle = ({ target, action }: DialogValueTypes) => {
     setIsDialogOpen(!isDialogOpen);
     setDialogType({
@@ -158,156 +150,153 @@ export default function Vacancy() {
   };
   return (
     <Layout>
-      <section className='grid grid-cols-2 gap-3 h-full grid-rows-[fit-content(100%)_1fr]'>
-        <DashboardNavbar username={name} />
-        <CollapsibleContainer
-          selfIndex={2}
-          onClick={() =>
-            handleToggleCollapsibleContainer({
-              index: 2,
-              setState: setActiveIndex,
-            })
-          }
-          activeIndex={activeIndex}
-          rowSpan={6}
-          className='row-span-6'
-        >
-          <div className='flex gap-4 items-center'>
-            <Typography variant='h6' weight='semibold'>
-              Vacancy
-            </Typography>
-            <Plus
-              color='white'
-              strokeWidth={3}
-              size={20}
-              className='cursor-pointer rounded-full bg-black'
-              onClick={() => dialogToggle({ target: 'Vacancy', action: 'Add' })}
-            />
-          </div>
-          <div className='mt-5 flex flex-col gap-5'>
-            <DataTable
-              columns={columns({ dialogToggle, setFormState })}
-              data={vacancyData}
-            />
-          </div>
-        </CollapsibleContainer>
-        <CollapsibleContainer
-          selfIndex={1}
-          onClick={() =>
-            handleToggleCollapsibleContainer({
-              index: 1,
-              setState: setActiveIndex,
-            })
-          }
-          activeIndex={activeIndex}
-          rowSpan={6}
-          className='row-span-5'
-        >
-          <div className='flex gap-4 items-center'>
-            <Typography variant='h6' weight='semibold'>
-              Batch
-            </Typography>
-            <Plus
-              color='white'
-              strokeWidth={3}
-              size={20}
-              className='cursor-pointer rounded-full bg-black'
-              onClick={() => dialogToggle({ target: 'Batch', action: 'Add' })}
-            />
-          </div>
-          <div className='mt-5 flex flex-col gap-5'>
-            <DataTable
-              columns={columnsBatch({ dialogToggle, setFormState })}
-              data={batchData}
-            />
-          </div>
-        </CollapsibleContainer>
-        <CollapsibleContainer
-          collapsible={false}
-          selfIndex={3}
-          onClick={() =>
-            handleToggleCollapsibleContainer({
-              index: 3,
-              setState: setActiveIndex,
-            })
-          }
-          activeIndex={activeIndex}
-        >
+      <CollapsibleContainer
+        selfIndex={2}
+        onClick={() =>
+          handleToggleCollapsibleContainer({
+            index: 2,
+            setState: setActiveIndex,
+          })
+        }
+        activeIndex={activeIndex}
+        rowSpan={7}
+        className='row-span-7 col-span-2'
+      >
+        <div className='flex gap-4 items-center'>
           <Typography variant='h6' weight='semibold'>
-            Role
+            Vacancy
           </Typography>
-          <section className='mt-4 flex flex-wrap items-center gap-3'>
-            <Button
-              variant='default'
-              className='cursor-pointer'
-              onClick={() => dialogToggle({ target: 'Role', action: 'Add' })}
-            >
-              <Plus color='white' strokeWidth={2} />
-              <Typography variant='c2' weight='semibold' color='white'>
-                Add Role
-              </Typography>
-            </Button>
-            {rolesData.length > 0 ? (
-              rolesData.map((role, index) => {
-                if (index < 6) {
-                  // Show normal button for the first 6 roles
-                  return (
-                    <Button
-                      key={role.id}
-                      className='p-0 pr-2 border-0 group cursor-pointer'
+          <Plus
+            color='white'
+            strokeWidth={3}
+            size={20}
+            className='cursor-pointer rounded-full bg-black'
+            onClick={() => dialogToggle({ target: 'Vacancy', action: 'Add' })}
+          />
+        </div>
+        <div className='mt-5 flex flex-col gap-5'>
+          <DataTable
+            columns={columns({ dialogToggle, setFormState })}
+            data={vacancyData}
+          />
+        </div>
+      </CollapsibleContainer>
+      <CollapsibleContainer
+        selfIndex={1}
+        onClick={() =>
+          handleToggleCollapsibleContainer({
+            index: 1,
+            setState: setActiveIndex,
+          })
+        }
+        activeIndex={activeIndex}
+        rowSpan={7}
+        className='row-span-4 col-span-2'
+      >
+        <div className='flex gap-4 items-center'>
+          <Typography variant='h6' weight='semibold'>
+            Batch
+          </Typography>
+          <Plus
+            color='white'
+            strokeWidth={3}
+            size={20}
+            className='cursor-pointer rounded-full bg-black'
+            onClick={() => dialogToggle({ target: 'Batch', action: 'Add' })}
+          />
+        </div>
+        <div className='mt-5 flex flex-col gap-5'>
+          <DataTable
+            columns={columnsBatch({ dialogToggle, setFormState })}
+            data={batchData}
+          />
+        </div>
+      </CollapsibleContainer>
+      <CollapsibleContainer
+        collapsible={false}
+        selfIndex={3}
+        onClick={() =>
+          handleToggleCollapsibleContainer({
+            index: 3,
+            setState: setActiveIndex,
+          })
+        }
+        activeIndex={activeIndex}
+        className='row-span-3 col-span-2'
+      >
+        <Typography variant='h6' weight='semibold'>
+          Role
+        </Typography>
+        <section className='mt-4 flex flex-wrap items-center gap-3'>
+          <Button
+            variant='default'
+            className='cursor-pointer'
+            onClick={() => dialogToggle({ target: 'Role', action: 'Add' })}
+          >
+            <Plus color='white' strokeWidth={2} />
+            <Typography variant='c2' weight='semibold' color='white'>
+              Add Role
+            </Typography>
+          </Button>
+          {rolesData.length > 0 ? (
+            rolesData.map((role, index) => {
+              if (index < 6) {
+                // Show normal button for the first 6 roles
+                return (
+                  <Button
+                    key={role.id}
+                    className='p-0 pr-2 border-0 group cursor-pointer'
+                  >
+                    <div
+                      className='border border-black bg-background shadow-md rounded-[18px] hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-1 has-[>svg]:px-3 cursor-pointer'
+                      onClick={() => {
+                        setFormState(prev => ({
+                          ...prev,
+                          data: {
+                            id: role.id,
+                            title: role.title,
+                            description: role.description,
+                          },
+                        }));
+                        dialogToggle({ target: 'Role', action: 'Edit' });
+                      }}
                     >
-                      <div
-                        className='border border-black bg-background shadow-md rounded-[18px] hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-1 has-[>svg]:px-3 cursor-pointer'
-                        onClick={() => {
-                          setFormState(prev => ({
-                            ...prev,
-                            data: {
-                              id: role.id,
-                              title: role.title,
-                              description: role.description,
-                            },
-                          }));
-                          dialogToggle({ target: 'Role', action: 'Edit' });
-                        }}
-                      >
-                        <Typography variant='c2' weight='semibold'>
-                          {role.title}
-                        </Typography>
-                      </div>
-                      <div
-                        className='p-1 relative hidden group-hover:flex hover:bg-light-gray/[50%] rounded-md shadow-md cursor-pointer'
-                        onClick={() => {
-                          handleDeleteVacancy(role.id);
-                          setIsActionFinish(!isActionFinish);
-                        }}
-                      >
-                        <Trash color='red' />
-                      </div>
-                    </Button>
-                  );
-                }
-
-                if (index === 6) {
-                  // On the 7th item, show the "+N" button
-                  const restRolesLength = rolesData.length - 6;
-                  return (
-                    <Button key='more-roles' variant='outline-black'>
                       <Typography variant='c2' weight='semibold'>
-                        +{restRolesLength}
+                        {role.title}
                       </Typography>
-                    </Button>
-                  );
-                }
+                    </div>
+                    <div
+                      className='p-1 relative hidden group-hover:flex hover:bg-light-gray/[50%] rounded-md shadow-md cursor-pointer'
+                      onClick={() => {
+                        handleDeleteVacancy(role.id);
+                        setIsActionFinish(!isActionFinish);
+                      }}
+                    >
+                      <Trash color='red' />
+                    </div>
+                  </Button>
+                );
+              }
 
-                // After index 6, render nothing
-                return null;
-              })
-            ) : (
-              <Typography>No Role</Typography>
-            )}
-          </section>
-        </CollapsibleContainer>
-      </section>
+              if (index === 6) {
+                const restRolesLength = rolesData.length - 6;
+                return (
+                  <Button key='more-roles' variant='outline-black'>
+                    <Typography variant='c2' weight='semibold'>
+                      +{restRolesLength}
+                    </Typography>
+                  </Button>
+                );
+              }
+
+              // After index 6, render nothing
+              return null;
+            })
+          ) : (
+            <Typography>No Role</Typography>
+          )}
+        </section>
+      </CollapsibleContainer>
       <DialogPopUp
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}

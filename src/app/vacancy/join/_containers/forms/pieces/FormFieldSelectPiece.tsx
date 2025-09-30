@@ -1,4 +1,8 @@
-import Typography, { TypographyVariant } from '@/components/Typography';
+import Typography, {
+  TypographyVariant,
+  TypographyColor,
+  FontWeight,
+} from '@/components/Typography';
 import {
   FormControl,
   FormField,
@@ -27,6 +31,8 @@ type FormFieldPiece = {
     button: string;
   };
   variantTypo?: keyof typeof TypographyVariant;
+  colorTypo?: keyof typeof TypographyColor;
+  weightTypo?: keyof typeof FontWeight;
 };
 
 export default function FormFieldSelectPiece({
@@ -35,6 +41,8 @@ export default function FormFieldSelectPiece({
   choices,
   label,
   variantTypo = 'h5',
+  colorTypo = 'blue-sky',
+  weightTypo = 'bold',
 }: FormFieldPiece) {
   return (
     <FormField
@@ -45,8 +53,8 @@ export default function FormFieldSelectPiece({
           <FormLabel>
             <Typography
               variant={variantTypo}
-              color='blue-sky'
-              weight='bold'
+              color={colorTypo}
+              weight={weightTypo}
               className='mb-2'
             >
               {label.button}

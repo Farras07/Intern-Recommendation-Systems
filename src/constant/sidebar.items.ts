@@ -22,7 +22,7 @@ const items = [
     icon: Pencil,
   },
   {
-    title: 'Intern Data',
+    title: 'Intern Registration',
     url: '/dashboard/intern',
     icon: BookUser,
   },

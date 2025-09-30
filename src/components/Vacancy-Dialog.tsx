@@ -71,23 +71,23 @@ export function DialogPopUp({
 }: DialogProps) {
   const { data } = formState;
   const now = new Date();
-
   const [batchData, setBatchData] = useState<BatchResponseType[]>([]);
   const [roleData, setRoleData] = useState<jobRoleType[]>([]);
-  console.log(roleData);
-  console.log(batchData);
 
   const formVacancy = useForm<z.infer<typeof formVacancySchema>>({
     resolver: zodResolver(formVacancySchema),
     defaultValues: {
-      batch: '',
-      role: '',
-      skills: [
-        {
-          priority: 0,
-          skillName: '',
-        },
-      ],
+      batch: action == 'Edit' ? data.batch : '',
+      role: action == 'Edit' ? data.role : '',
+      skills:
+        action == 'Edit'
+          ? data.skills
+          : [
+              {
+                priority: 0,
+                skillName: '',
+              },
+            ],
     },
   });
   const formBatch = useForm<z.infer<typeof formBatchSchema>>({
@@ -103,19 +103,21 @@ export function DialogPopUp({
   const formRole = useForm<z.infer<typeof formRoleSchema>>({
     resolver: zodResolver(formRoleSchema),
     defaultValues: {
-      roleTitle: data?.title || '',
-      roleDescription: data?.description || '',
+      roleTitle: action == 'Edit' ? data.title : '',
+      roleDescription: action == 'Edit' ? data.description : '',
     },
   });
 
   const onSubmitVacancy = async (values: z.infer<typeof formVacancySchema>) => {
+    console.log(values);
+    console.log(data.id);
     let toastMessage = '';
     try {
       if (action === 'Add') {
         await addVacancySubmit(values);
       }
       if (action === 'Edit') {
-        await updateVacancySubmit({ id: data.id, ...values });
+        await updateVacancySubmit({ id: data.id, skills: values.skills });
       }
 
       toastMessage = `${action} ${target} Success`;
@@ -162,7 +164,6 @@ export function DialogPopUp({
     try {
       if (target === 'Role') {
         if (action === 'Add') {
-          console.log('heiii');
           await addRoleSubmit({
             title: values.roleTitle,
             description: values.roleDescription,
@@ -226,6 +227,12 @@ export function DialogPopUp({
             ],
       });
     }
+    if (action === 'Edit' && target === 'Role') {
+      formRole.reset({
+        roleTitle: data.title ? data.title : '',
+        roleDescription: data.description ? data.description : '',
+      });
+    }
     if (!open) {
       formBatch.reset({
         batchName: '',
@@ -244,6 +251,10 @@ export function DialogPopUp({
           },
         ],
       });
+      formRole.reset({
+        roleTitle: '',
+        roleDescription: '',
+      });
     }
   }, [open, formVacancy]);
 
@@ -260,9 +271,6 @@ export function DialogPopUp({
     control,
     name: 'skills',
   });
-
-  console.log(action);
-  console.log(target);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -295,31 +303,35 @@ export function DialogPopUp({
                           <Button variant='outline'>
                             {selectedBatch
                               ? selectedBatch.batchName
-                              : 'Choose Batch'}
+                              : action === 'Edit'
+                                ? data.batch
+                                : 'Choose Batch'}
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuLabel>Batch</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <FormControl>
-                            <DropdownMenuRadioGroup>
-                              {batchData.map(batch => (
-                                <DropdownMenuItem
-                                  key={batch.batchId}
-                                  onClick={() =>
-                                    formVacancy.setValue(
-                                      'batch',
-                                      batch.batchId,
-                                      { shouldValidate: true },
-                                    )
-                                  }
-                                >
-                                  {batch.batchName}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuRadioGroup>
-                          </FormControl>
-                        </DropdownMenuContent>
+                        {action != 'Edit' && (
+                          <DropdownMenuContent>
+                            <DropdownMenuLabel>Batch</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <FormControl>
+                              <DropdownMenuRadioGroup>
+                                {batchData.map(batch => (
+                                  <DropdownMenuItem
+                                    key={batch.batchId}
+                                    onClick={() =>
+                                      formVacancy.setValue(
+                                        'batch',
+                                        batch.batchId,
+                                        { shouldValidate: true },
+                                      )
+                                    }
+                                  >
+                                    {batch.batchName}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuRadioGroup>
+                            </FormControl>
+                          </DropdownMenuContent>
+                        )}
                       </DropdownMenu>
 
                       <FormMessage />
@@ -335,29 +347,35 @@ export function DialogPopUp({
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant='outline'>
-                            {selectedRole ? selectedRole.title : 'Choose Role'}
+                            {selectedRole
+                              ? selectedRole.title
+                              : action === 'Edit'
+                                ? data.role
+                                : 'Choose Role'}
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuLabel>Role</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <FormControl>
-                            <DropdownMenuRadioGroup>
-                              {roleData.map(role => (
-                                <DropdownMenuItem
-                                  key={role.id}
-                                  onClick={() =>
-                                    formVacancy.setValue('role', role.id, {
-                                      shouldValidate: true,
-                                    })
-                                  }
-                                >
-                                  {role.title}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuRadioGroup>
-                          </FormControl>
-                        </DropdownMenuContent>
+                        {action != 'Edit' && (
+                          <DropdownMenuContent>
+                            <DropdownMenuLabel>Role</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <FormControl>
+                              <DropdownMenuRadioGroup>
+                                {roleData.map(role => (
+                                  <DropdownMenuItem
+                                    key={role.id}
+                                    onClick={() =>
+                                      formVacancy.setValue('role', role.id, {
+                                        shouldValidate: true,
+                                      })
+                                    }
+                                  >
+                                    {role.title}
+                                  </DropdownMenuItem>
+                                ))}
+                              </DropdownMenuRadioGroup>
+                            </FormControl>
+                          </DropdownMenuContent>
+                        )}
                       </DropdownMenu>
 
                       <FormMessage />
@@ -449,12 +467,7 @@ export function DialogPopUp({
                     <FormItem>
                       <FormLabel>Role Title</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder={
-                            action === 'Edit' ? data.title : 'Type Role Title'
-                          }
-                          {...field}
-                        />
+                        <Input placeholder='Type Role Title' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -469,11 +482,7 @@ export function DialogPopUp({
                       <FormLabel>Role Description</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder={
-                            action === 'Edit'
-                              ? data.description
-                              : 'Type Role Description'
-                          }
+                          placeholder='Type Role Description'
                           // defaultValue={action === "Edit" ? data.description : ""}
                           {...field}
                         />

@@ -8,7 +8,10 @@ import UserHandler from './user/handler';
 import InternRoleHandler from './intern/role/handler';
 import InternRoleStreamHandler from './intern/role/stream/handler';
 import InternBatchHandler from './intern/batch/handler';
+import InternBatchSlugHandler from './intern/batch/[id]/handler';
 import InternRegisterHandler from './intern/vacancy/register/handler';
+import InternStageHandler from './intern/vacancy/stage/handler';
+import InternRegisterSlugHandler from './intern/vacancy/register/[id]/handler';
 import InternBatchStreamHandler from './intern/batch/stream/handler';
 import InternVacancyHandler from './intern/vacancy/handler';
 import InternVacancyStreamHandler from './intern/vacancy/stream/handler';
@@ -20,8 +23,11 @@ const driveServices = new DriveServices(drive);
 
 const internServices = new InternServices(db);
 const internVacancyHandler = new InternVacancyHandler(internServices);
+const internStageHandler = new InternStageHandler(internServices);
 const internRoleHandler = new InternRoleHandler(internServices);
 const internBatchHandler = new InternBatchHandler(internServices);
+const internBatchSlugHandler = new InternBatchSlugHandler(internServices);
+const internRegisterSlugHandler = new InternRegisterSlugHandler(internServices);
 const internRegisterHandler = new InternRegisterHandler(
   internServices,
   driveServices,
@@ -39,7 +45,13 @@ export function userRouter() {
 }
 export function internRegisterRouter() {
   const POST = internRegisterHandler.POST.bind(internRegisterHandler);
-  return { POST };
+  const GET = internRegisterHandler.GET.bind(internRegisterHandler);
+  return { POST, GET };
+}
+export function internRegisterSlugRouter() {
+  const GET = internRegisterSlugHandler.GET.bind(internRegisterSlugHandler);
+  const PUT = internRegisterSlugHandler.PUT.bind(internRegisterSlugHandler);
+  return { GET, PUT };
 }
 export function internVacancyRouter() {
   const POST = internVacancyHandler.POST.bind(internVacancyHandler);
@@ -64,6 +76,15 @@ export function internBatchRouter() {
   const PUT = internBatchHandler.PUT.bind(internBatchHandler);
 
   return { POST, GET, DELETE, PUT };
+}
+export function internBatchSlugRouter() {
+  const PUT = internBatchSlugHandler.PUT.bind(internBatchSlugHandler);
+
+  return { PUT };
+}
+export function internStageRouter() {
+  const GET = internStageHandler.GET.bind(internStageHandler);
+  return { GET };
 }
 export function internVacancyStreamRouter() {
   const GET = internVacancyStreamHandler.GET.bind(internVacancyStreamHandler);
