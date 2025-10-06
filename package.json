@@ -9,7 +9,10 @@
     "lint": "next lint",
     "format:check": "prettier . --check",
     "format:write": "prettier -w . && eslint . --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "vitest run",
+    "vercel-build": "npm run test && npm run lint && npm run build"
+
   },
   "dependencies": {
     "@faceless-ui/modal": "^3.0.0-beta.2",
