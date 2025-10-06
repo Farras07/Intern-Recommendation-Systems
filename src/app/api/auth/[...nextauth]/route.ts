@@ -10,8 +10,8 @@ const userServices = new UserServices(db);
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.NEXT_PUBLIC_FIREBASE_CLIENTID || '',
-      clientSecret: process.env.NEXT_PUBLIC_FIREBASE_CLIENTSECRET || '',
+      clientId: process.env.NEXT_PUBLIC_FIREBASE_CLIENTID ?? '',
+      clientSecret: process.env.NEXT_PUBLIC_FIREBASE_CLIENTSECRET ?? '',
       authorization: {
         params: {
           prompt: 'consent',
@@ -29,17 +29,16 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      // First time the JWT callback runs, the user object is available
       if (user) {
-        token.id = user.id; // Custom ID from your DB or provider
-        token.role = user.role || 'user'; // Default role
+        token.id = (user as any).id ?? '';
+        token.role = (user as any).role ?? 'user';
       }
       return token;
     },
     async session({ session, token }) {
       try {
-        if (!session.user.email)
-          throw new AuthenticationError('Please Login First!');
+        if (!session.user?.email)
+          throw new AuthenticationError('Please login first!');
         const userData = await userServices.getUser(session.user.email);
         if (userData) {
           session.user.id = token.id as string;
@@ -48,19 +47,17 @@ export const authOptions: NextAuthOptions = {
         }
         return session;
       } catch (error: any) {
-        if (error.statusCode === 404) {
-          return session;
-        }
+        if (error.statusCode === 404) return session;
         throw error;
       }
     },
-
     async signIn() {
       return true;
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
+// ✅ App Router-compatible exports
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
