@@ -1,4 +1,5 @@
-'use client';
+export const dynamic = 'force-dynamic';
+('use client');
 
 import Navbar from '@/layouts/landing/Navbar';
 import Jumbotron from './_containers/Jumbotron';
