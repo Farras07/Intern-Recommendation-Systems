@@ -1,9 +1,7 @@
 // lib/firebase-admin.ts
 import admin from 'firebase-admin';
 
-const projectId =
-  process.env.NEXTAUTH_FIREBASE_PROJECT_ID ||
-  process.env.NEXT_PUBLIC_FIREBASE_PROJECTID;
+const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECTID;
 const clientEmail = process.env.NEXTAUTH_FIREBASE_CLIENT_EMAIL;
 const privateKey = process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY?.replace(
   /\\n/g,
