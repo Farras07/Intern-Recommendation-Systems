@@ -26,9 +26,6 @@ export default function DashboardHome() {
     action: null,
   });
 
-  // const [formState, setFormState] = useState({
-  //   data: {},
-  // });
   const inputRef = useRef<HTMLInputElement>(null);
   const { data, isPending } = useQuery({
     path: '/user',
@@ -156,7 +153,6 @@ export default function DashboardHome() {
         onOpenChange={setIsDialogOpen}
         target={dialogType.target}
         action={dialogType.action}
-        // formState={formState}
       />
     </Layout>
   );
