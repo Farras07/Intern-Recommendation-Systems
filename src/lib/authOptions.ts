@@ -41,8 +41,9 @@ export const authOptions: NextAuthOptions = {
         const userData = await userServices.getUser(session.user.email);
         if (userData) {
           session.user.id = token.id as string;
-          session.user.role = userData.role;
-          session.user.verified = userData.verified;
+          const data = Array.isArray(userData) ? userData[0] : userData;
+          session.user.role = data?.role ?? null;
+          session.user.verified = data?.verified ?? false;
         }
         return session;
       } catch (error: any) {

@@ -27,8 +27,11 @@ import { default as sidebarItems } from '@/constant/sidebar.items';
 export function AppSidebar() {
   const { state } = useSidebar();
   const { data: session } = useSession();
-  const { name, image, role } = session?.user;
-  console.log(image);
+  if (!session || !session.user) {
+    return null;
+  }
+
+  const { name, image, role } = session.user;
 
   return (
     <Sidebar variant='floating' collapsible='icon'>
@@ -67,10 +70,10 @@ export function AppSidebar() {
                 className={`${state === 'expanded' ? 'w-12 h-12' : 'h-full w-full'} flex items-center `}
               >
                 <Image
-                  src={image}
+                  src={image ?? '/vercel.svg'}
                   width={100}
                   height={100}
-                  alt={name}
+                  alt={name ?? ''}
                   className='rounded-full'
                 />
               </figure>

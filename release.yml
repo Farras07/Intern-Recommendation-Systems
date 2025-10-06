@@ -1,7 +1,7 @@
 name: CI/CD to Vercel
 on:
   push:
-    branches: [ "master" ]
+    branches: ['master']
 
 jobs:
   build_and_deploy:
@@ -30,7 +30,6 @@ jobs:
       NEXTAUTH_FIREBASE_CLIENT_Id: ${{ secrets.NEXTAUTH_FIREBASE_CLIENT_Id }}
       NEXT_PUBLIC_BASEURL: ${{ secrets.NEXT_PUBLIC_BASEURL }}
       NEXT_PUBLIC_FOLDERID: ${{ secrets.NEXT_PUBLIC_FOLDERID }}
-
 
     steps:
       - name: Checkout code
