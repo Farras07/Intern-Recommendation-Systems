@@ -32,7 +32,7 @@ export default function Navbar() {
           <div className='flex items-center'>
             <button className='hidden xl:inline border-2 border-light-gray rounded-[10px] h-fit w-fit p-1 cursor-pointer'>
               <Image
-                src={'icons/sun.svg'}
+                src={'/icons/sun.svg'}
                 width={30}
                 height={30}
                 alt='toggle mode'
@@ -79,7 +79,7 @@ export default function Navbar() {
             <div className='items-center'>
               <button className='border-2 border-light-gray rounded-[10px] h-fit w-fit p-1 cursor-pointer'>
                 <Image
-                  src={'icons/sun.svg'}
+                  src={'/icons/sun.svg'}
                   width={30}
                   height={30}
                   alt='toggle mode'
