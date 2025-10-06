@@ -1,6 +1,14 @@
 // lib/firebase-admin.ts
 import admin from 'firebase-admin';
 
+console.log('Project ID:', process.env.NEXT_PUBLIC_FIREBASE_PROJECTID);
+console.log('Client Email:', process.env.NEXTAUTH_FIREBASE_CLIENT_EMAIL);
+console.log(
+  'Private Key:',
+  process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY?.substring(0, 20),
+);
+console.log('Email:', process.env.NEXT_PUBLIC_DEV_EMAIL);
+
 if (!admin.apps.length) {
   try {
     admin.initializeApp({
