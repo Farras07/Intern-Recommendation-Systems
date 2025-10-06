@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Your NextAuth options
+import { authOptions } from '@/lib/authOptions';
 import SessionWrapper from './SessionWrapper';
 
 export default async function SessionProviderServer({
