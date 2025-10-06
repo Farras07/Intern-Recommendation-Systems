@@ -1,7 +1,7 @@
 'use client';
 
-import { Modal, ModalContainer, useModal } from '@faceless-ui/modal';
 import React from 'react';
+import { Modal, ModalContainer, useModal } from '@faceless-ui/modal';
 import { HiOutlineXMark } from 'react-icons/hi2';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import Image from 'next/image';

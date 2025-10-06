@@ -1,16 +1,7 @@
 export const dynamic = 'force-dynamic';
-('use client');
 
-import Navbar from '@/layouts/landing/Navbar';
-import Jumbotron from './_containers/Jumbotron';
-import About from './_containers/About';
+import HomeClient from './HomeClient';
 
-export default function Home() {
-  return (
-    <>
-      <Navbar />
-      <Jumbotron />
-      <About />
-    </>
-  );
+export default function HomePage() {
+  return <HomeClient />;
 }
