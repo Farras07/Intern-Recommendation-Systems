@@ -9,9 +9,11 @@ import Jumbotron from './_containers/Jumbotron';
 import About from './_containers/About';
 
 export default function HomePage() {
-  <>
-    <Navbar />
-    <Jumbotron />
-    <About />
-  </>;
+  return (
+    <>
+      <Navbar />
+      <Jumbotron />
+      <About />
+    </>
+  );
 }
