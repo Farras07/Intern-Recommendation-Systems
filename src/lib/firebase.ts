@@ -11,7 +11,7 @@ import { getFirestore } from 'firebase/firestore';
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_APIKEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTHDOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECTID,
+  projectId: process.env.NEXTAUTH_FIREBASE_PROJECT_ID,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGEBUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APPID,
