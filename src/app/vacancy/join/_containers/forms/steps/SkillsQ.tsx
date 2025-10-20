@@ -82,6 +82,8 @@ export default function SkillsQ() {
         ...restPropVac,
         skills: mergedSkills,
         exp: userData.exp,
+        interviewRate: 1,
+        lastStage: 'Registration',
         portofolioLink: userData.portofolioLink,
         achievement: userData.achievement,
       };

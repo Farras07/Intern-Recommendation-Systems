@@ -39,6 +39,7 @@ export default function Interview({
   const currentRegisData = useSelector(
     (state: RootState) => state.registerVacancy.regisData,
   );
+  console.log(currentRegisData);
   const currentApplyId = useSelector(
     (state: RootState) => state.registerVacancy.currentApplyId,
   );

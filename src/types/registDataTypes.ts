@@ -19,12 +19,13 @@ export type VacancyRegisType = {
   exp: string;
   id: string;
   portofolioLink: string;
+  portfolioRate: string;
   role?: {
     id: string;
     title: string;
   };
   skills: {
-    priority: number;
+    priority?: number;
     rate: string;
     skillName: string;
   }[];

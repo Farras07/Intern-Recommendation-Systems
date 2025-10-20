@@ -14,6 +14,13 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.NEXT_PUBLIC_FIREBASE_CLIENTSECRET || '',
       authorization: {
         params: {
+          scope: [
+            'openid',
+            'email',
+            'profile',
+            'https://www.googleapis.com/auth/calendar',
+            'https://www.googleapis.com/auth/calendar.events',
+          ].join(' '),
           prompt: 'consent',
           access_type: 'offline',
           response_type: 'code',

@@ -151,3 +151,34 @@ export const formUpdateSkillVacancySchema = z.object({
     }),
   ),
 });
+
+export const formShortlistCandidates = z.object({
+  candidateAmount: z
+    .number({
+      required_error: 'Candidate Amount is required!',
+      invalid_type_error: 'Field value must be a number!',
+    } as any)
+    .min(1, { message: 'Candidate Amount must be greater than 0!' }),
+
+  interviewDate: z.date({
+    required_error: 'Interview Date Required!',
+  } as any),
+
+  interviewStartTime: z.string().nonempty('Interview Start Time Required'),
+
+  durationTime: z.coerce
+    .number({
+      required_error: 'Duration Time is required!',
+      invalid_type_error: 'Field value must be a number!',
+    } as any)
+    .refine(val => val > 0, {
+      message: 'Duration Time must be greater than 0!',
+    }) as unknown as z.ZodNumber, // 👈 force-cast back to ZodNumber
+
+  interviewer: z.array(
+    z.object({
+      role: z.string().nonempty('Role Required!'),
+      judgesEmail: z.array(z.email()).nonempty('Judges Email Required!'),
+    }),
+  ),
+});

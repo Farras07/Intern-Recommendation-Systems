@@ -44,13 +44,12 @@ import _Fetch from '@/hooks/request.hooks';
 import { formTeamInviteSchema } from '@/constant/schemas.items';
 import { BatchResponseType } from '@/types/BatchTypes';
 import { useMutation } from '@/hooks/useQuery.hooks';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/lib/redux/store';
 
 type DialogProps = DialogValueTypes & {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  formState?: {
-    data?: any;
-  };
 };
 
 export default function HomeDialogPopUp({
@@ -58,9 +57,8 @@ export default function HomeDialogPopUp({
   onOpenChange,
   target,
   action,
-  // formState,
 }: DialogProps) {
-  // const { data } = formState;
+  const dataUser = useSelector((state: RootState) => state.team.teamData);
 
   const formTeamInvite = useForm<z.infer<typeof formTeamInviteSchema>>({
     resolver: zodResolver(formTeamInviteSchema),
@@ -70,9 +68,25 @@ export default function HomeDialogPopUp({
     },
   });
 
+  useEffect(() => {
+    if (action == 'Edit') {
+      if (dataUser) {
+        formTeamInvite.reset({
+          email: dataUser.email || '',
+          role: dataUser.role || '',
+        });
+      }
+    }
+  }, [dataUser]);
+
   const inviteTeamMutate = useMutation({
     path: '/user',
     method: 'POST',
+    queryKey: ['users'],
+  });
+  const updateTeamMutate = useMutation({
+    path: `/user?id=${dataUser?.id}`,
+    method: 'PUT',
     queryKey: ['users'],
   });
   const selectedRole = formTeamInvite.watch('role');
@@ -83,12 +97,18 @@ export default function HomeDialogPopUp({
     const toast = { message: '', type: DANGER_TOAST };
 
     try {
-      console.log(values);
-      inviteTeamMutate.mutate({
-        email: values.email,
-        role: values.role,
-        verified: true,
-      });
+      if (action === 'Add') {
+        inviteTeamMutate.mutate({
+          email: values.email,
+          role: values.role,
+          verified: true,
+        });
+      } else {
+        updateTeamMutate.mutate({
+          role: values.role,
+        });
+      }
+
       toast.message = `${action} ${target} Success`;
       toast.type = SUCCESS_TOAST;
     } catch (error) {
@@ -115,81 +135,82 @@ export default function HomeDialogPopUp({
           </DialogDescription>
         </DialogHeader>
 
-        {/* --------------------------- VACANCY --------------------------- */}
-        {action === 'Add' && (
-          <div className='grid gap-4'>
-            <Form {...formTeamInvite}>
-              <form
-                onSubmit={formTeamInvite.handleSubmit(onSubmitVacancy)}
-                className='space-y-8'
-              >
-                <FormField
-                  control={formTeamInvite.control}
-                  name='email'
-                  render={({ field }) => (
-                    <FormItem className='flex flex-col'>
-                      <FormLabel>Email</FormLabel>
-                      <Input placeholder='Type Email to Invite' {...field} />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={formTeamInvite.control}
-                  name='role'
-                  render={({ field }) => (
-                    <FormItem className='flex flex-col'>
-                      <FormLabel>Role</FormLabel>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant='outline'>
-                            {selectedRole || 'Choose Role'}
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuLabel>Role</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <FormControl>
-                            <DropdownMenuRadioGroup>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  formTeamInvite.setValue('role', 'Admin', {
-                                    shouldValidate: true,
-                                  })
-                                }
-                              >
-                                Admin
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  formTeamInvite.setValue('role', 'Judge', {
-                                    shouldValidate: true,
-                                  })
-                                }
-                              >
-                                Judge
-                              </DropdownMenuItem>
-                            </DropdownMenuRadioGroup>
-                          </FormControl>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <div className='grid gap-4'>
+          <Form {...formTeamInvite}>
+            <form
+              onSubmit={formTeamInvite.handleSubmit(onSubmitVacancy)}
+              className='space-y-8'
+            >
+              <FormField
+                control={formTeamInvite.control}
+                name='email'
+                render={({ field }) => (
+                  <FormItem className='flex flex-col'>
+                    <FormLabel>Email</FormLabel>
+                    <Input
+                      placeholder='Type Email to Invite'
+                      disabled={action === 'Edit'}
+                      {...field}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={formTeamInvite.control}
+                name='role'
+                render={({ field }) => (
+                  <FormItem className='flex flex-col'>
+                    <FormLabel>Role</FormLabel>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='outline'>
+                          {selectedRole || 'Choose Role'}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuLabel>Role</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <FormControl>
+                          <DropdownMenuRadioGroup>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                formTeamInvite.setValue('role', 'Admin', {
+                                  shouldValidate: true,
+                                })
+                              }
+                            >
+                              Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() =>
+                                formTeamInvite.setValue('role', 'Judge', {
+                                  shouldValidate: true,
+                                })
+                              }
+                            >
+                              Judge
+                            </DropdownMenuItem>
+                          </DropdownMenuRadioGroup>
+                        </FormControl>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant='outline' type='button'>
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                  <Button type='submit'>Save changes</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </div>
-        )}
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant='outline' type='button'>
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button type='submit'>Save changes</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

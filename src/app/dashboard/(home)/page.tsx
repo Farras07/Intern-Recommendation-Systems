@@ -32,7 +32,6 @@ export default function DashboardHome() {
     path: '/intern/vacancy/stage',
     queryKey: ['batchActive'],
   });
-  console.log(batchActive);
 
   const handleIconSearchClick = () => {
     inputRef.current?.focus();
@@ -58,7 +57,7 @@ export default function DashboardHome() {
         }
         rowSpan={7}
         collapsible={false}
-        className={`col-span-3 row-span-3 max-h-[40vh] overflow-y-scroll p-9`}
+        className={`col-span-3 row-span-3 max-h-[33vh] overflow-y-scroll p-9`}
       >
         <Typography variant='h6' weight='semibold'>
           Ongoing Registration Stage
@@ -131,8 +130,8 @@ export default function DashboardHome() {
           </Typography>
           <div className='w-full flex flex-col gap-2'>
             {isPending && <Loading />}
-            {Array.isArray(data?.user) &&
-              data.user.map((user: any) => (
+            {Array.isArray(data) &&
+              data.map((user: any) => (
                 <TeamCard
                   key={user.email}
                   name={user.name}

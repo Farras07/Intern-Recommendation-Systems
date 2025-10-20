@@ -3,6 +3,8 @@ import roleReducer from './slices/roleSlice';
 import formReducer from './slices/formSlice';
 import roleVacancyReducer from './slices/roleVacancySlice';
 import registerVacancyReducer from './slices/registerSlice';
+import teamReducer from './slices/teamSlice';
+import shortlistReducer from './slices/shortlistSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +12,8 @@ export const store = configureStore({
     form: formReducer,
     roleVacancyPick: roleVacancyReducer,
     registerVacancy: registerVacancyReducer,
+    team: teamReducer,
+    shortlist: shortlistReducer,
   },
 });
 

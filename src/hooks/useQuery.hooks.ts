@@ -9,9 +9,10 @@ type UseQueryTypes = {
   path: string;
   queryKey: (string | number | object)[];
   method?: 'POST' | 'PUT' | 'DELETE';
+  enabledVar?: any;
 };
 
-export function useQuery({ path, queryKey }: UseQueryTypes) {
+export function useQuery({ path, queryKey, enabledVar }: UseQueryTypes) {
   return useRQQuery({
     queryKey,
     queryFn: async () => {
@@ -20,6 +21,7 @@ export function useQuery({ path, queryKey }: UseQueryTypes) {
       const json = await res.json();
       return json.data;
     },
+    enabled: enabledVar,
   });
 }
 

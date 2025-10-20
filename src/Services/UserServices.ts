@@ -2,6 +2,7 @@ import { adminDb as db } from '@/lib/firebase-admin';
 import InternalServerError from '@/exceptions/InternalServerError';
 import NotFoundError from '@/exceptions/NotFoundError';
 import BaseError from '@/exceptions/BaseError';
+import { nanoid } from 'nanoid';
 
 export default class UserServices {
   _db: typeof db;
@@ -11,12 +12,15 @@ export default class UserServices {
 
   async createUser(payload: any) {
     try {
-      const docRef = await this._db.collection('users').add({
-        ...payload,
-        createdAt: new Date(),
-      });
-
-      return docRef.id;
+      const id = `user-${nanoid(5)}`;
+      await this._db
+        .collection('users')
+        .doc(id)
+        .set({
+          ...payload,
+          id,
+          createdAt: new Date(),
+        });
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
@@ -44,7 +48,7 @@ export default class UserServices {
       } else {
         const snapshot = await this._db.collection('users').get();
         if (snapshot.empty) {
-          throw new NotFoundError(`Not found Error : Data(${email}) not found`);
+          throw new NotFoundError(`Not found Error : Data not found`);
         }
 
         const users = snapshot.docs.map(doc => ({
@@ -53,6 +57,47 @@ export default class UserServices {
 
         return users;
       }
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
+  async getUserByRole(role: string) {
+    try {
+      const snapshot = await this._db
+        .collection('users')
+        .where('role', '==', role)
+        .get();
+
+      if (snapshot.empty)
+        throw new NotFoundError(`Not found Error : Data not found`);
+      const users = snapshot.docs.map(doc => doc.data());
+      return users;
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
+  async updateUserRole(id: string, role: string) {
+    try {
+      await db.collection('users').doc(id).update({ role });
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
+  async deleteUserById(id: string) {
+    try {
+      await db.collection('users').doc(id).delete();
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);

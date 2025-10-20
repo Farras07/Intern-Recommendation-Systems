@@ -316,15 +316,43 @@ export default class InternServices {
       throw error;
     }
   }
-  async getSpecificVacancy(id: string) {
+  async getSpecificVacancy(id: string, allField?: boolean) {
+    try {
+      if (allField) {
+        const vacancySnap = await this._db
+          .collection('vacancy')
+          .where('id', '==', id)
+          .get();
+
+        if (vacancySnap.empty) throw new NotFoundError('Vacancy Not Found!');
+        const vacancyData = vacancySnap.docs.map(docs => docs.data());
+        return vacancyData;
+      } else {
+        const vacancySnap = await this._db
+          .collection('vacancy')
+          .where('id', '==', id)
+          .select('role')
+          .get();
+        if (vacancySnap.empty) throw new NotFoundError('Vacancy Not Found!');
+        const vacancyData = vacancySnap.docs.map(docs => docs.data());
+        return vacancyData;
+      }
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+  async getVacancyIdsByBatchId(batchId: string) {
     try {
       const vacancySnap = await this._db
         .collection('vacancy')
-        .where('id', '==', id)
-        .select('role')
+        .where('batch', '==', batchId)
+        .select('id')
         .get();
       if (vacancySnap.empty) throw new NotFoundError('Vacancy Not Found!');
-      const vacancyData = vacancySnap.docs.map(docs => docs.data());
+      const vacancyData = vacancySnap.docs.map(docs => docs.data().id);
       return vacancyData;
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -333,6 +361,7 @@ export default class InternServices {
       throw error;
     }
   }
+
   async getOpenVacancy() {
     try {
       const currentTime = new Date();
@@ -497,6 +526,23 @@ export default class InternServices {
       );
 
       return registData.flat();
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
+  async getRegistrationByBatchId(batchId: string) {
+    try {
+      const regisSnap = await this._db
+        .collection('register')
+        .where('batch', '==', batchId)
+        .get();
+      if (regisSnap.empty) return [];
+      const regisData = regisSnap.docs.map(doc => doc.data());
+      return regisData;
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);

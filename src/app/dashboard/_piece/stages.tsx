@@ -2,6 +2,7 @@ import Typography from '@/components/Typography';
 import { Button } from '@/components/ui/button';
 import { NotebookPen, Funnel, MessagesSquare, BadgeCheck } from 'lucide-react';
 import { useMutation } from '@/hooks/useQuery.hooks';
+import _Fetch from '@/hooks/request.hooks';
 
 export default function PieceStages({
   batchId,
@@ -36,7 +37,20 @@ export default function PieceStages({
     method: 'PUT',
   });
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    if (stage == 'Registration') {
+      const regisData = await _Fetch(
+        `/intern/vacancy/register?batchId=${batchId}`,
+        'GET',
+      );
+      regisData.map(async data => {
+        const vacancy = data.vacancy.map(vac => {
+          vac.lastStage = stageOrder[currentIndex + 1];
+          return vac;
+        });
+        await _Fetch(`/intern/vacancy/register/${data.id}`, 'PUT', { vacancy });
+      });
+    }
     mutate({ stage: stageOrder[currentIndex + 1] });
   };
   return (

@@ -13,7 +13,6 @@ const _Fetch = async (path: string, method: string, body?: any) => {
     }
 
     const res = await fetch(url, options);
-    console.log(res.status);
 
     if (!res.ok) {
       throw new BaseError(`HTTP ${res.status}: ${res.statusText}`, res.status);

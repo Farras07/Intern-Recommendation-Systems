@@ -51,7 +51,7 @@ export const columnsBatch = ({
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue<'Pending' | 'On Process' | 'Done' | 'Failed'>(
+      const status = row.getValue<'Pending' | 'Hiring' | 'Done' | 'Failed'>(
         'status',
       );
       const color =

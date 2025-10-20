@@ -2,6 +2,8 @@
 import UserServices from '@/Services/UserServices';
 import DriveServices from '@/Services/DriveServices';
 import InternServices from '@/Services/InternServices';
+import RecommendationServices from '@/Services/RecommendationServices';
+import MeetServices from '@/Services/MeetServices';
 import { adminDb as db } from '@/lib/firebase-admin';
 import { drive } from '@/lib/gapi';
 import UserHandler from './user/handler';
@@ -15,6 +17,7 @@ import InternRegisterSlugHandler from './intern/vacancy/register/[id]/handler';
 import InternBatchStreamHandler from './intern/batch/stream/handler';
 import InternVacancyHandler from './intern/vacancy/handler';
 import InternVacancyStreamHandler from './intern/vacancy/stream/handler';
+import RecommendationHandler from './recommendation/handler';
 
 const userServices = new UserServices(db);
 const userHandler = new UserHandler(userServices);
@@ -22,6 +25,7 @@ const userHandler = new UserHandler(userServices);
 const driveServices = new DriveServices(drive);
 
 const internServices = new InternServices(db);
+const meetServices = new MeetServices(internServices);
 const internVacancyHandler = new InternVacancyHandler(internServices);
 const internStageHandler = new InternStageHandler(internServices);
 const internRoleHandler = new InternRoleHandler(internServices);
@@ -38,10 +42,19 @@ const internVacancyStreamHandler = new InternVacancyStreamHandler(
   internServices,
 );
 
+const recommendationServices = new RecommendationServices(db);
+const recommendationHandler = new RecommendationHandler(
+  recommendationServices,
+  internServices,
+  meetServices,
+);
+
 export function userRouter() {
   const POST = userHandler.POST.bind(userHandler);
   const GET = userHandler.GET.bind(userHandler);
-  return { POST, GET };
+  const PUT = userHandler.PUT.bind(userHandler);
+  const DELETE = userHandler.DELETE.bind(userHandler);
+  return { POST, GET, PUT, DELETE };
 }
 export function internRegisterRouter() {
   const POST = internRegisterHandler.POST.bind(internRegisterHandler);
@@ -81,6 +94,11 @@ export function internBatchSlugRouter() {
   const PUT = internBatchSlugHandler.PUT.bind(internBatchSlugHandler);
 
   return { PUT };
+}
+export function recommendationRouter() {
+  const GET = recommendationHandler.GET.bind(recommendationHandler);
+  const POST = recommendationHandler.POST.bind(recommendationHandler);
+  return { GET, POST };
 }
 export function internStageRouter() {
   const GET = internStageHandler.GET.bind(internStageHandler);
