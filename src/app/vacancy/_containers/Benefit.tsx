@@ -54,14 +54,11 @@ export default function Benefit() {
               <Typography variant='p' font='poppins' weight='semibold'>
                 {b.title}
               </Typography>
-              <Typography
-                variant='c1'
-                font='poppins'
-                weight='regular'
-                className='text-center'
-              >
-                {b.text}
-              </Typography>
+              <div className='w-[90%] break-words whitespace-normal text-center'>
+                <Typography variant='c1' font='poppins' weight='regular'>
+                  {b.text}
+                </Typography>
+              </div>
             </Badge>
           </div>
         ))}

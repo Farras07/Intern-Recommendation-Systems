@@ -20,4 +20,8 @@ export const navbarItems: NavbarItems[] = [
     label: 'Vacancy',
     href: '/vacancy',
   },
+  {
+    label: 'Login',
+    href: '/login',
+  },
 ];

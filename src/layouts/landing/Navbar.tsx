@@ -21,7 +21,7 @@ export default function Navbar() {
           <div className='hidden xl:flex items-center justify-between gap-1 xl:gap-7'>
             {navbarItems.map(({ label, href }, index) => (
               <a
-                className='font-teko text-xs w-24 h-fit py-2 text-center rounded-3xl text-typo-white hover:bg-white text-typo-dark hover:text-typo-dark'
+                className='font-teko text-btn w-24 h-fit py-2 text-center rounded-3xl text-typo-white hover:bg-white hover:text-typo-dark'
                 key={index}
                 href={href}
               >

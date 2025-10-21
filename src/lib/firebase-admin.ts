@@ -8,16 +8,6 @@ const privateKey = process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY?.replace(
   '\n',
 );
 
-console.log('🌱 Firebase Admin ENV:', {
-  NODE_ENV: process.env.NODE_ENV,
-  TEST: process.env.TEST,
-  projectId: process.env.NEXTAUTH_FIREBASE_PROJECT_ID,
-  clientEmail: process.env.NEXTAUTH_FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY
-    ? '✅ Exists'
-    : '❌ Missing',
-});
-
 if (!admin.apps.length) {
   try {
     if (!projectId || !clientEmail || !privateKey) {

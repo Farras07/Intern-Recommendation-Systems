@@ -13,9 +13,14 @@ export default function Hero_Card() {
       <Button
         size={'xxl'}
         variant={'hero-card'}
-        className='absolute bottom-10 xl:bottom-12 left-1/2 -translate-x-1/2'
+        className='absolute bottom-10 xl:bottom-12 left-1/2 -translate-x-1/2 cursor-pointer'
       >
-        Join Now!
+        <a
+          href='/vacancy/join'
+          className='w-full h-full flex justify-center items-center'
+        >
+          Join Now!
+        </a>
       </Button>
     </div>
   );
