@@ -1,11 +1,15 @@
 // types/next-auth.d.ts
 import { DefaultSession } from 'next-auth';
+import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 
 declare module 'next-auth' {
   interface Session {
-    accessToken: string;
-    refreshToken: string;
-    idToken: string;
+    token: {
+      accessToken: string;
+      refreshToken: string;
+      idToken: string;
+      exp: Timestamp;
+    };
     user: {
       id: string;
       role: string;

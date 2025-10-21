@@ -1,5 +1,7 @@
 import InternServices from '@/Services/InternServices';
 import { Success, Failed } from '@/types/ResponseTypes';
+import ResMiddleware from '@/app/middleware/response.middleware';
+import AuthMiddleware from '@/app/middleware/auth.middleware';
 
 type InternServicesType = InstanceType<typeof InternServices>;
 
@@ -9,82 +11,76 @@ export default class InternRoleHandler {
     this._service = InternService;
   }
 
-  async POST(req: Request) {
-    try {
-      const payload = await req.json();
-      const newUserId = await this._service.createRole(payload);
-      return Success({
-        statusCode: 201,
-        message: 'Intern Role Successfully Created',
-        data: {
-          id: newUserId,
-        },
-      });
-    } catch (error: any) {
-      return Failed({
-        statusCode: error.statusCode,
-        message: error.message,
-      });
-    }
-  }
+  POST = ResMiddleware(
+    AuthMiddleware(
+      async (req: Request) => {
+        const payload = await req.json();
+        const newUserId = await this._service.createRole(payload);
+        return {
+          statusCode: 201,
+          message: 'Intern Role Successfully Created',
+          data: {
+            id: newUserId,
+          },
+        };
+      },
+      { authorizeRole: ['Admin'] },
+    ),
+  );
 
-  async GET(req: Request) {
-    try {
+  GET = ResMiddleware(
+    AuthMiddleware(async (req: Request) => {
       const { searchParams } = new URL(req.url);
       const roleId = searchParams.get('id');
       if (!roleId) {
         const internRoles = await this._service.getAllRole();
-        return Success({
+        return {
           statusCode: 200,
           message: 'Get Intern Role Success',
           data: {
             roles: internRoles,
           },
-        });
+        };
       } else {
         const internRoles = await this._service.getSpecificRoleById(roleId);
-        return Success({
+        return {
           statusCode: 200,
           message: 'Get Intern Role Success',
           data: {
             role: internRoles,
           },
-        });
+        };
       }
-    } catch (error: any) {
-      return Failed({
-        statusCode: error.statusCode,
-        message: error.message,
-      });
-    }
-  }
+    }),
+  );
 
-  async DELETE(req: Request) {
-    try {
-      const payload = await req.json();
-      const { id } = payload;
-      await this._service.deleteRole(id);
-      return Success({
-        statusCode: 200,
-        message: 'Delete Intern Role Success',
-      });
-    } catch (error: any) {
-      return Failed({
-        statusCode: error.statusCode,
-        message: error.message,
-      });
-    }
-  }
-  async PUT(req: Request) {
-    try {
-      const payload = await req.json();
-      console.log(payload);
-      await this._service.updateRole(payload);
-    } catch (error: any) {
-      return Failed({
-        statusCode: error.statusCode,
-        message: error.message,
-      });
-    }
-  }
+  DELETE = ResMiddleware(
+    AuthMiddleware(
+      async (req: Request) => {
+        const payload = await req.json();
+        const { id } = payload;
+        await this._service.deleteRole(id);
+        return {
+          statusCode: 200,
+          message: 'Delete Intern Role Success',
+        };
+      },
+      { authorizeRole: ['Admin'] },
+    ),
+  );
+
+  PUT = ResMiddleware(
+    AuthMiddleware(
+      async (req: Request) => {
+        const payload = await req.json();
+        console.log(payload);
+        await this._service.updateRole(payload);
+        return {
+          statusCode: 200,
+          message: 'Update Intern Role Success',
+        };
+      },
+      { authorizeRole: ['Admin'] },
+    ),
+  );
 }

@@ -1,5 +1,7 @@
 import InternServices from '@/Services/InternServices';
 import { Success, Failed } from '@/types/ResponseTypes';
+import ResMiddleware from '@/app/middleware/response.middleware';
+import AuthMiddleware from '@/app/middleware/auth.middleware';
 
 type InternServicesType = InstanceType<typeof InternServices>;
 
@@ -9,20 +11,14 @@ export default class InternStageHandler {
     this._service = InternService;
   }
 
-  async GET() {
-    try {
+  GET = ResMiddleware(
+    AuthMiddleware(async () => {
       const activeBatchStage = await this._service.getActiveBatchStage();
-
-      return Success({
+      return {
         statusCode: 200,
         message: 'Get Intern Batch Stage Success',
         data: activeBatchStage,
-      });
-    } catch (error: any) {
-      return Failed({
-        statusCode: error.statusCode,
-        message: error.message,
-      });
-    }
-  }
+      };
+    }),
+  );
 }

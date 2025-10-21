@@ -8,7 +8,6 @@ import { BatchTableTypes } from '@/types/BatchTypes';
 import _Fetch from '@/hooks/request.hooks';
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,

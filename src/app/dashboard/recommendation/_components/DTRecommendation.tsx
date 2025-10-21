@@ -69,7 +69,6 @@ export default function DTRecommendation<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
-  console.log('data: ', data);
 
   //   useEffect(() => {
   //     if (advBatchFilter) {

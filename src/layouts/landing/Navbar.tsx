@@ -1,7 +1,7 @@
 'use client';
 
-import { Modal, ModalContainer, useModal } from '@faceless-ui/modal';
 import React from 'react';
+import { Modal, ModalContainer, useModal } from '@faceless-ui/modal';
 import { HiOutlineXMark } from 'react-icons/hi2';
 import { RxHamburgerMenu } from 'react-icons/rx';
 import Image from 'next/image';
@@ -33,7 +33,7 @@ export default function Navbar() {
           <div className='flex items-center'>
             <button className='hidden xl:inline border-2 border-light-gray rounded-[10px] h-fit w-fit p-1 cursor-pointer'>
               <Image
-                src='/icons/sun.svg'
+                src={'/icons/sun.svg'}
                 width={30}
                 height={30}
                 alt='toggle mode'
@@ -78,7 +78,7 @@ export default function Navbar() {
             <div className='items-center'>
               <button className='border-2 border-light-gray rounded-[10px] h-fit w-fit p-1 cursor-pointer'>
                 <Image
-                  src='/icons/sun.svg'
+                  src={'/icons/sun.svg'}
                   width={30}
                   height={30}
                   alt='toggle mode'

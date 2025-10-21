@@ -5,7 +5,7 @@ type ResponseProps = {
 };
 
 export function Success(props: ResponseProps) {
-  const data = props.data ? props.data : null;
+  const data = props.data ? props.data : undefined;
   const { statusCode, message } = props;
   const res = {
     status: 'Success',

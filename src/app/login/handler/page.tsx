@@ -33,7 +33,6 @@ export default function Handler() {
                 `/user?email=${session?.user.email}`,
                 'GET',
               );
-              console.log(isEmailExist);
               if (isEmailExist.verified) {
                 setLoading({
                   isLoading: true,

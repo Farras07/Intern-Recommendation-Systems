@@ -109,7 +109,7 @@ export default function ShortlistDialog({ open, onOpenChange }: DialogProps) {
     try {
       mutate({
         session: {
-          accessToken: session?.accessToken,
+          accessToken: session?.token.accessToken,
           name: session?.user.name,
           email: session?.user.email,
         },

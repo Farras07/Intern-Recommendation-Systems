@@ -5,7 +5,6 @@ import { Provider } from 'jotai';
 import { ReactNode } from 'react';
 import { Provider as ReduxProvider } from 'react-redux';
 import { store } from '@/lib/redux/store';
-import { SessionProvider } from 'next-auth/react';
 
 import Toast from '@/components/Toast';
 
