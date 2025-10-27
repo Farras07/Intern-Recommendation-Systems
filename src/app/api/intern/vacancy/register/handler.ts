@@ -22,61 +22,78 @@ export default class InternRegisterHandler {
     this._emailService = new EmailServices();
   }
 
-  POST = ResMiddleware(
-    AuthMiddleware(async (req: Request) => {
-      try {
-        const payload = await req.json();
-        console.log(payload);
-        await this._service.registerVacancy(payload);
-        await this._emailService.sendEmail({
-          email: payload.email,
-          name: payload.name,
-        });
-        return Success({
-          statusCode: 201,
-          message: 'Intern Register Success',
-        });
-      } catch (error: any) {
-        return Failed({
-          statusCode: error.statusCode,
-          message: error.message,
-        });
-      }
-    }),
-  );
+  POST = ResMiddleware(async (req: Request) => {
+    try {
+      const payload = await req.json();
+      await this._service.registerVacancy(payload);
+      await this._emailService.sendEmail({
+        email: payload.email,
+        name: payload.name,
+      });
+      return Success({
+        statusCode: 201,
+        message: 'Intern Register Success',
+      });
+    } catch (error: any) {
+      return Failed({
+        statusCode: error.statusCode,
+        message: error.message,
+      });
+    }
+  });
 
   GET = ResMiddleware(
     AuthMiddleware(
       async (req: Request) => {
         let registData;
         const { searchParams } = new URL(req.url);
-        const batchType = searchParams.get('batchType');
+        // const batchType = searchParams.get('batchType');
         const roleId = searchParams.get('role');
         const batchId = searchParams.get('batchId');
-        if (batchType == 'active') {
-          const activeBatch = await this._service.getActiveBatch();
-          if (roleId)
-            registData = await this._service.getRegistration(
-              activeBatch,
-              roleId,
-            );
-          else registData = await this._service.getRegistration(activeBatch);
-        } else {
-          if (roleId || batchId) {
-            if (roleId) {
-              const allBatch = await this._service.getBatches();
-              registData = await this._service.getRegistration(
-                allBatch,
-                roleId,
-              );
-            } else if (batchId) {
-              registData =
-                await this._service.getRegistrationByBatchId(batchId);
-            }
-          } else {
+        // if (batchType == 'active') {
+        //   const activeBatch = await this._service.getActiveBatch();
+        //   if (roleId)
+        //     registData = await this._service.getRegistration(
+        //       activeBatch,
+        //       roleId,
+        //     );
+        //   else registData = await this._service.getRegistration(activeBatch);
+        // } else {
+        //   if (roleId && batchId) {
+        //     const batchData = await this._service.getSpecificBatch(batchId)
+        //     registData = await this._service.getRegistration([batchData], roleId)
+        //   }
+        //   else if (roleId || batchId) {
+        //     if (roleId) {
+        //       const allBatch = await this._service.getBatches();
+        //       registData = await this._service.getRegistration(
+        //         allBatch,
+        //         roleId,
+        //       );
+        //     } else if (batchId) {
+        //       const batchData = await this._service.getSpecificBatch(batchId)
+        //       registData = await this._service.getRegistration([batchData])
+        //     }
+        //   } else {
+        //     const allBatch = await this._service.getBatches();
+        //     registData = await this._service.getRegistration(allBatch);
+        //   }
+        // }
+        if (roleId && batchId) {
+          const batchData = await this._service.getSpecificBatch(batchId);
+          registData = await this._service.getRegistration([batchData], roleId);
+        } else if (roleId || batchId) {
+          if (roleId) {
             const allBatch = await this._service.getBatches();
-            registData = await this._service.getRegistration(allBatch);
+            registData = await this._service.getRegistration(allBatch, roleId);
+          } else if (batchId) {
+            const batchData = await this._service.getSpecificBatch(batchId);
+            registData = await this._service.getRegistration([batchData]);
           }
+        } else {
+          console.log('heiii');
+          const allBatch = await this._service.getBatches();
+          registData = await this._service.getRegistration(allBatch);
         }
         return {
           statusCode: 200,

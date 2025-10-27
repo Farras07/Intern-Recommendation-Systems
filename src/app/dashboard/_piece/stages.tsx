@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { NotebookPen, Funnel, MessagesSquare, BadgeCheck } from 'lucide-react';
 import { useMutation } from '@/hooks/useQuery.hooks';
 import _Fetch from '@/hooks/request.hooks';
+import { stageOrder } from '@/constant/stages.items';
 
 export default function PieceStages({
   batchId,
@@ -11,13 +12,6 @@ export default function PieceStages({
   batchId: string;
   stage: string;
 }) {
-  const stageOrder = [
-    'Registration',
-    'Selection 1',
-    'Interview',
-    'Selection 2',
-    'Finish',
-  ];
   const currentIndex = stageOrder.indexOf(stage);
 
   const stagesIcon = [
@@ -25,7 +19,7 @@ export default function PieceStages({
     { name: 'Selection 1', icon: <Funnel size={40} /> },
     { name: 'Interview', icon: <MessagesSquare size={40} /> },
     { name: 'Selection 2', icon: <Funnel size={40} /> },
-    { name: 'Finish', icon: <BadgeCheck size={40} /> },
+    { name: 'Finished', icon: <BadgeCheck size={40} /> },
   ].map(s => ({
     ...s,
     link: `/dashboard/intern?batchId=${batchId}&stage=${s.name}`,
@@ -35,6 +29,8 @@ export default function PieceStages({
     path: `/intern/batch/${batchId}`,
     queryKey: ['batchActive'],
     method: 'PUT',
+    successMessage: 'Update Batch Stage Success',
+    errorMessage: 'Update Batch Stage Failed',
   });
 
   const onSubmit = async () => {
@@ -50,18 +46,39 @@ export default function PieceStages({
         });
         await _Fetch(`/intern/vacancy/register/${data.id}`, 'PUT', { vacancy });
       });
+    } else if (stage === 'Interview') {
+      const regisData = await _Fetch(
+        `/intern/vacancy/register?batchId=${batchId}`,
+        'GET',
+      );
+      regisData.map(async data => {
+        const vacancy = data.vacancy.map(vac => {
+          const lastStageIndex = stageOrder.indexOf(vac.lastStage);
+          if (lastStageIndex == currentIndex) {
+            vac.lastStage = stageOrder[currentIndex + 1];
+          }
+          return vac;
+        });
+        await _Fetch(`/intern/vacancy/register/${data.id}`, 'PUT', { vacancy });
+      });
     }
     mutate({ stage: stageOrder[currentIndex + 1] });
   };
+  console.log(stage);
   return (
     <section className='w-full h-full flex flex-col gap-2 mt-2'>
       <section className='flex gap-7'>
         <div className='w-fit border-b-4 border-b-black p-2'>
           <Typography weight='semibold'>{batchId}</Typography>
         </div>
-        <Button className='cursor-pointer' onClick={onSubmit}>
-          Update to Next Stage
+        <Button className='cursor-pointer'>
+          <a href={`/dashboard/intern?batchId=${batchId}`}>View Registrant</a>
         </Button>
+        {['Registration', 'Interview'].includes(stage) && (
+          <Button className='cursor-pointer' onClick={onSubmit}>
+            Update to Next Stage
+          </Button>
+        )}
       </section>
       <div className='flex justify-center items-center gap-2'>
         {stagesIcon.map((stage, index) => {

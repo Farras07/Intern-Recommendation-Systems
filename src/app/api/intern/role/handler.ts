@@ -1,5 +1,4 @@
 import InternServices from '@/Services/InternServices';
-import { Success, Failed } from '@/types/ResponseTypes';
 import ResMiddleware from '@/app/middleware/response.middleware';
 import AuthMiddleware from '@/app/middleware/auth.middleware';
 
@@ -73,7 +72,6 @@ export default class InternRoleHandler {
     AuthMiddleware(
       async (req: Request) => {
         const payload = await req.json();
-        console.log(payload);
         await this._service.updateRole(payload);
         return {
           statusCode: 200,

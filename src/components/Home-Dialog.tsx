@@ -38,6 +38,7 @@ import { formTeamInviteSchema } from '@/constant/schemas.items';
 import { useMutation } from '@/hooks/useQuery.hooks';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/redux/store';
+import { useEffect } from 'react';
 
 type DialogProps = DialogValueTypes & {
   open: boolean;
@@ -151,7 +152,7 @@ export default function HomeDialogPopUp({
               <FormField
                 control={formTeamInvite.control}
                 name='role'
-                render={({ field }) => (
+                render={() => (
                   <FormItem className='flex flex-col'>
                     <FormLabel>Role</FormLabel>
                     <DropdownMenu>

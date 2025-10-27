@@ -4,13 +4,13 @@ import CollapsibleContainer from '@/components/CollapsibleContainer';
 import Typography from '@/components/Typography';
 import Filter from './_components/Filter';
 import { useQuery } from '@/hooks/useQuery.hooks';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { BatchResponseType } from '@/types/BatchTypes';
 import Loading from '@/app/Loading';
 import { DANGER_TOAST, showToast } from '@/components/Toast';
-import ConfirmationDialog from './_components/ConfirmationDialog';
+import GeneratorConfirmationDialog from './_components/GeneratorConfirmDialog';
 import { RecommendationType } from '@/types/RecommendationTypes';
 import DTRecommendation from './_components/DTRecommendation';
 import { columnsRecommendationsData } from '@/constant/table/recommendation.columns';
@@ -18,22 +18,15 @@ import ShortlistDialog from './_components/ShotlistDialog';
 import { useDispatch } from 'react-redux';
 import { setShortlistCandidate } from '@/lib/redux/slices/shortlistSlice';
 import InvariantError from '@/exceptions/InvariantError';
+import { useSession } from 'next-auth/react';
 
 export default function Recommendation() {
+  const { data: session } = useSession();
   const dispatch = useDispatch();
   const { data, isLoading } = useQuery({
     path: '/intern/batch',
     queryKey: ['batch'],
   });
-
-  const [recommendation, setRecommendation] =
-    useState<RecommendationType | null>(null);
-  useEffect(() => {
-    const stored = localStorage.getItem('recommendation');
-    if (stored) {
-      setRecommendation(JSON.parse(stored));
-    }
-  }, []);
 
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] =
     useState<boolean>(false);
@@ -47,7 +40,7 @@ export default function Recommendation() {
   const [matrixLabels, setMatrixLabels] = useState<string[]>([]);
   const [alternativeLoading, setAlternativeLoading] = useState<boolean>(false);
 
-  const stage = selectedBatch?.stage?.toLowerCase().replace(/\s+/g, '_') || '';
+  const stage = selectedBatch?.stage?.replace(/\s+/g, '_') || '';
   const { data: recommendationData, isLoading: isRecommendationLoading } =
     useQuery({
       path: selectedBatch
@@ -59,16 +52,6 @@ export default function Recommendation() {
       ],
       enabledVar: generateToggle && !!selectedBatch,
     });
-
-  useEffect(() => {
-    if (generateToggle && !isRecommendationLoading) {
-      setGenerateToggle(false);
-      localStorage.setItem(
-        'recommendation',
-        JSON.stringify(recommendationData),
-      );
-    }
-  }, [generateToggle, isRecommendationLoading]);
 
   const handleGenerate = () => {
     setIsConfirmDialogOpen(!isConfirmDialogOpen);
@@ -167,15 +150,17 @@ export default function Recommendation() {
                   isLoading={alternativeLoading}
                 />
               </section>
-              <section className='flex justify-center'>
-                <Button
-                  variant={'hero-card'}
-                  className='cursor-pointer'
-                  onClick={handleShortlist}
-                >
-                  Shortlist Candidates
-                </Button>
-              </section>
+              {session && session.user.role === 'Admin' && (
+                <section className='flex justify-center'>
+                  <Button
+                    variant={'hero-card'}
+                    className='cursor-pointer'
+                    onClick={handleShortlist}
+                  >
+                    Shortlist Candidates
+                  </Button>
+                </section>
+              )}
             </>
           ) : (
             <>
@@ -210,55 +195,19 @@ export default function Recommendation() {
             </>
           )}
         </section>
-        {/* <section className={`h-[90%] flex flex-col gap-4 ${recommendation?? 'justify-center items-center'}`}>
-          {recommendation? (
-            <>
-                <Typography 
-                    variant='h6' 
-                    color='dark'
-                >
-                    {selectedBatch ? selectedBatch.batchName : ''}
-                </Typography>
-                <section className='flex gap-5 justify-center'>
-                    {Array.isArray(recommendation) && recommendation.map((item, index: number) => (
-                        <Button key={index}>{item.role}</Button>
-                    ))}
-
-                </section>
-            </>
-          ): (
-            <>
-                <div className={`flex-col gap-5 items-center ${isRecommendationLoading? 'hidden': 'flex'}`}>
-                    <Image src='/icons/generate.svg' width={300} height={300} alt='' />
-                    <Typography color='lightgray' variant='c2'>
-                    Click Generate Recommendation Button to Generate Recommendation
-                    </Typography>
-                    <Button 
-                        className='w-fit cursor-pointer'
-                        onClick={handleGenerate}
-                    >
-                        Generate Recommendation</Button>
-                </div>
-                <div className={`flex-col gap-5 items-center ${!isRecommendationLoading? 'hidden': 'flex'}`}>
-                    <Loading/>
-                    <Typography color='lightgray' variant='c2'>
-                    Wait a minute!. Generating Intern Recomendation...
-                    </Typography>
-                </div>
-            </>
-
-          )}  
-        </section> */}
       </CollapsibleContainer>
-      <ConfirmationDialog
+      <GeneratorConfirmationDialog
         open={isConfirmDialogOpen}
         onOpenChange={setIsConfirmDialogOpen}
         isFilterExist={selectedBatch ? true : false}
         generateToggle={setGenerateToggle}
       />
+
       <ShortlistDialog
         open={isShortlistDialogOpen}
         onOpenChange={setIsShortlistDialogOpen}
+        stage={selectedBatch?.stage}
+        currentBatch={selectedBatch}
       />
     </Layout>
   );

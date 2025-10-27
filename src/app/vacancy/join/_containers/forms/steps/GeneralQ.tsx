@@ -26,7 +26,6 @@ export default function GeneralQ() {
   });
 
   const onNext = async (values: z.infer<typeof formGeneralQVacancySchema>) => {
-    console.log(values);
     dispatch(setData(values));
     dispatch(setStep({ type: 'Next' }));
   };

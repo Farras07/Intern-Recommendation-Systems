@@ -4,7 +4,7 @@ import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { RegistDataTypes } from '@/types/registDataTypes';
 import Typography from '@/components/Typography';
-import { ArrowUpDown, File, MoreHorizontal, X } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuPortal,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -23,11 +21,15 @@ import {
 import { Button } from '@/components/ui/button';
 import { useDispatch } from 'react-redux';
 import { setCurrentApplyId } from '@/lib/redux/slices/registerSlice';
+import { useMutation } from '@/hooks/useQuery.hooks';
+import { stageOrder } from '../stages.items';
 
 export const columnsRegisterData = ({
   dialogToggle,
+  currentStage,
 }: {
   dialogToggle: () => void;
+  currentStage?: string | null;
 }): ColumnDef<RegistDataTypes>[] => [
   {
     accessorKey: 'id',
@@ -99,8 +101,23 @@ export const columnsRegisterData = ({
     size: 30,
     cell: ({ getValue }) => {
       const value = getValue();
-      const { title } = value.role;
-      return <Typography variant='c2'>{title}</Typography>;
+      const lastStage = value?.lastStage ?? 'N/A';
+      const currentLastStageIndex = stageOrder.indexOf(lastStage);
+      let currentStageIndex;
+      if (currentStage) currentStageIndex = stageOrder.indexOf(currentStage);
+      const title = value?.role?.title ?? 'N/A';
+      return (
+        <Typography variant='c2'>
+          {title}{' '}
+          {currentStageIndex
+            ? currentStageIndex > currentLastStageIndex && (
+                <span className='text-red-500 text-[12px] block'>
+                  (Eliminated: {lastStage})
+                </span>
+              )
+            : ''}
+        </Typography>
+      );
     },
   },
   {
@@ -108,12 +125,23 @@ export const columnsRegisterData = ({
     header: 'Role 2',
     size: 30,
     cell: ({ getValue }) => {
-      let title = 'none';
       const value = getValue();
-      if (value) title = value.role.title;
-      //   const { title } = value.role
+      const lastStage = value?.lastStage ?? 'N/A';
+      const currentLastStageIndex = stageOrder.indexOf(lastStage);
+      let currentStageIndex;
+      if (currentStage) currentStageIndex = stageOrder.indexOf(currentStage);
+      const title = value?.role?.title ?? 'N/A';
       return value ? (
-        <Typography variant='c2'>{title}</Typography>
+        <Typography variant='c2'>
+          {title}{' '}
+          {currentStageIndex
+            ? currentStageIndex > currentLastStageIndex && (
+                <span className='text-red-500 text-[12px] block'>
+                  (Eliminated: {lastStage})
+                </span>
+              )
+            : ''}
+        </Typography>
       ) : (
         <div className='w-10 flex justify-center'>
           <X color='#FF0000' />
@@ -150,17 +178,17 @@ export const columnsRegisterData = ({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {value.map((vac, index) =>
-                vac.portofolioLink !== '' || vac.achievement.cert !== '' ? (
+                vac?.portfolio?.link !== '' || vac?.achievement?.cert !== '' ? (
                   <DropdownMenuSub key={index}>
                     <DropdownMenuSubTrigger>
-                      {vac.role.title}
+                      {vac?.role?.title ?? 'Unknown Role'} {/* ✅ fixed */}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
-                        {vac.portofolioLink !== '' && (
+                        {vac?.portfolio?.link && (
                           <DropdownMenuItem>
                             <a
-                              href={vac.portofolioLink}
+                              href={vac.portfolio.link}
                               target='_blank'
                               rel='noopener noreferrer'
                               className='w-full h-full'
@@ -169,7 +197,7 @@ export const columnsRegisterData = ({
                             </a>
                           </DropdownMenuItem>
                         )}
-                        {vac.achievement.cert !== '' && (
+                        {vac?.achievement?.cert && (
                           <DropdownMenuItem>
                             <a
                               href={vac.achievement.cert}
@@ -196,29 +224,45 @@ export const columnsRegisterData = ({
     id: 'actions',
     enableHiding: false,
     size: 30,
-    cell: ({ row }) => {
-      const dispatch = useDispatch();
-      const handleEditClick = () => {
-        dispatch(setCurrentApplyId(row.original.id));
-        dialogToggle();
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleEditClick}>Edit</DropdownMenuItem>
-            <DropdownMenuItem>Delete</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ({ row }) => <ActionPart row={row} dialogToggle={dialogToggle} />,
   },
 ];
+
+export function ActionPart({
+  row,
+  dialogToggle,
+}: {
+  row: any;
+  dialogToggle: () => void;
+}) {
+  const { mutate } = useMutation({
+    path: `/intern/vacancy/register/${row.original.id}`,
+    queryKey: ['registrationData'],
+    method: 'DELETE',
+  });
+  const dispatch = useDispatch();
+  const handleEditClick = () => {
+    dispatch(setCurrentApplyId(row.original.id));
+    dialogToggle();
+  };
+  const handleDeleteClick = () => {
+    mutate({});
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant='ghost' className='h-8 w-8 p-0'>
+          <span className='sr-only'>Open menu</span>
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align='end'>
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleEditClick}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDeleteClick}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

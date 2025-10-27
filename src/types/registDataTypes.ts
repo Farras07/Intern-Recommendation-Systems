@@ -6,7 +6,6 @@ export type RegistDataTypes = VacancyRegisType & {
   id: string;
   name: string;
   phone: string;
-  interviewRate?: string;
   vacancy: VacancyRegisType[];
 };
 
@@ -18,8 +17,12 @@ export type VacancyRegisType = {
   };
   exp: string;
   id: string;
-  portofolioLink: string;
-  portfolioRate: string;
+  lastStage: string;
+  portfolio: {
+    link: string;
+    rate: number;
+  };
+  interviewRate: string;
   role?: {
     id: string;
     title: string;

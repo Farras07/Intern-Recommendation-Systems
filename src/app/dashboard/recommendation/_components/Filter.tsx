@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { BatchResponseType } from '@/types/BatchTypes';
+import Typography from '@/components/Typography';
 
 export default function Filter({
   batchdata,
@@ -19,6 +20,7 @@ export default function Filter({
   selectedBatch: BatchResponseType | null;
   setSelectedBatch: (batch: BatchResponseType) => void;
 }) {
+  console.log(batchdata);
   return (
     <section className='flex gap-3 items-center'>
       <DropdownMenu>
@@ -34,16 +36,26 @@ export default function Filter({
           <DropdownMenuSeparator />
 
           <DropdownMenuRadioGroup value={selectedBatch?.batchId}>
-            {batchdata?.map((batch, index) =>
-              batch.stage === 'Selection 1' || batch.stage === 'Selection 2' ? (
-                <DropdownMenuRadioItem
-                  key={index}
-                  value={batch.batchId}
-                  onClick={() => setSelectedBatch(batch)}
-                >
-                  {batch.batchName} - {batch.stage}
-                </DropdownMenuRadioItem>
-              ) : null,
+            {batchdata && batchdata.length > 0 ? (
+              batchdata
+                .filter(
+                  batch =>
+                    batch.stage === 'Selection 1' ||
+                    batch.stage === 'Selection 2',
+                )
+                .map((batch, index) => (
+                  <DropdownMenuRadioItem
+                    key={index}
+                    value={batch.batchId}
+                    onClick={() => setSelectedBatch(batch)}
+                  >
+                    {batch.batchName} - {batch.stage}
+                  </DropdownMenuRadioItem>
+                ))
+            ) : (
+              <Typography variant='c1'>
+                You don&apos;t have active batch
+              </Typography>
             )}
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>

@@ -64,7 +64,10 @@ export function internRegisterRouter() {
 export function internRegisterSlugRouter() {
   const GET = internRegisterSlugHandler.GET.bind(internRegisterSlugHandler);
   const PUT = internRegisterSlugHandler.PUT.bind(internRegisterSlugHandler);
-  return { GET, PUT };
+  const DELETE = internRegisterSlugHandler.DELETE.bind(
+    internRegisterSlugHandler,
+  );
+  return { GET, PUT, DELETE };
 }
 export function internVacancyRouter() {
   const POST = internVacancyHandler.POST.bind(internVacancyHandler);

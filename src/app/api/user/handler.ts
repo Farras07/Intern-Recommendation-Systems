@@ -1,7 +1,5 @@
 import InvariantError from '@/exceptions/InvariantError';
 import UserServices from '@/Services/UserServices';
-import { Success, Failed } from '@/types/ResponseTypes';
-import sendEmail from '@/Services/EmailServices';
 import EmailServices from '@/Services/EmailServices';
 import ResMiddleware from '@/app/middleware/response.middleware';
 import AuthMiddleware from '@/app/middleware/auth.middleware';
@@ -37,25 +35,23 @@ export default class UserHandler {
     ),
   );
 
-  GET = ResMiddleware(
-    AuthMiddleware(async (req: Request) => {
-      const { searchParams } = new URL(req.url);
-      const email = searchParams.get('email');
-      let user;
-      if (email) user = await this._service.getUser(email);
-      else {
-        const role = searchParams.get('role');
-        if (role) user = await this._service.getUserByRole(role);
-        else user = await this._service.getUser();
-      }
+  GET = ResMiddleware(async (req: Request) => {
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get('email');
+    let user;
+    if (email) user = await this._service.getUser(email);
+    else {
+      const role = searchParams.get('role');
+      if (role) user = await this._service.getUserByRole(role);
+      else user = await this._service.getUser();
+    }
 
-      return {
-        statusCode: 200,
-        message: 'Get User Successfully',
-        data: user,
-      };
-    }),
-  );
+    return {
+      statusCode: 200,
+      message: 'Get User Successfully',
+      data: user,
+    };
+  });
 
   PUT = ResMiddleware(
     AuthMiddleware(

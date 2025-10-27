@@ -1,13 +1,12 @@
 import InvariantError from '@/exceptions/InvariantError';
 import RecommendationServices from '@/Services/RecommendationServices';
-import { Success, Failed } from '@/types/ResponseTypes';
-import sendEmail from '@/Services/EmailServices';
 import InternServices from '@/Services/InternServices';
 import NotFoundError from '@/exceptions/NotFoundError';
 import { VacancyRegisType } from '@/types/registDataTypes';
 import MeetServices from '@/Services/MeetServices';
 import ResMiddleware from '@/app/middleware/response.middleware';
 import AuthMiddleware from '@/app/middleware/auth.middleware';
+import { stageOrder } from '@/constant/stages.items';
 
 type RecomServicesType = InstanceType<typeof RecommendationServices>;
 type InternServicesType = InstanceType<typeof InternServices>;
@@ -33,8 +32,20 @@ export default class RecommendationHandler {
         const { searchParams } = new URL(req.url);
         const batchId = searchParams.get('batchId') || '';
         const stage = searchParams.get('stage') || '';
-        const altData =
-          await this._internService.getRegistrationByBatchId(batchId);
+        let altData;
+        if (stage && stage === 'Selection_2') {
+          const internData =
+            await this._internService.getRegistrationByBatchId(batchId);
+          const lastStageIndex = stageOrder.indexOf('Selection 2');
+          altData = internData.filter(candidate => {
+            return candidate.vacancy.some(vac => {
+              const vacStageIndex = stageOrder.indexOf(vac.lastStage);
+              return vacStageIndex == lastStageIndex;
+            });
+          });
+        } else {
+          altData = await this._internService.getRegistrationByBatchId(batchId);
+        }
         if (altData.length === 0)
           throw new NotFoundError('Registration Data Not Found');
         const vacancyIds =
@@ -86,12 +97,18 @@ export default class RecommendationHandler {
               );
             let topsisRank;
 
-            if (stage == 'selection_1')
-              topsisRank = await this._service.topsisSelection1(
+            if (stage == 'Selection_1')
+              topsisRank = await this._service.topsisSelection(
                 vacGroup.list,
                 ahpGlobalWeightResult,
+                1,
               );
-            // else if (stage == 'selection_2') topsisRank = await this._service.topsisSelection1(vacGroup.list, ahpGlobalWeightResult)
+            else if (stage == 'Selection_2')
+              topsisRank = await this._service.topsisSelection(
+                vacGroup.list,
+                ahpGlobalWeightResult,
+                2,
+              );
             else throw new InvariantError('Stage Query Param is Wrong!!');
 
             return { id: vacGroup.id, role: role.title, rank: topsisRank };
@@ -112,11 +129,17 @@ export default class RecommendationHandler {
     AuthMiddleware(
       async (req: Request) => {
         const payload = await req.json();
-        await this._meetService.createMeet(payload);
-        return {
-          statusCode: 200,
-          message: 'Create Meet Room Success',
-        };
+        const { searchParams } = new URL(req.url);
+        const stageFinal = searchParams.get('final') || '';
+        if (stageFinal) {
+          await this._internService.sendAcceptanceEmail(payload);
+        } else {
+          await this._meetService.createMeet(payload);
+          return {
+            statusCode: 200,
+            message: 'Create Meet Room Success',
+          };
+        }
       },
       { authorizeRole: ['Admin'] },
     ),

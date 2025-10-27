@@ -109,8 +109,6 @@ export function DialogPopUp({
   });
 
   const onSubmitVacancy = async (values: z.infer<typeof formVacancySchema>) => {
-    console.log(values);
-    console.log(data.id);
     let toastMessage = '';
     try {
       if (action === 'Add') {

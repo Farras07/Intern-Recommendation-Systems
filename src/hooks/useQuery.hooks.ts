@@ -4,28 +4,60 @@ import {
   useMutation as useRQMutation,
   useQueryClient,
 } from '@tanstack/react-query';
+import _Fetch from './request.hooks';
+import { DANGER_TOAST, SUCCESS_TOAST, showToast } from '@/components/Toast';
 
 type UseQueryTypes = {
   path: string;
   queryKey: (string | number | object)[];
   method?: 'POST' | 'PUT' | 'DELETE';
   enabledVar?: any;
+  timeout?: number;
+  errorMessage?: string;
+  successMessage?: string;
 };
 
-export function useQuery({ path, queryKey, enabledVar }: UseQueryTypes) {
+export function useQuery({
+  path,
+  queryKey,
+  enabledVar,
+  timeout = 10000,
+}: UseQueryTypes) {
   return useRQQuery({
     queryKey,
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}${path}`);
-      if (!res.ok) throw new BaseError(res.statusText, res.status);
-      const json = await res.json();
-      return json.data;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      try {
+        const response = await _Fetch(
+          path,
+          'GET',
+          undefined,
+          controller.signal,
+        );
+        return response;
+      } catch (err) {
+        console.log(err);
+        if (err instanceof BaseError && err.message === 'Request timed out') {
+          // You can handle timeout differently if you want
+          throw err;
+        }
+        throw err;
+      } finally {
+        clearTimeout(timeoutId);
+      }
     },
     enabled: enabledVar,
   });
 }
 
-export function useMutation({ path, queryKey, method }: UseQueryTypes) {
+export function useMutation({
+  path,
+  queryKey,
+  method,
+  errorMessage = 'Request Failed: ',
+  successMessage = 'Request Success',
+}: UseQueryTypes) {
   const queryClient = useQueryClient();
 
   return useRQMutation({
@@ -43,6 +75,10 @@ export function useMutation({ path, queryKey, method }: UseQueryTypes) {
       if (queryKey) {
         queryClient.invalidateQueries({ queryKey: queryKey });
       }
+      showToast(successMessage, SUCCESS_TOAST);
+    },
+    onError: error => {
+      showToast(`${errorMessage} : ${error.message}`, DANGER_TOAST);
     },
   });
 }

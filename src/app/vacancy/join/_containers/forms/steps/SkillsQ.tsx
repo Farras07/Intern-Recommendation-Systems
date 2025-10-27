@@ -77,14 +77,17 @@ export default function SkillsQ() {
         return { ...userSkill };
       });
 
-      const { batch, role, ...restPropVac } = vacancy;
+      const { batch: _batch, role: _role, ...restPropVac } = vacancy;
       return {
         ...restPropVac,
         skills: mergedSkills,
         exp: userData.exp,
         interviewRate: 1,
         lastStage: 'Registration',
-        portofolioLink: userData.portofolioLink,
+        portfolio: {
+          link: userData.portofolioLink,
+          rate: 1,
+        },
         achievement: userData.achievement,
       };
     });

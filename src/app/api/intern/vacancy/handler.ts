@@ -1,5 +1,4 @@
 import InternServices from '@/Services/InternServices';
-import { Success, Failed } from '@/types/ResponseTypes';
 import InvariantError from '@/exceptions/InvariantError';
 import ResMiddleware from '@/app/middleware/response.middleware';
 import AuthMiddleware from '@/app/middleware/auth.middleware';
@@ -26,20 +25,18 @@ export default class InternVacancyHandler {
     }),
   );
 
-  GET = ResMiddleware(
-    AuthMiddleware(async (req: Request) => {
-      const { searchParams } = new URL(req.url);
-      // const filter = searchParams.get('filter');
-      const vacancy = await this._service.getOpenVacancy();
-      return {
-        statusCode: 200,
-        message: 'Intern Vacancy Successfully Retrieved',
-        data: {
-          vacancy,
-        },
-      };
-    }),
-  );
+  GET = ResMiddleware(async (req: Request) => {
+    // const { searchParams } = new URL(req.url);
+    // const filter = searchParams.get('filter');
+    const vacancy = await this._service.getOpenVacancy();
+    return {
+      statusCode: 200,
+      message: 'Intern Vacancy Successfully Retrieved',
+      data: {
+        vacancy,
+      },
+    };
+  });
 
   DELETE = ResMiddleware(
     AuthMiddleware(async (req: Request) => {

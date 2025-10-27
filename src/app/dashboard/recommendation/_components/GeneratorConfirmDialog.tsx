@@ -2,10 +2,8 @@
 
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -19,7 +17,7 @@ type DialogProps = {
   generateToggle: (state: boolean) => void;
 };
 
-export default function ConfirmationDialog({
+export default function GeneratorConfirmationDialog({
   open,
   onOpenChange,
   isFilterExist,

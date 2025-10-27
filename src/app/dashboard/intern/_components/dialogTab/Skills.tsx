@@ -27,7 +27,6 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
 import { useEffect } from 'react';
 
-// 🔹 Child component to render each skills group
 function SkillRateFields({
   control,
   index,

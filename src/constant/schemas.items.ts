@@ -110,9 +110,12 @@ export const formSkillsQVacancySchema = z.object({
   ),
 });
 
-export const formInterviewSchema = z.object({
-  interviewRate: z.string().nonempty({ message: 'Interview is required!' }),
-});
+export const formInterviewSchema = z.array(
+  z.object({
+    idVacancy: z.string().nonempty({ message: 'Id Vacancy is required!' }),
+    interviewRate: z.string().nonempty({ message: 'Interview is required!' }),
+  }),
+);
 
 export const formUpdateGeneralVacancySchema = z.object({
   name: z.string().optional(),
@@ -182,3 +185,21 @@ export const formShortlistCandidates = z.object({
     }),
   ),
 });
+
+export const formShortlistFinalCandidates = z.object({
+  candidateAmount: z
+    .number({
+      required_error: 'Candidate Amount is required!',
+      invalid_type_error: 'Field value must be a number!',
+    } as any)
+    .min(1, { message: 'Candidate Amount must be greater than 0!' }),
+});
+
+export const formPortfolioSchema = z.array(
+  z.object({
+    idVacancy: z.string().nonempty({ message: 'Id Vacancy is required!' }),
+    portfolioRate: z
+      .string()
+      .nonempty({ message: 'Portfolio Rate is required!' }),
+  }),
+);

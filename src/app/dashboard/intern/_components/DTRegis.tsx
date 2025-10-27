@@ -37,10 +37,13 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   isLoading?: boolean;
   batchFilter?: string;
+  batchSpecificMode?: boolean;
   className?: {
     table?: string;
     header?: string;
   };
+  isError?: boolean;
+  error?: any;
 }
 
 export default function DTRegis<TData, TValue>({
@@ -49,6 +52,8 @@ export default function DTRegis<TData, TValue>({
   isLoading,
   className,
   batchFilter,
+  isError,
+  error,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'name', desc: false },
@@ -93,6 +98,7 @@ export default function DTRegis<TData, TValue>({
           }
           className='max-w-sm'
         />
+
         <Input
           placeholder='Filter Batch Id...'
           value={(table.getColumn('batch')?.getFilterValue() as string) ?? ''}
@@ -101,6 +107,7 @@ export default function DTRegis<TData, TValue>({
           }
           className='max-w-sm'
         />
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant='outline' className='ml-auto'>
@@ -162,7 +169,13 @@ export default function DTRegis<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className='h-24 text-center'>
-                {isLoading ? <Loading /> : 'No Results'}
+                {isLoading ? (
+                  <Loading />
+                ) : isError && error.message === 'Request timed out' ? (
+                  'Request Timed Out'
+                ) : (
+                  'No Results'
+                )}
               </TableCell>
             </TableRow>
           )}

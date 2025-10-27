@@ -31,8 +31,6 @@ import { BatchItemType, FormVacancyItemType } from '@/types/OpenVacancyTypes';
 export default function RolesQ() {
   const dispatch = useDispatch();
   const data = useSelector((state: RootState) => state.roleVacancyPick.data);
-  const dataForm = useSelector((state: RootState) => state.form.data);
-  console.log(dataForm);
   const { data: openVacancyData } = useQuery({
     path: '/intern/vacancy?filter=open',
     queryKey: ['vacancyOpen'],
@@ -42,7 +40,6 @@ export default function RolesQ() {
   const roleVacancy = vacancies
     .filter((vacancy: BatchItemType) => vacancy.batch.id == data[0]?.batch.id)
     .filter((vacancy: { id: string }) => vacancy.id != data[0]?.id);
-  console.log(roleVacancy);
   const form = useForm<z.infer<typeof formRoleQVacancySchema>>({
     resolver: zodResolver(formRoleQVacancySchema),
     defaultValues: {

@@ -73,6 +73,7 @@ export default class MeetServices {
         pdfBuffer,
       );
     } catch (error) {
+      console.log(error);
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
       }

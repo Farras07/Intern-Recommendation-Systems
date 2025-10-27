@@ -1,5 +1,5 @@
 import InternServices from '@/Services/InternServices';
-import { Success, Failed } from '@/types/ResponseTypes';
+import { Success } from '@/types/ResponseTypes';
 import ResMiddleware from '@/app/middleware/response.middleware';
 import AuthMiddleware from '@/app/middleware/auth.middleware';
 
@@ -38,6 +38,20 @@ export default class InternRegisterSlugHandler {
           message: 'Update Intern Registration Data Success',
         });
       },
+    ),
+  );
+
+  DELETE = ResMiddleware(
+    AuthMiddleware(
+      async (req: Request, { params }: { params: { id: string } }) => {
+        const { id } = await params;
+        await this._service.deleteRegistrationData(id);
+        return Success({
+          statusCode: 200,
+          message: 'Update Intern Registration Data Success',
+        });
+      },
+      { authorizeRole: ['Admin'] },
     ),
   );
 }

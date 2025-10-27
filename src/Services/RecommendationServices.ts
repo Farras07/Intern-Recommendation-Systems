@@ -1,6 +1,5 @@
 import { adminDb as db } from '@/lib/firebase-admin';
 import InternalServerError from '@/exceptions/InternalServerError';
-import NotFoundError from '@/exceptions/NotFoundError';
 import BaseError from '@/exceptions/BaseError';
 import AHP from '@/lib/ahp';
 import TOPSIS from '@/lib/topsis';
@@ -59,13 +58,21 @@ export default class InternServices {
     }
   }
 
-  async topsisSelection1(payload: any, ahpWeight: any) {
+  async topsisSelection(payload: any, ahpWeight: any, selectionStepNum: 1 | 2) {
     try {
-      const topsisCalc = await this._topsisContext.calcTopsisSelection1(
-        payload,
-        ahpWeight,
-      );
-      return topsisCalc;
+      if (selectionStepNum === 1) {
+        const topsisCalc = await this._topsisContext.calcTopsisSelection1(
+          payload,
+          ahpWeight,
+        );
+        return topsisCalc;
+      } else {
+        const topsisCalc = await this._topsisContext.calcTopsisSelection2(
+          payload,
+          ahpWeight,
+        );
+        return topsisCalc;
+      }
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);

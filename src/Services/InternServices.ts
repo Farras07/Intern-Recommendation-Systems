@@ -13,11 +13,17 @@ import {
 import { formatLocalDateTimeServer } from '@/hooks/date-format.hooks';
 import { firestore } from 'firebase-admin';
 import { VacancyRegisType } from '@/types/registDataTypes';
+import EmailServices from './EmailServices';
+import { generateAcceptedCandidatesPDF } from '@/lib/pdfGenerator';
+type EmailServicesType = InstanceType<typeof EmailServices>;
 
 export default class InternServices {
   _db: typeof db;
+  private _emailServices: EmailServicesType;
+
   constructor(database: any) {
     this._db = database;
+    this._emailServices = new EmailServices();
   }
 
   async createRole(payload: any) {
@@ -598,6 +604,17 @@ export default class InternServices {
     }
   }
 
+  async deleteRegistrationData(id: string) {
+    try {
+      await db.collection('register').doc(id).delete();
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
   async streamVacancyData() {
     const encoder = new TextEncoder();
     let keepAlive: NodeJS.Timeout;
@@ -746,5 +763,71 @@ export default class InternServices {
         Connection: 'keep-alive',
       },
     });
+  }
+
+  async sendAcceptanceEmail(payload: any) {
+    try {
+      const { candidates, values } = payload;
+      const { recommendation } = candidates;
+      const data = recommendation.map(recom => {
+        const topRank = recom.rank
+          .sort((a, b) => a.rank - b.rank)
+          .slice(0, values.candidateAmount);
+        return {
+          ...recom,
+          rank: topRank,
+        };
+      });
+      const regisData: any[] = [];
+      const pdfBuffer = await generateAcceptedCandidatesPDF(
+        data,
+        candidates.batch,
+      );
+      for (const recom of data) {
+        for (const rankData of recom.rank) {
+          const alreadyFetched = regisData.some(r => r.id === rankData.applyId);
+          if (!alreadyFetched) {
+            const registrationData = await this.getSpecificRegistration(
+              rankData.applyId,
+            );
+            regisData.push(registrationData);
+          }
+          await this._emailServices.sendAcceptanceEmail(
+            rankData.candidateName,
+            rankData.candidateEmail,
+            candidates.batch,
+            recom.role,
+            pdfBuffer,
+          );
+        }
+      }
+      // Update vacancies in DB
+      for (const recom of data) {
+        for (const rankData of recom.rank) {
+          const regisIndex = regisData.findIndex(
+            r => r.id === rankData.applyId,
+          );
+          if (regisIndex === -1) continue;
+
+          const regis = regisData[regisIndex];
+          const updatedVacancies = regis.vacancy.map((vac: any) =>
+            vac.id === rankData.vacancyId
+              ? { ...vac, lastStage: 'Finished' }
+              : vac,
+          );
+
+          regisData[regisIndex] = { ...regis, vacancy: updatedVacancies };
+
+          await this.updateRegistrationData(rankData.applyId, {
+            vacancy: updatedVacancies,
+          });
+        }
+      }
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
   }
 }

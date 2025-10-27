@@ -7,15 +7,21 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
-import { Form } from '@/components/ui/form';
-
-import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import Typography from '@/components/Typography';
+import { Button } from '@/components/ui/button';
+import { formPortfolioSchema } from '@/constant/schemas.items';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { formInterviewSchema } from '@/constant/schemas.items';
 import { likertScale } from '@/constant/criteriaValue.items';
 import FormFieldSelectPiece from '@/app/vacancy/join/_containers/forms/pieces/FormFieldSelectPiece';
 import { useSelector } from 'react-redux';
@@ -24,7 +30,7 @@ import { useMutation } from '@/hooks/useQuery.hooks';
 import { DANGER_TOAST, SUCCESS_TOAST, showToast } from '@/components/Toast';
 import { VacancyRegisType } from '@/types/registDataTypes';
 
-export default function Interview({
+export default function Portfolio({
   onOpenChange,
 }: {
   onOpenChange: (open: boolean) => void;
@@ -32,8 +38,16 @@ export default function Interview({
   const currentRegisData = useSelector(
     (state: RootState) => state.registerVacancy.regisData,
   );
+  const currentApplyId = useSelector(
+    (state: RootState) => state.registerVacancy.currentApplyId,
+  );
 
   const [vacancy, setVacancy] = useState<VacancyRegisType[]>([]);
+  const { mutate } = useMutation({
+    path: `/intern/vacancy/register/${currentApplyId}`,
+    queryKey: ['registrationData'],
+    method: 'PUT',
+  });
 
   useEffect(() => {
     if (currentRegisData?.vacancy) {
@@ -41,66 +55,59 @@ export default function Interview({
     }
   }, [currentRegisData]);
 
-  const currentApplyId = useSelector(
-    (state: RootState) => state.registerVacancy.currentApplyId,
-  );
-
-  const { mutate } = useMutation({
-    path: `/intern/vacancy/register/${currentApplyId}`,
-    queryKey: ['registrationData'],
-    method: 'PUT',
-  });
-
-  const formInterview = useForm<{
-    interviewList: z.infer<typeof formInterviewSchema>;
+  const formPortfolio = useForm<{
+    portfolioList: z.infer<typeof formPortfolioSchema>;
   }>({
-    resolver: zodResolver(z.object({ interviewList: formInterviewSchema })),
+    resolver: zodResolver(z.object({ portfolioList: formPortfolioSchema })),
     defaultValues: {
-      interviewList: vacancy.map(vac => ({
+      portfolioList: vacancy.map(vac => ({
         idVacancy: vac.id,
-        interviewRate: String(vac.interviewRate) || '1',
+        portfolioRate: String(vac.portfolio.rate) || '1',
       })),
     },
   });
 
   const { fields } = useFieldArray({
-    control: formInterview.control,
-    name: 'interviewList',
+    control: formPortfolio.control,
+    name: 'portfolioList',
   });
 
   useEffect(() => {
     if (vacancy.length > 0) {
-      formInterview.reset({
-        interviewList: vacancy.map(vac => ({
+      formPortfolio.reset({
+        portfolioList: vacancy.map(vac => ({
           idVacancy: vac.id,
-          interviewRate: String(vac.interviewRate) || '1',
+          portfolioRate: String(vac.portfolio.rate) || '1',
         })),
       });
     }
   }, [vacancy]);
 
   const onSubmit = async (values: {
-    interviewList: z.infer<typeof formInterviewSchema>;
+    portfolioList: z.infer<typeof formPortfolioSchema>;
   }) => {
     const toast = { message: '', type: DANGER_TOAST };
-    const interviewMap = new Map(
-      values.interviewList.map(int => [
+    const portfolioMap = new Map(
+      values.portfolioList.map(int => [
         int.idVacancy,
-        Number(int.interviewRate),
+        Number(int.portfolioRate),
       ]),
     );
-
     const updatedVacancy = vacancy.map(vac => ({
       ...vac,
-      interviewRate: interviewMap.get(vac.id) || vac.interviewRate,
+      portfolio: {
+        link: vac.portfolio.link,
+        rate: portfolioMap.get(vac.id) || vac.portfolio.rate,
+      },
     }));
 
     try {
       mutate({ vacancy: updatedVacancy });
-      toast.message = 'Update Interview Rate Success';
+      toast.message = 'Update Portfolio Rate Success';
       toast.type = SUCCESS_TOAST;
     } catch (error) {
-      toast.message = `Update Interview Rate Failed: ${error}`;
+      toast.message = `Update Portfolio Rate Failed: ${error}`;
+      console.error(error);
     } finally {
       showToast(toast.message, toast.type);
       onOpenChange(false);
@@ -108,13 +115,13 @@ export default function Interview({
   };
 
   return (
-    <Form {...formInterview}>
-      <form onSubmit={formInterview.handleSubmit(onSubmit)}>
+    <Form {...formPortfolio}>
+      <form onSubmit={formPortfolio.handleSubmit(onSubmit)}>
         <Card>
           <CardHeader>
             <CardTitle>
               <Typography variant='h6' weight='bold'>
-                Interview
+                Portfolio
               </Typography>
             </CardTitle>
             <CardDescription>
@@ -129,11 +136,11 @@ export default function Interview({
               {fields.map((field, index) => (
                 <FormFieldSelectPiece
                   key={field.id}
-                  name={`interviewList.${index}.interviewRate`}
-                  control={formInterview.control}
+                  name={`portfolioList.${index}.portfolioRate`}
+                  control={formPortfolio.control}
                   label={{
-                    button: `${vacancy[index]?.role?.title || 'Unknown'} Interview Rate`,
-                    sel: 'Interview Rate',
+                    button: `${vacancy[index]?.role?.title || 'Unknown'} Portfolio Rate`,
+                    sel: 'Portfolio Rate',
                   }}
                   choices={likertScale}
                   variantTypo='c2'

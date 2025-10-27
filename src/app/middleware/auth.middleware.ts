@@ -23,6 +23,11 @@ export default function AuthMiddleware(
       throw new AuthenticationError(
         'Your session token expired!. Please Relogin',
       );
+    if (!session.user.verified) {
+      throw new AuthorizationError(
+        'You are not verified user to access this resource!',
+      );
+    }
 
     const { authorizeRole = [] } = permittedRole || {};
     const hasPermission = authorizeRole.includes(session.user.role);

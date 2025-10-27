@@ -1,29 +1,16 @@
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { AppWindowIcon, CodeIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import General from './General';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 import Interview from './Interview';
 import Skills from './Skills';
+import Portfolio from './portfolio';
 
 type DialogProps = {
   open: boolean;
@@ -49,6 +36,7 @@ export default function DialogTab({ open, onOpenChange }: DialogProps) {
             <TabsList>
               <TabsTrigger value='general'>General</TabsTrigger>
               <TabsTrigger value='skills'>Skills</TabsTrigger>
+              <TabsTrigger value='portfolio'>Portfolio</TabsTrigger>
               <TabsTrigger value='interview'>Interview</TabsTrigger>
             </TabsList>
             <TabsContent value='general'>
@@ -56,6 +44,9 @@ export default function DialogTab({ open, onOpenChange }: DialogProps) {
             </TabsContent>
             <TabsContent value='skills'>
               <Skills onOpenChange={onOpenChange} />
+            </TabsContent>
+            <TabsContent value='portfolio'>
+              <Portfolio onOpenChange={onOpenChange} />
             </TabsContent>
             <TabsContent value='interview'>
               <Interview onOpenChange={onOpenChange} />
