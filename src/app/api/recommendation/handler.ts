@@ -38,7 +38,7 @@ export default class RecommendationHandler {
             await this._internService.getRegistrationByBatchId(batchId);
           const lastStageIndex = stageOrder.indexOf('Selection 2');
           altData = internData.filter(candidate => {
-            return candidate.vacancy.some(vac => {
+            return candidate.vacancy.some((vac: VacancyRegisType) => {
               const vacStageIndex = stageOrder.indexOf(vac.lastStage);
               return vacStageIndex == lastStageIndex;
             });

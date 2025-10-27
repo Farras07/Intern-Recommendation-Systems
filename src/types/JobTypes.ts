@@ -23,8 +23,14 @@ export type jobRoleType = {
 };
 
 export type VacancyLandingType = {
-  role: string;
-  batch: string;
+  role: jobRoleType;
+  batch: {
+    id: string;
+    name: string;
+    stage: string;
+    startDate: number;
+    endDate: number;
+  };
   status: 'Pending' | 'Hiring' | 'Done' | 'Failed';
-  deadline: string;
+  deadline?: string;
 };

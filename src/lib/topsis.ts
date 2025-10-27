@@ -14,12 +14,14 @@ export default class TOPSIS {
   ) {
     try {
       // 1️⃣ Flatten all vacancies into one array
-      const criteriaMatrix = candidatesData.map(candidate => {
+      const criteriaMatrix = candidatesData.map((candidate: any) => {
         const exp = Number(candidate.exp);
         const portfolioValue = candidate.portfolio.rate
           ? Number(candidate.portfolio.rate)
           : 1;
-        const skillRate = candidate.skills.map(skill => Number(skill.rate));
+        const skillRate = candidate.skills.map((skill: any) =>
+          Number(skill.rate),
+        );
         const achievementValues = [
           Number(candidate.achievement.lvlRate),
           Number(candidate.achievement.champRate),
@@ -46,9 +48,10 @@ export default class TOPSIS {
       // 3️⃣ Normalize matrix
       const normalizedMatrix = numericMatrix.map(row =>
         row.map((value, j) => {
-          const colValues = numericMatrix.map(r => r[j]);
-          const denom = sqrt(sum(colValues.map(v => v * v)));
-          return denom === 0 ? 0 : value / denom;
+          const numValue = Number(value);
+          const colValues = numericMatrix.map(r => Number(r[j]));
+          const denom = Math.sqrt(colValues.reduce((sum, v) => sum + v * v, 0));
+          return denom === 0 ? 0 : numValue / denom;
         }),
       );
 
@@ -70,8 +73,20 @@ export default class TOPSIS {
 
       // 6️⃣ Calculate distances and TOPSIS scores
       const distances = weightedMatrix.map(row => {
-        const sp = sqrt(sum(row.map((v, j) => (v - ideal[j]) ** 2)));
-        const sn = sqrt(sum(row.map((v, j) => (v - negativeIdeal[j]) ** 2)));
+        const sp = Math.sqrt(
+          row.reduce((sum, v, j) => {
+            const diff = Number(v) - Number(ideal[j]);
+            return sum + diff * diff;
+          }, 0),
+        );
+
+        const sn = Math.sqrt(
+          row.reduce((sum, v, j) => {
+            const diff = Number(v) - Number(negativeIdeal[j]);
+            return sum + diff * diff;
+          }, 0),
+        );
+
         return { sp, sn, score: sn / (sp + sn) };
       });
 
@@ -105,13 +120,15 @@ export default class TOPSIS {
   ) {
     try {
       // 1️⃣ Flatten all vacancies into one array
-      const criteriaMatrix = candidatesData.map(candidate => {
+      const criteriaMatrix = candidatesData.map((candidate: any) => {
         const exp = Number(candidate.exp);
         const interviewValue = candidate.interviewRate;
         const portfolioValue = candidate.portfolio.rate
           ? Number(candidate.portfolio.rate)
           : 1;
-        const skillRate = candidate.skills.map(skill => Number(skill.rate));
+        const skillRate = candidate.skills.map((skill: any) =>
+          Number(skill.rate),
+        );
         const achievementValues = [
           Number(candidate.achievement.lvlRate),
           Number(candidate.achievement.champRate),
@@ -141,9 +158,10 @@ export default class TOPSIS {
       // 3️⃣ Normalize matrix
       const normalizedMatrix = numericMatrix.map(row =>
         row.map((value, j) => {
-          const colValues = numericMatrix.map(r => r[j]);
-          const denom = sqrt(sum(colValues.map(v => v * v)));
-          return denom === 0 ? 0 : value / denom;
+          const numValue = Number(value);
+          const colValues = numericMatrix.map(r => Number(r[j]));
+          const denom = Math.sqrt(colValues.reduce((sum, v) => sum + v * v, 0));
+          return denom === 0 ? 0 : numValue / denom;
         }),
       );
 
@@ -163,8 +181,20 @@ export default class TOPSIS {
 
       // 6️⃣ Calculate distances and TOPSIS scores
       const distances = weightedMatrix.map(row => {
-        const sp = sqrt(sum(row.map((v, j) => (v - ideal[j]) ** 2)));
-        const sn = sqrt(sum(row.map((v, j) => (v - negativeIdeal[j]) ** 2)));
+        const sp = Math.sqrt(
+          row.reduce((sum, v, j) => {
+            const diff = Number(v) - Number(ideal[j]);
+            return sum + diff * diff;
+          }, 0),
+        );
+
+        const sn = Math.sqrt(
+          row.reduce((sum, v, j) => {
+            const diff = Number(v) - Number(negativeIdeal[j]);
+            return sum + diff * diff;
+          }, 0),
+        );
+
         return { sp, sn, score: sn / (sp + sn) };
       });
 

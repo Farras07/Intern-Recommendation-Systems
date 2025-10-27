@@ -2,6 +2,7 @@ import { google } from 'googleapis';
 import BaseError from '@/exceptions/BaseError';
 import InternalServerError from '@/exceptions/InternalServerError';
 import {
+  InterviewerType,
   RecommendationType,
   ShortlistRecommendationType,
 } from '@/types/RecommendationTypes';
@@ -206,7 +207,7 @@ export default class MeetServices {
           pdfBuffer,
         );
       }
-      judges.map(async judge => {
+      judges.map(async (judge: InterviewerType) => {
         if (judge.role === recom.role) {
           judge.judgesEmail.map(async email => {
             await this._emailServices.sendInterviewInvitationEmailJudge(

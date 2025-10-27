@@ -8,6 +8,7 @@ import { columnsRegisterData } from '@/constant/table/intern_register.columns';
 import DTRegis from '@/app/dashboard/intern/_components/DTRegis';
 import { useSearchParams } from 'next/navigation';
 import { stageOrder } from '@/constant/stages.items';
+import { RegistDataTypes } from '@/types/registDataTypes';
 
 export default function DefaultRegistrationPage({
   dialogToggle,
@@ -39,7 +40,7 @@ export default function DefaultRegistrationPage({
     if (data && stage) {
       const currentStageIndex = stageOrder.indexOf(stage);
 
-      const filteredData = data.filter(candidate => {
+      const filteredData = data.filter((candidate: RegistDataTypes) => {
         return candidate.vacancy.some(vac => {
           const vacStageIndex = stageOrder.indexOf(vac.lastStage);
           return vacStageIndex >= currentStageIndex;

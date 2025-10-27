@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { useQuery } from '@/hooks/useQuery.hooks';
 import Loading from '@/app/Loading';
+import { jobRoleType } from '@/types/JobTypes';
 
 export default function Filter({
   role,
@@ -68,7 +69,7 @@ export default function Filter({
             onValueChange={value => {
               if (value != 'all') {
                 const roleSelect = data.roles.filter(
-                  role => role.id == value,
+                  (role: jobRoleType) => role.id == value,
                 )[0];
                 setSelectedRole(roleSelect.title);
                 setRole(value);
@@ -82,7 +83,7 @@ export default function Filter({
             {isLoading ? (
               <Loading />
             ) : (
-              data.roles.map(role => (
+              data.roles.map((role: jobRoleType) => (
                 <DropdownMenuRadioItem key={role.id} value={role.id}>
                   {role.title}
                 </DropdownMenuRadioItem>

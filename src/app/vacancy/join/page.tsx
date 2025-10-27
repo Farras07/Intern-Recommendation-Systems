@@ -16,6 +16,7 @@ export default function Join() {
   });
 
   const vacancies = openVacancyData?.vacancy ?? [];
+  console.log(vacancies);
 
   return (
     <div className='w-screen h-auto bg-ghost-white'>

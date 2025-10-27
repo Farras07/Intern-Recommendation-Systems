@@ -44,6 +44,7 @@ import Calendar from '@/components/App-Calendar';
 import ShortlistConfirmationDialog from './ShortlistConfirmDialog';
 import { BatchResponseType } from '@/types/BatchTypes';
 import { stageOrder } from '@/constant/stages.items';
+import { userData } from '@/types/UserTypes';
 
 type DialogProps = {
   open: boolean;
@@ -357,7 +358,7 @@ export default function ShortlistDialog({
                                     Select Judges
                                   </DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  {judges.map(judge => (
+                                  {judges.map((judge: userData) => (
                                     <DropdownMenuCheckboxItem
                                       key={judge.id}
                                       checked={selected.includes(judge.email)}

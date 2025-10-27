@@ -1,4 +1,4 @@
-export type RegistDataTypes = VacancyRegisType & {
+export type RegistDataTypes = {
   batch: string;
   cv: string;
   educationInstitution: string;

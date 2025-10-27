@@ -15,6 +15,10 @@ import { firestore } from 'firebase-admin';
 import { VacancyRegisType } from '@/types/registDataTypes';
 import EmailServices from './EmailServices';
 import { generateAcceptedCandidatesPDF } from '@/lib/pdfGenerator';
+import {
+  RankRecommendationType,
+  RecommendationType,
+} from '@/types/RecommendationTypes';
 type EmailServicesType = InstanceType<typeof EmailServices>;
 
 export default class InternServices {
@@ -769,9 +773,12 @@ export default class InternServices {
     try {
       const { candidates, values } = payload;
       const { recommendation } = candidates;
-      const data = recommendation.map(recom => {
+      const data = recommendation.map((recom: RecommendationType) => {
         const topRank = recom.rank
-          .sort((a, b) => a.rank - b.rank)
+          .sort(
+            (a: RankRecommendationType, b: RankRecommendationType) =>
+              a.rank - b.rank,
+          )
           .slice(0, values.candidateAmount);
         return {
           ...recom,

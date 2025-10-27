@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { RegistDataTypes } from '@/types/registDataTypes';
+import { RegistDataTypes, VacancyRegisType } from '@/types/registDataTypes';
 import Typography from '@/components/Typography';
 import { ArrowUpDown, MoreHorizontal, X } from 'lucide-react';
 import {
@@ -96,11 +96,11 @@ export const columnsRegisterData = ({
     },
   },
   {
-    accessorFn: row => row.vacancy[0],
+    accessorFn: row => row.vacancy[0] as VacancyRegisType | undefined,
     header: 'Role 1',
     size: 30,
     cell: ({ getValue }) => {
-      const value = getValue();
+      const value = getValue() as VacancyRegisType | undefined;
       const lastStage = value?.lastStage ?? 'N/A';
       const currentLastStageIndex = stageOrder.indexOf(lastStage);
       let currentStageIndex;
@@ -121,11 +121,11 @@ export const columnsRegisterData = ({
     },
   },
   {
-    accessorFn: row => row.vacancy[1],
+    accessorFn: row => row.vacancy[1] as VacancyRegisType | undefined,
     header: 'Role 2',
     size: 30,
     cell: ({ getValue }) => {
-      const value = getValue();
+      const value = getValue() as VacancyRegisType | undefined;
       const lastStage = value?.lastStage ?? 'N/A';
       const currentLastStageIndex = stageOrder.indexOf(lastStage);
       let currentStageIndex;
@@ -150,11 +150,11 @@ export const columnsRegisterData = ({
     },
   },
   {
-    accessorFn: row => row.vacancy,
+    accessorFn: row => row.vacancy as VacancyRegisType[] | undefined,
     header: 'Documents',
     size: 30,
     cell: ({ row, getValue }) => {
-      const value = getValue();
+      const value = getValue() as VacancyRegisType[] | undefined;
       if (!value) return null;
 
       return (
@@ -181,7 +181,7 @@ export const columnsRegisterData = ({
                 vac?.portfolio?.link !== '' || vac?.achievement?.cert !== '' ? (
                   <DropdownMenuSub key={index}>
                     <DropdownMenuSubTrigger>
-                      {vac?.role?.title ?? 'Unknown Role'} {/* ✅ fixed */}
+                      {vac?.role?.title ?? 'Unknown Role'}
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>

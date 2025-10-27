@@ -1,38 +1,27 @@
 name: CI/CD to Vercel
+
 on:
   push:
-    branches: ["master"]
+    branches:
+      - master
+      - test
 
 jobs:
-  build_and_deploy:
+  # ========================
+  # 🚀 Production Deployment
+  # ========================
+  deploy_production:
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     env:
       NODE_ENV: production
-      TEST: "heyy"
-      # Required for Vercel Deployment
+      DEPLOY_ENV: production
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      # ✅ Firebase Client (Frontend)
-      NEXT_PUBLIC_FIREBASE_APIKEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_APIKEY }}
-      NEXT_PUBLIC_FIREBASE_AUTHDOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTHDOMAIN }}
-      NEXT_PUBLIC_FIREBASE_PROJECTID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECTID }}
-      NEXT_PUBLIC_FIREBASE_STORAGEBUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGEBUCKET }}
-      NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID }}
-      NEXT_PUBLIC_FIREBASE_APPID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APPID }}
-      NEXT_PUBLIC_FIREBASE_MEASUREMENTID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENTID }}
-
-      # ✅ Firebase Admin (Server)
-      NEXTAUTH_FIREBASE_PROJECT_ID: ${{ secrets.NEXTAUTH_FIREBASE_PROJECT_ID }}
-      NEXTAUTH_FIREBASE_PRIVATE_KEY_ID: ${{ secrets.NEXTAUTH_FIREBASE_PRIVATE_KEY_ID }}
-      NEXTAUTH_FIREBASE_PRIVATE_KEY: ${{ secrets.NEXTAUTH_FIREBASE_PRIVATE_KEY }}
-      NEXTAUTH_FIREBASE_CLIENT_EMAIL: ${{ secrets.NEXTAUTH_FIREBASE_CLIENT_EMAIL }}
-      NEXTAUTH_FIREBASE_CLIENT_ID: ${{ secrets.NEXTAUTH_FIREBASE_CLIENT_ID }}
-
-      # Other
-      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL_PROD }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET_PROD }}
+      # 🔥 add your Firebase + other prod envs here...
 
     steps:
       - name: Checkout code
@@ -46,17 +35,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Debug Firebase Admin envs
-        run: |
-          echo "Project ID: $NEXTAUTH_FIREBASE_PROJECT_ID"
-          echo "Client Email: $NEXTAUTH_FIREBASE_CLIENT_EMAIL"
-          echo "Private Key length: ${#NEXTAUTH_FIREBASE_PRIVATE_KEY}"
-
-
       - name: Build project
         run: npm run build
-        
-      - name: Deploy to Vercel
+
+      - name: Deploy to Vercel (Production)
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ env.VERCEL_TOKEN }}
@@ -64,3 +46,43 @@ jobs:
           vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
           vercel-args: "--prod"
           working-directory: "."
+
+  # =====================
+  # 🧪 Preview Deployment
+  # =====================
+  deploy_preview:
+    if: github.ref != 'refs/heads/master'
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: Test
+      DEPLOY_ENV: preview
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL_PREVIEW }}
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET_PREVIEW }}
+      # 🔥 add your Firebase + other test envs here...
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy to Vercel (Preview)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ env.VERCEL_TOKEN }}
+          vercel-org-id: ${{ env.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ env.VERCEL_PROJECT_ID }}
+          working-directory: "."
+          # ⚠️ no --prod flag → creates a preview deployment

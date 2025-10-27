@@ -3,12 +3,12 @@
 import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { VacancyLandingType } from '@/types/JobTypes';
 import { formatLocalDateTime } from '@/hooks/date-format.hooks';
 import Typography from '@/components/Typography';
 import { useDispatch } from 'react-redux';
 import { setStep } from '@/lib/redux/slices/formSlice';
 import { setPushRoleVacancy } from '@/lib/redux/slices/roleVacancySlice';
+import { FormVacancyItemType } from '@/types/OpenVacancyTypes';
 
 type ColumnsVacancyLandingPropsType = {
   setShowPopup: React.Dispatch<React.SetStateAction<boolean>>;
@@ -16,7 +16,7 @@ type ColumnsVacancyLandingPropsType = {
 
 export const columnsVacancyLanding = ({
   setShowPopup,
-}: ColumnsVacancyLandingPropsType): ColumnDef<VacancyLandingType>[] => [
+}: ColumnsVacancyLandingPropsType): ColumnDef<FormVacancyItemType>[] => [
   {
     accessorKey: 'id',
     header: 'Vacancy Id',
@@ -86,6 +86,7 @@ export const columnsVacancyLanding = ({
     size: 30,
     cell: ({ row }) => {
       const dispatch = useDispatch();
+      console.log(row.original);
       return (
         <div className='flex justify-end'>
           <Button

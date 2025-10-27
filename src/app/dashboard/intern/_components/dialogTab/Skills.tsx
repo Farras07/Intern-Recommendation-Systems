@@ -23,18 +23,26 @@ import { RootState } from '@/lib/redux/store';
 import { useMutation } from '@/hooks/useQuery.hooks';
 import { DANGER_TOAST, SUCCESS_TOAST, showToast } from '@/components/Toast';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, useFieldArray } from 'react-hook-form';
+import {
+  useForm,
+  useFieldArray,
+  Control,
+  FieldArrayWithId,
+} from 'react-hook-form';
 import { z } from 'zod';
 import { useEffect } from 'react';
+import { VacancyRegisType } from '@/types/registDataTypes';
+
+type FormSkillValues = z.infer<typeof formUpdateSkillVacancySchema>;
 
 function SkillRateFields({
   control,
   index,
   vacancy,
 }: {
-  control: any;
+  control: Control<FormSkillValues>;
   index: number;
-  vacancy: any[];
+  vacancy: VacancyRegisType[];
 }) {
   const { fields: skillRateFields } = useFieldArray({
     control,
@@ -131,7 +139,7 @@ export default function Skills({
   const currentApplyId = useSelector(
     (state: RootState) => state.registerVacancy.currentApplyId,
   );
-  const vacancy = roleVacancyPick?.vacancy ?? [];
+  const vacancy: VacancyRegisType[] = roleVacancyPick?.vacancy ?? [];
 
   const { mutate } = useMutation({
     path: `/intern/vacancy/register/${currentApplyId}`,
@@ -139,9 +147,7 @@ export default function Skills({
     method: 'PUT',
   });
 
-  const formSkillsUpdate = useForm<
-    z.infer<typeof formUpdateSkillVacancySchema>
-  >({
+  const formSkillsUpdate = useForm<FormSkillValues>({
     resolver: zodResolver(formUpdateSkillVacancySchema),
     defaultValues: { vacancy: [] },
   });
@@ -156,7 +162,7 @@ export default function Skills({
             skillName: skill.skillName,
             rate: skill?.rate || '1',
           })),
-          portofolioLink: role?.portofolioLink || '',
+          portofolioLink: role?.portfolio.link || '',
           achievement: {
             lvlRate: role?.achievement.lvlRate || '1',
             champRate: role?.achievement.champRate || '1',

@@ -4,6 +4,7 @@ import { NotebookPen, Funnel, MessagesSquare, BadgeCheck } from 'lucide-react';
 import { useMutation } from '@/hooks/useQuery.hooks';
 import _Fetch from '@/hooks/request.hooks';
 import { stageOrder } from '@/constant/stages.items';
+import { RegistDataTypes } from '@/types/registDataTypes';
 
 export default function PieceStages({
   batchId,
@@ -39,7 +40,7 @@ export default function PieceStages({
         `/intern/vacancy/register?batchId=${batchId}`,
         'GET',
       );
-      regisData.map(async data => {
+      regisData.map(async (data: RegistDataTypes) => {
         const vacancy = data.vacancy.map(vac => {
           vac.lastStage = stageOrder[currentIndex + 1];
           return vac;
@@ -51,7 +52,7 @@ export default function PieceStages({
         `/intern/vacancy/register?batchId=${batchId}`,
         'GET',
       );
-      regisData.map(async data => {
+      regisData.map(async (data: RegistDataTypes) => {
         const vacancy = data.vacancy.map(vac => {
           const lastStageIndex = stageOrder.indexOf(vac.lastStage);
           if (lastStageIndex == currentIndex) {

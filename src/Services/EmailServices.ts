@@ -1,5 +1,5 @@
 import React from 'react';
-import nodemailer from 'nodemailer';
+import nodemailer, { Transporter } from 'nodemailer';
 import { render } from '@react-email/render';
 import InviteAlertEmail from '@/constant/email_template/InviteAlert';
 import RegisterAlertEmail from '@/constant/email_template/RegisterAlertEmail';
@@ -8,7 +8,7 @@ import InterviewInvitationEmailJudge from '@/constant/email_template/InterviewIn
 import AcceptanceInternEmail from '@/constant/email_template/AcceptanceIntern';
 
 export default class EmailServices {
-  transporter: typeof nodemailer.createTransport;
+  private transporter: Transporter; // ✅ correct type
   constructor() {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
