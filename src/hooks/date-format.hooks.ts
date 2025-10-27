@@ -90,3 +90,30 @@ export function addMinutesJKT(dateString: string, minutesToAdd: number) {
 
   return `${year}-${month}-${day}T${hour}:${minute}:${second}+07:00`;
 }
+
+export const combineToUTC = (date: Date, time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const combined = new Date(date);
+  combined.setHours(hours, minutes, 0, 0);
+  return combined.toISOString();
+};
+
+export const UTCToLocalTimezone = (utc: string) => {
+  const date = new Date(utc);
+
+  const datePart = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+
+  const timePart = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false, // 24-hour format
+  }).format(date);
+
+  return `${datePart} ${timePart}`;
+};

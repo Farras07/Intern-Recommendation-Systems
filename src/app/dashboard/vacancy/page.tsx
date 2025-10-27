@@ -16,7 +16,10 @@ import { showToast, DANGER_TOAST, SUCCESS_TOAST } from '@/components/Toast';
 import _Fetch from '@/hooks/request.hooks';
 import { BatchTableTypes } from '@/types/BatchTypes';
 import { columnsBatch } from '@/constant/table//batch.columns';
-import { formatLocalDateTime } from '@/hooks/date-format.hooks';
+import {
+  formatLocalDateTime,
+  UTCToLocalTimezone,
+} from '@/hooks/date-format.hooks';
 
 export default function Vacancy() {
   const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -66,8 +69,11 @@ export default function Vacancy() {
             'GET',
           );
 
-          const batchStartDateTime = new Date(batch.startDate._seconds * 1000);
-          const batchEndDateTime = new Date(batch.endDate._seconds * 1000);
+          const startDate = UTCToLocalTimezone(batch.startDate);
+          const endDate = UTCToLocalTimezone(batch.endDate);
+
+          const batchStartDateTime = new Date(batch.startDate);
+          const batchEndDateTime = new Date(batch.endDate);
           const currentDate = new Date();
 
           if (currentDate > batchEndDateTime) status = 'Done';
@@ -82,8 +88,8 @@ export default function Vacancy() {
             ...data,
             batch: batch.batchName,
             role: role.title,
-            startDate: formatLocalDateTime(batchStartDateTime),
-            endDate: formatLocalDateTime(batchEndDateTime),
+            startDate,
+            endDate,
             no: index + 1,
             status,
           };
@@ -97,9 +103,11 @@ export default function Vacancy() {
       const batchData = JSON.parse(event.data);
       const fixData = batchData.map((data: any, index: number) => {
         let status = 'Pending';
+        const startDate = UTCToLocalTimezone(data.startDate);
+        const endDate = UTCToLocalTimezone(data.endDate);
 
-        const batchStartDateTime = new Date(data.startDate._seconds * 1000);
-        const batchEndDateTime = new Date(data.endDate._seconds * 1000);
+        const batchStartDateTime = new Date(data.startDate);
+        const batchEndDateTime = new Date(data.endDate);
         const currentDate = new Date();
 
         if (currentDate > batchEndDateTime) status = 'Done';
@@ -108,8 +116,8 @@ export default function Vacancy() {
 
         return {
           ...data,
-          startDate: formatLocalDateTime(batchStartDateTime),
-          endDate: formatLocalDateTime(batchEndDateTime),
+          startDate,
+          endDate,
           no: index + 1,
           status,
         };

@@ -45,6 +45,7 @@ import {
   formRoleSchema,
 } from '@/constant/schemas.items';
 import { BatchResponseType } from '@/types/BatchTypes';
+import { combineToUTC } from '@/hooks/date-format.hooks';
 
 type DialogProps = DialogValueTypes & {
   open: boolean;
@@ -134,12 +135,21 @@ export function DialogPopUp({
 
   const onSubmitBatch = async (values: z.infer<typeof formBatchSchema>) => {
     let toastMessage = '';
+    const payload = {
+      ...values,
+      batchStartDate: combineToUTC(
+        values.batchStartDate,
+        values.batchStartTime,
+      ),
+      batchEndDate: combineToUTC(values.batchEndDate, values.batchEndTime),
+    };
     try {
       if (action === 'Add') {
-        await addBatchSubmit(values);
+        await addBatchSubmit(payload);
       }
       if (action === 'Edit') {
-        await updateBatchSubmit({ batchId: data.batchId, ...values });
+        // await updateBatchSubmit({ batchId: data.batchId, ...values });
+        await updateBatchSubmit({ batchId: data.batchId, ...payload });
       }
 
       toastMessage = `${action} ${target} Success`;
@@ -613,6 +623,7 @@ const updateRoleSubmit = async ({ id, title, description }: jobRoleType) => {
 };
 const addBatchSubmit = async (payload: any) => {
   try {
+    console.log(payload);
     const req = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/intern/batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -128,30 +128,13 @@ export default class InternServices {
   async createBatch(payload: BatchPayloadAddType) {
     try {
       const id = `batch-${nanoid(5)}`;
-      const startDatePart = formatLocalDateTimeServer(
-        payload.batchStartDate,
-      ).split(',');
-      const endDatePart = formatLocalDateTimeServer(payload.batchEndDate).split(
-        ',',
-      );
-
-      const formattedStartDate = new Date(
-        `${startDatePart[0]},${startDatePart[1]},${startDatePart[2]},${payload.batchStartTime}`,
-      );
-      const formattedEndDate = new Date(
-        `${endDatePart[0]},${endDatePart[1]},${endDatePart[2]}, ${payload.batchEndTime}`,
-      );
-
-      await this._db
-        .collection('batch')
-        .doc(id)
-        .set({
-          batchId: id,
-          batchName: payload.batchName,
-          startDate: firestore.Timestamp.fromDate(formattedStartDate),
-          endDate: firestore.Timestamp.fromDate(formattedEndDate),
-          stage: 'Registration',
-        });
+      await this._db.collection('batch').doc(id).set({
+        batchId: id,
+        batchName: payload.batchName,
+        startDate: payload.batchStartDate,
+        endDate: payload.batchEndDate,
+        stage: 'Registration',
+      });
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
@@ -206,30 +189,14 @@ export default class InternServices {
   async updateBatch(payload: BatchPayloadUpdateType) {
     try {
       const { batchId } = payload;
-      const startDatePart = formatLocalDateTimeServer(
-        payload.batchStartDate,
-      ).split(',');
-      const endDatePart = formatLocalDateTimeServer(payload.batchEndDate).split(
-        ',',
-      );
-
-      const formattedStartDate = new Date(
-        `${startDatePart[0]},${startDatePart[1]},${startDatePart[2]}, ${payload.batchStartTime}`,
-      );
-      const formattedEndDate = new Date(
-        `${endDatePart[0]},${endDatePart[1]},${endDatePart[2]}, ${payload.batchEndTime}`,
-      );
-
-      await this._db
-        .collection('batch')
-        .doc(batchId)
-        .update({
-          batchId,
-          batchName: payload.batchName,
-          startDate: firestore.Timestamp.fromDate(formattedStartDate),
-          endDate: firestore.Timestamp.fromDate(formattedEndDate),
-        });
+      await this._db.collection('batch').doc(batchId).update({
+        batchId,
+        batchName: payload.batchName,
+        startDate: payload.batchStartDate,
+        endDate: payload.batchEndDate,
+      });
     } catch (error) {
+      console.log(error);
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
       }
@@ -377,17 +344,20 @@ export default class InternServices {
       const currentTime = new Date();
 
       // Step 1: Get batches that haven't ended yet
-      const batchSnap = await this._db
-        .collection('batch')
-        .where('endDate', '>', currentTime)
-        .get();
+      const batchSnap = await this._db.collection('batch').get(); // no need for Firestore '>' query if it's a string; filter later
 
       if (batchSnap.empty) throw new NotFoundError('No active batch found!');
 
-      // Step 2: Filter in-memory by startDate < now
+      // Step 2: Filter in-memory by startDate <= now < endDate
       const openBatches = batchSnap.docs
         .map(doc => doc.data())
-        .filter(batch => batch.startDate.toDate() < currentTime);
+        .filter(batch => {
+          const startDate = new Date(batch.startDate);
+          const endDate = new Date(batch.endDate);
+          return startDate <= currentTime && currentTime <= endDate;
+        });
+
+      if (openBatches.length === 0) throw new NotFoundError('No open batches!');
 
       // Step 3: For each batch, fetch its vacancies
       const openVacancies = await Promise.all(
@@ -416,8 +386,8 @@ export default class InternServices {
                 batch: {
                   id: batch.batchId,
                   name: batch.batchName,
-                  startDate: batch.startDate._seconds,
-                  endDate: batch.endDate._seconds,
+                  startDate: batch.startDate,
+                  endDate: batch.endDate,
                   stage: batch.stage,
                 },
                 role: {

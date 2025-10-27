@@ -26,8 +26,6 @@ export default class InternVacancyHandler {
   );
 
   GET = ResMiddleware(async (req: Request) => {
-    // const { searchParams } = new URL(req.url);
-    // const filter = searchParams.get('filter');
     const vacancy = await this._service.getOpenVacancy();
     return {
       statusCode: 200,

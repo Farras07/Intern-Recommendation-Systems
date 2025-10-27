@@ -3,7 +3,10 @@
 import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { formatLocalDateTime } from '@/hooks/date-format.hooks';
+import {
+  formatLocalDateTime,
+  UTCToLocalTimezone,
+} from '@/hooks/date-format.hooks';
 import Typography from '@/components/Typography';
 import { useDispatch } from 'react-redux';
 import { setStep } from '@/lib/redux/slices/formSlice';
@@ -71,11 +74,11 @@ export const columnsVacancyLanding = ({
     accessorFn: row => row.batch.endDate,
     size: 30,
     cell: ({ getValue }) => {
-      const endDate = getValue<number>();
+      const endDate = getValue<string>();
       if (!endDate) return null;
 
       // Firestore gives seconds → multiply by 1000 to get ms
-      const formattedDate = formatLocalDateTime(new Date(endDate * 1000));
+      const formattedDate = UTCToLocalTimezone(endDate);
 
       return <Typography variant='p'>{formattedDate}</Typography>;
     },
