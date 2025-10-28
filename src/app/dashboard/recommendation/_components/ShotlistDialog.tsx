@@ -45,6 +45,7 @@ import ShortlistConfirmationDialog from './ShortlistConfirmDialog';
 import { BatchResponseType } from '@/types/BatchTypes';
 import { stageOrder } from '@/constant/stages.items';
 import { userData } from '@/types/UserTypes';
+import { combineToUTC } from '@/hooks/date-format.hooks';
 
 type DialogProps = {
   open: boolean;
@@ -146,7 +147,9 @@ export default function ShortlistDialog({
     });
   }, [recommendation]);
 
-  const onSubmitShortlist = async (values: z.infer<typeof formShortlist>) => {
+  const onSubmitShortlist = async (
+    values: z.infer<typeof formShortlistCandidates>,
+  ) => {
     setConfirmAction(() => async () => {
       try {
         mutate({
@@ -155,13 +158,17 @@ export default function ShortlistDialog({
             name: session?.user.name,
             email: session?.user.email,
           },
-          values,
+          values: {
+            ...values,
+            interviewDate: combineToUTC(
+              values.interviewDate,
+              values.interviewStartTime,
+            ),
+          },
           candidates: recommendation,
         });
         const currentStageIndex = stageOrder.indexOf(currentBatch?.stage ?? '');
         mutateBatch({ stage: stageOrder[currentStageIndex + 1] });
-      } catch (error) {
-        console.log(error);
       } finally {
         onOpenChange(false);
       }
@@ -179,8 +186,6 @@ export default function ShortlistDialog({
         });
         const currentStageIndex = stageOrder.indexOf(currentBatch?.stage ?? '');
         mutateBatch({ stage: stageOrder[currentStageIndex + 1] });
-      } catch (error) {
-        console.log(error);
       } finally {
         onOpenChange(false);
       }

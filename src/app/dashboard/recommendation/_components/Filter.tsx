@@ -20,7 +20,6 @@ export default function Filter({
   selectedBatch: BatchResponseType | null;
   setSelectedBatch: (batch: BatchResponseType) => void;
 }) {
-  console.log(batchdata);
   return (
     <section className='flex gap-3 items-center'>
       <DropdownMenu>

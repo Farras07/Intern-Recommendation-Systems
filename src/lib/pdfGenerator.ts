@@ -1,9 +1,13 @@
+import {
+  formatJakartaHour,
+  formatJakartaDate,
+} from '@/hooks/date-format.hooks';
 import PDFDocument from 'pdfkit/js/pdfkit.standalone.js';
 
 export async function generateTopRankPDF(recomData: any[], batch: string) {
   return new Promise<Buffer>((resolve, reject) => {
     try {
-      const doc = new PDFDocument({ margin: 50 }); // Added more margin around page
+      const doc = new PDFDocument({ margin: 50 });
       const buffers: Buffer[] = [];
 
       doc.on('data', buffers.push.bind(buffers));
@@ -26,56 +30,86 @@ export async function generateTopRankPDF(recomData: any[], batch: string) {
         doc.font('Courier').fontSize(12);
         doc.text(`Role: ${data.role}`);
         doc.text(`Batch: ${batch}`);
-        doc.text(`Interview Date: ${data.interviewDate}`);
+        doc.text(`Interview Date: ${formatJakartaDate(data.interviewDate)}`);
         doc.moveDown(1.5);
 
         // === Table Layout ===
         const startX = 60; // left margin
         let y = doc.y;
 
-        // Adjusted column widths
-        const col1 = startX; // No
-        const col2 = col1 + 50; // Name
-        const col3 = col2 + 150; // Email
-        const col4 = col3 + 180; // Link (Meet)
-        const col5 = col4 + 100;
+        // Column widths (adjust these as needed)
+        const colWidths = {
+          no: 40,
+          name: 130,
+          email: 160,
+          link: 160,
+          time: 80,
+        };
 
-        const rowHeight = 25;
+        // Calculate X positions
+        const colX = {
+          no: startX,
+          name: startX + colWidths.no,
+          email: startX + colWidths.no + colWidths.name,
+          link: startX + colWidths.no + colWidths.name + colWidths.email,
+          time:
+            startX +
+            colWidths.no +
+            colWidths.name +
+            colWidths.email +
+            colWidths.link,
+        };
 
-        // Draw header function (for reuse after page breaks)
+        const rowHeight = 35;
+
+        // === Draw table header ===
         const drawTableHeader = () => {
           doc.font('Courier-Bold').fontSize(12);
-          doc.text('No', col1, y);
-          doc.text('Name', col2, y);
-          doc.text('Email', col3, y);
-          doc.text('Link', col4, y, { width: 120 }); // set width limit to prevent overflow
-          doc.text('Time', col5, y, { width: 120 }); // set width limit to prevent overflow
-          y += rowHeight;
-          doc
-            .moveTo(startX, y - 10)
-            .lineTo(550, y - 10)
-            .stroke(); // underline
+          doc.text('No', colX.no, y, { width: colWidths.no });
+          doc.text('Name', colX.name, y, { width: colWidths.name });
+          doc.text('Email', colX.email, y, { width: colWidths.email });
+          doc.text('Link', colX.link, y, { width: colWidths.link });
+          doc.text('Time', colX.time, y, { width: colWidths.time });
+          y += rowHeight - 10;
+          doc.moveTo(startX, y).lineTo(550, y).stroke();
+          y += 10;
         };
 
         drawTableHeader();
 
         // === Table Rows ===
         doc.font('Courier').fontSize(9);
-        data.rank.forEach((item: any) => {
+
+        data.rank.forEach((item: any, idx: number) => {
           // Check page overflow
           if (y > doc.page.height - 80) {
             doc.addPage();
             y = 80;
             drawTableHeader();
           }
-          //   console.log(item.timeStart)
 
-          // Wrap text if long
-          doc.text(`${item.rank}`, col1, y);
-          doc.text(item.candidateName || '-', col2, y, { width: 140 });
-          doc.text(item.candidateEmail || '-', col3, y, { width: 170 });
-          doc.text(item.link || '-', col4, y, { width: 120 });
-          doc.text(item.interviewTime || '-', col5, y, { width: 100 });
+          // Text content with width limit for wrapping
+          doc.text(`${item.rank}`, colX.no, y, {
+            width: colWidths.no,
+            align: 'left',
+          });
+          doc.text(item.candidateName || '-', colX.name, y, {
+            width: colWidths.name,
+            align: 'left',
+          });
+          doc.text(item.candidateEmail || '-', colX.email, y, {
+            width: colWidths.email,
+            align: 'left',
+          });
+          doc.text(item.link, colX.link, y, {
+            width: colWidths.link,
+            align: 'left',
+          });
+          doc.text(formatJakartaHour(item.interviewTime) || '-', colX.time, y, {
+            width: colWidths.time,
+            align: 'left',
+          });
+
           y += rowHeight;
         });
       });
@@ -86,6 +120,7 @@ export async function generateTopRankPDF(recomData: any[], batch: string) {
     }
   });
 }
+
 export async function generateAcceptedCandidatesPDF(
   recomData: any[],
   batch: string,

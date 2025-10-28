@@ -1,5 +1,4 @@
 import InternServices from '@/Services/InternServices';
-import { Success, Failed } from '@/types/ResponseTypes';
 import ResMiddleware from '@/app/middleware/response.middleware';
 import AuthMiddleware from '@/app/middleware/auth.middleware';
 
