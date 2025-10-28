@@ -117,3 +117,71 @@ export const UTCToLocalTimezone = (utc: string) => {
 
   return `${datePart} ${timePart}`;
 };
+// Combine local date + time into UTC ISO string
+export const combineDateTimeToUTC = (date: Date, time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const combined = new Date(date);
+  combined.setUTCHours(hours, minutes, 0, 0); // Set in UTC
+  return combined.toISOString();
+};
+
+// Add minutes to a UTC ISO string
+export const addMinutesUTC = (utcISOString: string, minutes: number) => {
+  const date = new Date(utcISOString);
+  date.setUTCMinutes(date.getUTCMinutes() + minutes);
+  return date.toISOString();
+};
+
+// Display UTC ISO in Jakarta local time for UI
+export const UTCToJakarta = (utcISOString: string) => {
+  const date = new Date(utcISOString);
+  return date.toLocaleString('en-US', {
+    timeZone: 'Asia/Jakarta',
+    hour12: false,
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+export const combineJakartaDateTimeToUTC = (date: Date, time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+
+  // Create a date in Jakarta timezone first
+  const jakartaDate = new Date(date);
+  jakartaDate.setHours(hours, minutes, 0, 0);
+
+  // Offset Jakarta (+07:00) → UTC
+  const utcDate = new Date(jakartaDate.getTime() - 7 * 60 * 60 * 1000);
+
+  return utcDate.toISOString();
+};
+
+export const formatJakartaDate = (utcISOString: string) => {
+  const date = new Date(utcISOString);
+  return date.toLocaleString('en-US', {
+    timeZone: 'Asia/Jakarta',
+    hour12: false,
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+};
+export const formatJakartaHour = (utcISOString: string) => {
+  const date = new Date(utcISOString);
+  return date.toLocaleString('en-US', {
+    timeZone: 'Asia/Jakarta',
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+export const combineJakartaDateTimeToUTCForCalendar = (date: Date | string) => {
+  const d = new Date(date);
+  // Format as ISO string, but don't shift to UTC
+  const iso = d.toISOString();
+  return iso.split('.')[0]; // remove milliseconds
+};

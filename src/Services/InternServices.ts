@@ -10,8 +10,6 @@ import {
   BatchPayloadUpdateType,
   BatchResponseType,
 } from '@/types/BatchTypes';
-import { formatLocalDateTimeServer } from '@/hooks/date-format.hooks';
-import { firestore } from 'firebase-admin';
 import { VacancyRegisType } from '@/types/registDataTypes';
 import EmailServices from './EmailServices';
 import { generateAcceptedCandidatesPDF } from '@/lib/pdfGenerator';
@@ -196,7 +194,6 @@ export default class InternServices {
         endDate: payload.batchEndDate,
       });
     } catch (error) {
-      console.log(error);
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
       }

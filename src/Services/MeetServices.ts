@@ -6,10 +6,7 @@ import {
   RecommendationType,
   ShortlistRecommendationType,
 } from '@/types/RecommendationTypes';
-import {
-  formatLocalDateTimeServer,
-  addMinutesJKT,
-} from '@/hooks/date-format.hooks';
+import { addMinutesUTC, UTCToLocalTimezone } from '@/hooks/date-format.hooks';
 import EmailServices from './EmailServices';
 import InternServices from './InternServices';
 import { generateTopRankPDF } from '@/lib/pdfGenerator';
@@ -49,17 +46,11 @@ export default class MeetServices {
 
       const calendar = google.calendar({ version: 'v3', auth });
 
-      const interviewDateParts = formatLocalDateTimeServer(
-        values.interviewDate,
-      ).split(',');
-      const baseStartTime = new Date(
-        `${interviewDateParts[0]},${interviewDateParts[1]},${interviewDateParts[2]}, ${values.interviewStartTime}`,
-      );
+      // Base start time in UTC
 
       const recomData = await this._createCalendarEvents(
         calendar,
         candidates.recommendation,
-        baseStartTime,
         values,
       );
 
@@ -74,7 +65,6 @@ export default class MeetServices {
         pdfBuffer,
       );
     } catch (error) {
-      console.log(error);
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
       }
@@ -86,7 +76,7 @@ export default class MeetServices {
   private async _createCalendarEvents(
     calendar: any,
     recommendations: RecommendationType[],
-    baseStartTime: Date,
+    // baseStartTimeUTC: string, // UTC ISO
     values: ShortlistRecommendationType,
   ) {
     const recomData: RecommendationType[] = [];
@@ -96,24 +86,25 @@ export default class MeetServices {
         .sort((a, b) => a.rank - b.rank)
         .slice(0, values.candidateAmount);
 
-      let currentStart = baseStartTime.toISOString();
+      let currentStartUTC = values.interviewDate;
       let remainingSession = 60;
       let batchEmails: { email: string }[] = [];
       let candidateIndex = 0;
-      // ✅ find interviewer that matches current role
+
       const matchingInterviewer = values.interviewer.find(
         intv => intv.role === recom.role,
       );
 
       for (let i = 0; i < topRank.length; i++) {
         batchEmails.push({ email: topRank[i].candidateEmail });
-        // ✅ if matching interviewer found, add all judgesEmail once
+
         if (matchingInterviewer && i === 0) {
           const judgeEmails = matchingInterviewer.judgesEmail.map(
             (email: string) => ({ email }),
           );
           batchEmails.push(...judgeEmails);
         }
+
         remainingSession -= values.durationTime;
 
         const isLast = i === topRank.length - 1;
@@ -121,29 +112,28 @@ export default class MeetServices {
           const meetEvent = await this._createMeetEvent(
             calendar,
             recom.role,
-            currentStart,
+            currentStartUTC,
             batchEmails,
           );
 
           const meetLink = meetEvent.hangoutLink;
-          let sessionTime = currentStart;
+          let sessionTimeUTC = currentStartUTC;
 
           for (; candidateIndex <= i; candidateIndex++) {
             const candidate = topRank[candidateIndex];
             candidate.link = meetLink;
-            const formatted = formatLocalDateTimeServer(sessionTime).split(',');
-            candidate.interviewTime = formatted[3];
-            sessionTime = addMinutesJKT(sessionTime, values.durationTime);
+            candidate.interviewTime = sessionTimeUTC;
+            sessionTimeUTC = addMinutesUTC(sessionTimeUTC, values.durationTime);
           }
 
-          // Reset session
-          currentStart = addMinutesJKT(currentStart, 60);
+          // Prepare for next session batch
+          currentStartUTC = addMinutesUTC(currentStartUTC, 60);
           remainingSession = 60;
           batchEmails = [];
         }
       }
 
-      recom.interviewDate = `${formatLocalDateTimeServer(values.interviewDate).split(',')[1]} ${formatLocalDateTimeServer(values.interviewDate).split(',')[2]}`;
+      recom.interviewDate = values.interviewDate; // store UTC
       recom.rank = topRank;
       recomData.push(recom);
     }
@@ -155,14 +145,22 @@ export default class MeetServices {
   private async _createMeetEvent(
     calendar: any,
     role: string,
-    startTime: string,
+    startTimeUTC: string, // UTC ISO
     attendees: { email: string }[],
   ) {
+    const endTimeUTC = addMinutesUTC(startTimeUTC, 60);
+
     const event = {
       summary: `Interview for ${role}`,
       description: `Interview session for ${role} candidates`,
-      start: { dateTime: startTime },
-      end: { dateTime: addMinutesJKT(startTime, 60) },
+      start: {
+        dateTime: startTimeUTC, // ISO string
+        timeZone: 'Asia/Jakarta', // This is key
+      },
+      end: {
+        dateTime: endTimeUTC,
+        timeZone: 'Asia/Jakarta',
+      },
       attendees,
       conferenceData: {
         createRequest: {
