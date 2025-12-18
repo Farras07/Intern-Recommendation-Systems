@@ -3,13 +3,32 @@ import UserServices from '@/Services/UserServices';
 import UserHandler from './handler';
 import { adminDb as db } from '@/lib/firebase-admin';
 
-const userServices = new UserServices(db);
-const userHandler = new UserHandler(userServices);
+let userHandler: UserHandler;
 
-export const POST = userHandler.POST.bind(userHandler);
-export const GET = userHandler.GET.bind(userHandler);
-export const PUT = userHandler.PUT.bind(userHandler);
-export const DELETE = userHandler.DELETE.bind(userHandler);
+function getHandler() {
+  if (!userHandler) {
+    const userServices = new UserServices(db);
+    userHandler = new UserHandler(userServices);
+  }
+  return userHandler;
+}
 
-// import { userRouter } from '../route';
-// export const { POST, GET, PUT, DELETE } = userRouter();
+export async function POST(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.POST(req, context);
+}
+
+export async function GET(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.GET(req, context);
+}
+
+export async function PUT(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.PUT(req, context);
+}
+
+export async function DELETE(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.DELETE(req, context);
+}

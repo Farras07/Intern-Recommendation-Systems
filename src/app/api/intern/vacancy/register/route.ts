@@ -4,16 +4,26 @@ import InternRegisterHandler from './handler';
 import { adminDb as db } from '@/lib/firebase-admin';
 import BatchServices from '@/Services/BatchServices';
 
-const registerService = new RegisterServices(db);
-const batchServices = new BatchServices(db);
+let internRegisterHandler: InternRegisterHandler;
 
-const internRegisterHandler = new InternRegisterHandler(
-  registerService,
-  batchServices,
-);
+function getHandler() {
+  if (!internRegisterHandler) {
+    const registerService = new RegisterServices(db);
+    const batchServices = new BatchServices(db);
+    internRegisterHandler = new InternRegisterHandler(
+      registerService,
+      batchServices,
+    );
+  }
+  return internRegisterHandler;
+}
 
-export const POST = internRegisterHandler.POST.bind(internRegisterHandler);
-export const GET = internRegisterHandler.GET.bind(internRegisterHandler);
+export async function POST(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.POST(req, context);
+}
 
-// import { internRegisterRouter } from '../../../route';
-// export const { POST, GET } = internRegisterRouter();
+export async function GET(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.GET(req, context);
+}

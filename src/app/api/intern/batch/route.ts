@@ -3,13 +3,32 @@ import BatchServices from '@/Services/BatchServices';
 import InternBatchHandler from './handler';
 import { adminDb as db } from '@/lib/firebase-admin';
 
-const batchServices = new BatchServices(db);
-const internBatchHandler = new InternBatchHandler(batchServices);
+let internBatchHandler: InternBatchHandler;
 
-export const POST = internBatchHandler.POST.bind(internBatchHandler);
-export const GET = internBatchHandler.GET.bind(internBatchHandler);
-export const PUT = internBatchHandler.PUT.bind(internBatchHandler);
-export const DELETE = internBatchHandler.DELETE.bind(internBatchHandler);
+function getHandler() {
+  if (!internBatchHandler) {
+    const batchServices = new BatchServices(db);
+    internBatchHandler = new InternBatchHandler(batchServices);
+  }
+  return internBatchHandler;
+}
 
-// import { internBatchRouter } from '../../route';
-// export const { POST, GET, DELETE, PUT } = internBatchRouter();
+export async function POST(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.POST(req, context);
+}
+
+export async function GET(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.GET(req, context);
+}
+
+export async function PUT(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.PUT(req, context);
+}
+
+export async function DELETE(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.DELETE(req, context);
+}

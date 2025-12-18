@@ -5,18 +5,28 @@ import InternServices from '@/Services/InternServices';
 import { adminDb as db } from '@/lib/firebase-admin';
 import MeetServices from '@/Services/MeetServices';
 
-const recommendationServices = new RecommendationServices(db);
-const internServices = new InternServices(db);
-const meetServices = new MeetServices(internServices);
+let recommendationHandler: RecommendationHandler;
 
-const recommendationHandler = new RecommendationHandler(
-  recommendationServices,
-  internServices,
-  meetServices,
-);
+function getHandler() {
+  if (!recommendationHandler) {
+    const recommendationServices = new RecommendationServices(db);
+    const internServices = new InternServices(db);
+    const meetServices = new MeetServices(internServices);
+    recommendationHandler = new RecommendationHandler(
+      recommendationServices,
+      internServices,
+      meetServices,
+    );
+  }
+  return recommendationHandler;
+}
 
-export const GET = recommendationHandler.GET.bind(recommendationHandler);
-export const POST = recommendationHandler.POST.bind(recommendationHandler);
-// import { recommendationRouter } from '../route';
+export async function GET(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.GET(req, context);
+}
 
-// export const { GET, POST } = recommendationRouter();
+export async function POST(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.POST(req, context);
+}

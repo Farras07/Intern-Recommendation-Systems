@@ -1,13 +1,19 @@
 export const runtime = 'nodejs';
-// import { internBatchSlugRouter } from '../../../route';
-
-// export const { PUT } = internBatchSlugRouter();
-
 import BatchServices from '@/Services/BatchServices';
 import { adminDb as db } from '@/lib/firebase-admin';
 import InternBatchSlugHandler from './handler';
 
-const batchServices = new BatchServices(db);
-const internBatchSlugHandler = new InternBatchSlugHandler(batchServices);
+let internBatchSlugHandler: InternBatchSlugHandler;
 
-export const PUT = internBatchSlugHandler.PUT.bind(internBatchSlugHandler);
+function getHandler() {
+  if (!internBatchSlugHandler) {
+    const batchServices = new BatchServices(db);
+    internBatchSlugHandler = new InternBatchSlugHandler(batchServices);
+  }
+  return internBatchSlugHandler;
+}
+
+export async function PUT(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.PUT(req, context);
+}

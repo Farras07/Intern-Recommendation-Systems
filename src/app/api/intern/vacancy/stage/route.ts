@@ -3,9 +3,17 @@ import BatchServices from '@/Services/BatchServices';
 import InternStageHandler from './handler';
 import { adminDb as db } from '@/lib/firebase-admin';
 
-const batchServices = new BatchServices(db);
-const internStageHandler = new InternStageHandler(batchServices);
-export const GET = internStageHandler.GET.bind(internStageHandler);
+let internStageHandler: InternStageHandler;
 
-// import { internStageRouter } from '../../../route';
-// export const { GET } = internStageRouter();
+function getHandler() {
+  if (!internStageHandler) {
+    const batchServices = new BatchServices(db);
+    internStageHandler = new InternStageHandler(batchServices);
+  }
+  return internStageHandler;
+}
+
+export async function GET(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.GET(req, context);
+}

@@ -3,15 +3,32 @@ import VacancyServices from '@/Services/VacancyServices';
 import InternVacancyHandler from './handler';
 import { adminDb as db } from '@/lib/firebase-admin';
 
-const vacancyServices = new VacancyServices(db);
+let internVacancyHandler: InternVacancyHandler;
 
-const internVacancyHandler = new InternVacancyHandler(vacancyServices);
+function getHandler() {
+  if (!internVacancyHandler) {
+    const vacancyServices = new VacancyServices(db);
+    internVacancyHandler = new InternVacancyHandler(vacancyServices);
+  }
+  return internVacancyHandler;
+}
 
-export const POST = internVacancyHandler.POST.bind(internVacancyHandler);
-export const GET = internVacancyHandler.GET.bind(internVacancyHandler);
-export const PUT = internVacancyHandler.PUT.bind(internVacancyHandler);
-export const DELETE = internVacancyHandler.DELETE.bind(internVacancyHandler);
+export async function POST(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.POST(req, context);
+}
 
-// import { internVacancyRouter } from '../../route';
+export async function GET(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.GET(req, context);
+}
 
-// export const { POST, DELETE, PUT, GET } = internVacancyRouter();
+export async function PUT(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.PUT(req, context);
+}
+
+export async function DELETE(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.DELETE(req, context);
+}

@@ -3,18 +3,27 @@ import InternRegisterSlugHandler from './handler';
 import { adminDb as db } from '@/lib/firebase-admin';
 import InternServices from '@/Services/InternServices';
 
-const internServices = new InternServices(db);
-const internRegisterSlugHandler = new InternRegisterSlugHandler(internServices);
+let internRegisterSlugHandler: InternRegisterSlugHandler;
 
-export const GET = internRegisterSlugHandler.GET.bind(
-  internRegisterSlugHandler,
-);
-export const PUT = internRegisterSlugHandler.PUT.bind(
-  internRegisterSlugHandler,
-);
-export const DELETE = internRegisterSlugHandler.DELETE.bind(
-  internRegisterSlugHandler,
-);
+function getHandler() {
+  if (!internRegisterSlugHandler) {
+    const internServices = new InternServices(db);
+    internRegisterSlugHandler = new InternRegisterSlugHandler(internServices);
+  }
+  return internRegisterSlugHandler;
+}
 
-// import { internRegisterSlugRouter } from '../../../../route';
-// export const { GET, PUT, DELETE } = internRegisterSlugRouter();
+export async function GET(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.GET(req, context);
+}
+
+export async function PUT(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.PUT(req, context);
+}
+
+export async function DELETE(req: Request, context: any) {
+  const handler = getHandler();
+  return handler.DELETE(req, context);
+}
