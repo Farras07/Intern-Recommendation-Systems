@@ -1,4 +1,4 @@
-// app/api/user/route.ts
+// app/api/routers.ts (renamed from route.ts)
 import UserServices from '@/Services/UserServices';
 import DriveServices from '@/Services/DriveServices';
 import InternServices from '@/Services/InternServices';
