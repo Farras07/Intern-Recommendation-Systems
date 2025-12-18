@@ -1,29 +1,29 @@
 export const runtime = 'nodejs';
-import BatchServices from '@/Services/BatchServices';
-import TestRegisterHandler from './handler';
-import RegisterServices from '@/Services/RegisterServices';
-import { adminDb as db } from '@/lib/firebase-admin';
 
-let testRegisterHandler: TestRegisterHandler;
+export async function POST(req: Request, context: any) {
+  const { adminDb: db } = await import('@/lib/firebase-admin');
+  const BatchServices = (await import('@/Services/BatchServices')).default;
+  const TestRegisterHandler = (await import('./handler')).default;
+  const RegisterServices = (await import('@/Services/RegisterServices'))
+    .default;
 
-function getHandler() {
-  if (!testRegisterHandler) {
-    const registerService = new RegisterServices(db);
-    const batchServices = new BatchServices(db);
-    testRegisterHandler = new TestRegisterHandler(
-      registerService,
-      batchServices,
-    );
-  }
-  return testRegisterHandler;
+  const registerService = new RegisterServices(db);
+  const batchServices = new BatchServices(db);
+  const handler = new TestRegisterHandler(registerService, batchServices);
+
+  return handler.POST(req, context);
 }
 
-export async function POST(req: Request) {
-  const handler = getHandler();
-  return handler.POST(req);
-}
+export async function GET(req: Request, context: any) {
+  const { adminDb: db } = await import('@/lib/firebase-admin');
+  const BatchServices = (await import('@/Services/BatchServices')).default;
+  const TestRegisterHandler = (await import('./handler')).default;
+  const RegisterServices = (await import('@/Services/RegisterServices'))
+    .default;
 
-export async function GET(req: Request) {
-  const handler = getHandler();
-  return handler.GET(req);
+  const registerService = new RegisterServices(db);
+  const batchServices = new BatchServices(db);
+  const handler = new TestRegisterHandler(registerService, batchServices);
+
+  return handler.GET(req, context);
 }
