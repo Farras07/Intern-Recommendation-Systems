@@ -22,7 +22,7 @@ export default function Forms({
   const content = {
     [1]: <RolesQ />,
     [2]: <GeneralQ />,
-    [3]: <SkillsQ />,
+    [3]: <SkillsQ onChangeSetPopup={onChangeSetPopup} />,
   }[formState.step];
   return (
     // <ContainerPopup className={className}>

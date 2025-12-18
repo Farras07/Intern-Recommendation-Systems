@@ -21,17 +21,12 @@ import FormFieldSelectPiece from '@/app/vacancy/join/_containers/forms/pieces/Fo
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/redux/store';
 import { useMutation } from '@/hooks/useQuery.hooks';
-import { DANGER_TOAST, SUCCESS_TOAST, showToast } from '@/components/Toast';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  useForm,
-  useFieldArray,
-  Control,
-  FieldArrayWithId,
-} from 'react-hook-form';
+import { useForm, useFieldArray, Control } from 'react-hook-form';
 import { z } from 'zod';
 import { useEffect } from 'react';
 import { VacancyRegisType } from '@/types/registDataTypes';
+import { useSession } from 'next-auth/react';
 
 type FormSkillValues = z.infer<typeof formUpdateSkillVacancySchema>;
 
@@ -39,11 +34,16 @@ function SkillRateFields({
   control,
   index,
   vacancy,
+  disabled,
 }: {
   control: Control<FormSkillValues>;
   index: number;
   vacancy: VacancyRegisType[];
+  disabled?: any;
 }) {
+  const { data: session } = useSession();
+  if (!session) return;
+
   const { fields: skillRateFields } = useFieldArray({
     control,
     name: `vacancy.${index}.skills`,
@@ -69,6 +69,7 @@ function SkillRateFields({
           variantTypo='c2'
           colorTypo={'dark'}
           weightTypo='semibold'
+          disabled={disabled}
         />
 
         <Typography color='dark' variant='c2' weight='semibold'>
@@ -89,6 +90,7 @@ function SkillRateFields({
                 variantTypo='c2'
                 colorTypo={'blue-sky'}
                 weightTypo='medium'
+                disabled={session.user.role === 'Judge'}
               />
             </div>
           ))}
@@ -109,6 +111,7 @@ function SkillRateFields({
             variantTypo='c2'
             colorTypo={'blue-sky'}
             weightTypo='medium'
+            disabled={session.user.role === 'Judge'}
           />
           <FormFieldSelectPiece
             name={`vacancy.${index}.achievement.champRate`}
@@ -121,6 +124,7 @@ function SkillRateFields({
             variantTypo='c2'
             colorTypo={'blue-sky'}
             weightTypo='medium'
+            disabled={session.user.role === 'Judge'}
           />
         </div>
       </div>
@@ -133,6 +137,9 @@ export default function Skills({
 }: {
   onOpenChange: (open: boolean) => void;
 }) {
+  const { data: session } = useSession();
+  if (!session) return;
+
   const roleVacancyPick = useSelector(
     (state: RootState) => state.registerVacancy.regisData,
   );
@@ -145,6 +152,8 @@ export default function Skills({
     path: `/intern/vacancy/register/${currentApplyId}`,
     queryKey: ['registrationData'],
     method: 'PUT',
+    successMessage: 'Update Registration Data Success',
+    errorMessage: 'Update Registration Data Failed',
   });
 
   const formSkillsUpdate = useForm<FormSkillValues>({
@@ -152,26 +161,28 @@ export default function Skills({
     defaultValues: { vacancy: [] },
   });
 
+  console.log(vacancy);
+
   useEffect(() => {
-    if (vacancy.length > 0) {
-      formSkillsUpdate.reset({
-        vacancy: vacancy.map(role => ({
-          id: role?.id || '',
-          exp: role?.exp || '1',
-          skills: role.skills.map(skill => ({
-            skillName: skill.skillName,
-            rate: skill?.rate || '1',
-          })),
-          portofolioLink: role?.portfolio.link || '',
-          achievement: {
-            lvlRate: role?.achievement.lvlRate || '1',
-            champRate: role?.achievement.champRate || '1',
-            cert: role?.achievement.cert || '',
-          },
+    if (!vacancy || vacancy.length === 0) return;
+
+    formSkillsUpdate.reset({
+      vacancy: vacancy.map(role => ({
+        id: role.id,
+        exp: role.exp ?? '1',
+        skills: role.skills.map(skill => ({
+          skillName: skill.skillName,
+          rate: skill.rate ?? '1',
         })),
-      });
-    }
-  }, [vacancy, formSkillsUpdate]);
+        portofolioLink: role.portfolio?.link ?? '',
+        achievement: {
+          lvlRate: role.achievement?.lvlRate ?? '1',
+          champRate: role.achievement?.champRate ?? '1',
+          cert: role.achievement?.cert ?? '',
+        },
+      })),
+    });
+  }, [vacancy]);
 
   const { fields } = useFieldArray({
     control: formSkillsUpdate.control,
@@ -181,22 +192,30 @@ export default function Skills({
   const onSubmit = async (
     values: z.infer<typeof formUpdateSkillVacancySchema>,
   ) => {
-    const toast = { message: '', type: DANGER_TOAST };
-    try {
-      mutate(values);
-      toast.message = 'Update Registration Data Success';
-      toast.type = SUCCESS_TOAST;
-    } catch (error) {
-      toast.message = `Update Registration Data Failed: ${error}`;
-    } finally {
-      showToast(toast.message, toast.type);
-      onOpenChange(false);
-    }
+    const updatedVacancy = values.vacancy.map((vac, index: number) => {
+      const { portofolioLink, ...rest } = vac;
+      return {
+        ...rest,
+        interviewRate: vacancy[index].interviewRate,
+        lastStage: vacancy[index].lastStage,
+        rolePriority: vacancy[index].rolePriority,
+        portfolio: {
+          link: vac.portofolioLink,
+          rate: vacancy[index].portfolio.rate,
+        },
+      };
+    });
+    mutate({ vacancy: updatedVacancy });
+    onOpenChange(false);
   };
 
   return (
     <Form {...formSkillsUpdate}>
-      <form onSubmit={formSkillsUpdate.handleSubmit(onSubmit)}>
+      <form
+        onSubmit={formSkillsUpdate.handleSubmit(onSubmit, errors => {
+          console.log('SUBMIT BLOCKED:', errors);
+        })}
+      >
         <Card>
           <CardHeader>
             <CardTitle>
@@ -219,19 +238,22 @@ export default function Skills({
                 control={formSkillsUpdate.control}
                 index={index}
                 vacancy={vacancy}
+                disabled={session.user.role === 'Judge'}
               />
             ))}
           </CardContent>
 
           <DialogFooter>
-            <CardFooter className='flex justify-center gap-2 p-8'>
-              <DialogClose asChild>
-                <Button className='cursor-pointer'>Cancel</Button>
-              </DialogClose>
-              <Button type='submit' className='cursor-pointer'>
-                Save Changes
-              </Button>
-            </CardFooter>
+            {session?.user?.role === 'Admin' && (
+              <CardFooter className='flex justify-center gap-2 p-8'>
+                <DialogClose asChild>
+                  <Button className='cursor-pointer'>Cancel</Button>
+                </DialogClose>
+                <Button type='submit' className='cursor-pointer'>
+                  Save Changes
+                </Button>
+              </CardFooter>
+            )}
           </DialogFooter>
         </Card>
       </form>

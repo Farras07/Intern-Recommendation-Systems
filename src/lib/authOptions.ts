@@ -1,9 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import AuthenticationError from '@/exceptions/AuthenticationError';
 import UserServices from '@/Services/UserServices';
 import { adminDb as db } from '@/lib/firebase-admin';
-import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
 import { JWT } from 'next-auth/jwt';
 
 const userServices = new UserServices(db);
@@ -11,8 +9,8 @@ const userServices = new UserServices(db);
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.NEXT_PUBLIC_FIREBASE_CLIENTID ?? '',
-      clientSecret: process.env.NEXT_PUBLIC_FIREBASE_CLIENTSECRET ?? '',
+      clientId: process.env.FIREBASE_CLIENTID ?? '',
+      clientSecret: process.env.FIREBASE_CLIENTSECRET ?? '',
       authorization: {
         params: {
           scope: [
@@ -31,8 +29,8 @@ export const authOptions: NextAuthOptions = {
   ],
   pages: {
     signIn: '/login/handler',
-    signOut: '/',
-    verifyRequest: '/auth/verify',
+    signOut: '/login',
+    // verifyRequest: '/auth/verify',
     newUser: '/dashboard',
   },
   callbacks: {
@@ -41,49 +39,45 @@ export const authOptions: NextAuthOptions = {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.idToken = account.id_token;
-        token.id = (user as any).id ?? '';
-        token.role = (user as any).role ?? 'user';
+
+        try {
+          const userData = await userServices.getUser(user.email as string);
+          const data = Array.isArray(userData) ? userData[0] : userData;
+          token.id = data?.id ?? user.id;
+          token.verified = data?.verified ?? false;
+          token.role = data?.role ?? 'user';
+        } catch (error: any) {
+          token.verified = false;
+        }
 
         return {
           ...token,
-          accessToken: account.access_token,
-          refreshToken: account.refresh_token,
           accessTokenExpires:
             Date.now() + (Number(account.expires_in) ?? 3600) * 1000,
-          user,
         };
       }
 
       if (Date.now() < (token.accessTokenExpires as number)) {
         return token;
       }
-
-      // if (user) {
-      //   token.id = (user as any).id ?? '';
-      //   token.role = (user as any).role ?? 'user';
-      // }
       return await refreshAccessToken(token);
     },
+
+    // Session Configuration in Auth Options
     async session({ session, token }) {
       try {
-        if (!session.user?.email)
-          throw new AuthenticationError('Please login first!');
-        const userData = await userServices.getUser(session.user.email);
-        if (userData) {
-          session.user.id = token.id as string;
-          const data = Array.isArray(userData) ? userData[0] : userData;
-          session.user.role = data?.role ?? null;
-          session.user.verified = data?.verified ?? false;
-          session.token = {
-            accessToken: token.accessToken as string,
-            refreshToken: token.refreshToken as string,
-            idToken: token.idToken as string,
-            exp: token.exp as Timestamp,
-          };
-        }
+        session.user.id = token.id;
+        session.user.role = token.role;
+        session.user.verified = token.verified ?? false;
+        session.token = {
+          accessToken: token.accessToken!,
+          refreshToken: token.refreshToken!,
+          idToken: token.idToken!,
+          exp: token.exp,
+        };
         return session;
       } catch (error: any) {
-        if (error.statusCode === 404) return session;
+        // if (error.statusCode === 404) return session;
         throw error;
       }
     },
@@ -100,8 +94,8 @@ async function refreshAccessToken(token: JWT) {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: process.env.NEXT_PUBLIC_FIREBASE_CLIENTID!,
-        client_secret: process.env.NEXT_PUBLIC_FIREBASE_CLIENTSECRET!,
+        client_id: process.env.FIREBASE_CLIENTID!,
+        client_secret: process.env.FIREBASE_CLIENTSECRET!,
         grant_type: 'refresh_token',
         refresh_token: token.refreshToken as string,
       }),

@@ -22,7 +22,7 @@ const _Fetch = async (
     }
 
     const res = await fetch(url, options);
-    const resBody = await res.json().catch(() => ({}));
+    const resBody = await res.json();
 
     if (!res.ok) {
       switch (res.status) {

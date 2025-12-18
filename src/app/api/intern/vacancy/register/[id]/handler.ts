@@ -1,7 +1,7 @@
 import InternServices from '@/Services/InternServices';
 import { Success } from '@/types/ResponseTypes';
-import ResMiddleware from '@/app/middleware/response.middleware';
-import AuthMiddleware from '@/app/middleware/auth.middleware';
+import ResMiddleware from '@/app/api/middleware/response.middleware';
+import AuthMiddleware from '@/app/api/middleware/auth.middleware';
 
 type InternServicesType = InstanceType<typeof InternServices>;
 

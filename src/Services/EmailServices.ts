@@ -6,15 +6,16 @@ import RegisterAlertEmail from '@/constant/email_template/RegisterAlertEmail';
 import InterviewInvitationEmail from '@/constant/email_template/InterviewInvitation';
 import InterviewInvitationEmailJudge from '@/constant/email_template/InterviewInvitationJudge';
 import AcceptanceInternEmail from '@/constant/email_template/AcceptanceIntern';
+import RejectionInternEmail from '@/constant/email_template/RejectionIntern';
 
 export default class EmailServices {
-  private transporter: Transporter; // ✅ correct type
+  private transporter: Transporter;
   constructor() {
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.NEXT_PUBLIC_DEV_EMAIL,
-        pass: process.env.NEXT_PUBLIC_DEV_PASS,
+        user: process.env.DEV_EMAIL,
+        pass: process.env.DEV_PASS,
       },
       tls: { rejectUnauthorized: false },
       secure: true,
@@ -40,7 +41,7 @@ export default class EmailServices {
       );
 
     const mailOptions = {
-      from: process.env.NEXT_PUBLIC_DEV_EMAIL,
+      from: process.env.DEV_EMAIL,
       to: email,
       subject: 'Test',
       html: emailHtml,
@@ -48,6 +49,7 @@ export default class EmailServices {
 
     await this.transporter.sendMail(mailOptions);
   }
+
   async sendInterviewInvitationEmailJudge(
     email: string,
     batch: string,
@@ -59,7 +61,7 @@ export default class EmailServices {
     );
 
     const mailOptions = {
-      from: process.env.NEXT_PUBLIC_DEV_EMAIL,
+      from: process.env.DEV_EMAIL,
       to: email,
       subject: `Interview Invitation Judge for ${role}`,
       html: emailHtml,
@@ -86,7 +88,7 @@ export default class EmailServices {
     );
 
     const mailOptions = {
-      from: process.env.NEXT_PUBLIC_DEV_EMAIL,
+      from: process.env.DEV_EMAIL,
       to: email,
       subject: `Interview Invitation for ${role}`,
       html: emailHtml,
@@ -113,7 +115,7 @@ export default class EmailServices {
     );
 
     const mailOptions = {
-      from: process.env.NEXT_PUBLIC_DEV_EMAIL,
+      from: process.env.DEV_EMAIL,
       to: email,
       subject: `Application Accepted for ${role} role`,
       html: emailHtml,
@@ -124,6 +126,26 @@ export default class EmailServices {
           contentType: 'application/pdf',
         },
       ],
+    };
+
+    await this.transporter.sendMail(mailOptions);
+  }
+
+  async sendRejectionIntern(
+    name: string,
+    email: string,
+    batch: string,
+    role: string,
+  ) {
+    const emailHtml = await render(
+      React.createElement(RejectionInternEmail, { name, batch, role }),
+    );
+
+    const mailOptions = {
+      from: process.env.DEV_EMAIL,
+      to: email,
+      subject: `Application Rejection for ${role} role`,
+      html: emailHtml,
     };
 
     await this.transporter.sendMail(mailOptions);

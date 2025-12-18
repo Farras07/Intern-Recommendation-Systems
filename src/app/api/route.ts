@@ -18,23 +18,36 @@ import InternBatchStreamHandler from './intern/batch/stream/handler';
 import InternVacancyHandler from './intern/vacancy/handler';
 import InternVacancyStreamHandler from './intern/vacancy/stream/handler';
 import RecommendationHandler from './recommendation/handler';
+import BatchServices from '@/Services/BatchServices';
+import RoleServices from '@/Services/RoleServices';
+import VacancyServices from '@/Services/VacancyServices';
+import RegisterServices from '@/Services/RegisterServices';
+import TestRegisterHandler from './intern/test/handler';
 
 const userServices = new UserServices(db);
 const userHandler = new UserHandler(userServices);
-
+const batchServices = new BatchServices(db);
+const roleServices = new RoleServices(db);
+const vacancyServices = new VacancyServices(db);
+const registerService = new RegisterServices(db);
 const driveServices = new DriveServices(drive);
+
+const testRegisterHandler = new TestRegisterHandler(
+  registerService,
+  batchServices,
+);
 
 const internServices = new InternServices(db);
 const meetServices = new MeetServices(internServices);
-const internVacancyHandler = new InternVacancyHandler(internServices);
-const internStageHandler = new InternStageHandler(internServices);
-const internRoleHandler = new InternRoleHandler(internServices);
-const internBatchHandler = new InternBatchHandler(internServices);
-const internBatchSlugHandler = new InternBatchSlugHandler(internServices);
+const internVacancyHandler = new InternVacancyHandler(vacancyServices);
+const internStageHandler = new InternStageHandler(batchServices);
+const internRoleHandler = new InternRoleHandler(roleServices);
+const internBatchHandler = new InternBatchHandler(batchServices);
+const internBatchSlugHandler = new InternBatchSlugHandler(batchServices);
 const internRegisterSlugHandler = new InternRegisterSlugHandler(internServices);
 const internRegisterHandler = new InternRegisterHandler(
-  internServices,
-  driveServices,
+  registerService,
+  batchServices,
 );
 const internBatchStreamHandler = new InternBatchStreamHandler(internServices);
 const internRoleStreamHandler = new InternRoleStreamHandler(internServices);
@@ -49,6 +62,11 @@ const recommendationHandler = new RecommendationHandler(
   meetServices,
 );
 
+export function testInternRegisterRouter() {
+  const POST = testRegisterHandler.POST.bind(testRegisterHandler);
+  const GET = testRegisterHandler.GET.bind(testRegisterHandler);
+  return { POST, GET };
+}
 export function userRouter() {
   const POST = userHandler.POST.bind(userHandler);
   const GET = userHandler.GET.bind(userHandler);

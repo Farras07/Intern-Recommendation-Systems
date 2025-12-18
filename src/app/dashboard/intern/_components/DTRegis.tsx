@@ -41,6 +41,7 @@ interface DataTableProps<TData, TValue> {
   className?: {
     table?: string;
     header?: string;
+    parent?: string;
   };
   isError?: boolean;
   error?: any;
@@ -82,7 +83,9 @@ export default function DTRegis<TData, TValue>({
   }, [advBatchFilter, table]);
 
   return (
-    <div className='w-full flex flex-col gap-3'>
+    <div
+      className={`w-full flex flex-col gap-3 ${className?.parent} scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}
+    >
       <div className='flex items-center space-x-2'>
         <Switch checked={showFilter} onCheckedChange={setShowFilter} />
         <Label htmlFor='advfilter-check' className='text-typo-dark'>

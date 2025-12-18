@@ -55,6 +55,7 @@ export const formRoleSchema = z.object({
 export const formTeamInviteSchema = z.object({
   email: z.email().nonempty('Email is Required!'),
   role: z.string().nonempty('Role is Required!'),
+  verified: z.boolean().optional(),
 });
 
 export const formVacancyFilterSchema = z.object({
@@ -123,33 +124,36 @@ export const formUpdateGeneralVacancySchema = z.object({
   phone: z.string().optional(),
 });
 
+export const optionalHttpsUrl = z
+  .string()
+  .trim()
+  .optional()
+  .refine(val => !val || val.startsWith('https://'), {
+    message: 'URL must start with https://',
+  })
+  .refine(val => !val || /^https?:\/\/.+/.test(val), {
+    message: 'Must be a valid URL',
+  });
+
 export const formUpdateSkillVacancySchema = z.object({
   vacancy: z.array(
     z.object({
       id: z.string().optional(),
       exp: z.string().optional(),
+
       skills: z.array(
         z.object({
           skillName: z.string().optional(),
           rate: z.string().optional(),
         }),
       ),
-      portofolioLink: z
-        .url({ message: 'Portfolio must be a valid URL!' })
-        .refine(val => val.startsWith('https://'), {
-          message: 'Portfolio link must start with https://',
-        })
-        .optional(),
+
+      portofolioLink: optionalHttpsUrl,
+
       achievement: z.object({
         lvlRate: z.string().optional(),
         champRate: z.string().optional(),
-        cert: z
-          .url({ message: 'Achievement certificate link must be a valid URL!' })
-          .refine(val => val.startsWith('https://'), {
-            message: 'Achievement certificate link must start with https://',
-          })
-          .or(z.literal(''))
-          .optional(),
+        cert: optionalHttpsUrl,
       }),
     }),
   ),
@@ -187,12 +191,23 @@ export const formShortlistCandidates = z.object({
 });
 
 export const formShortlistFinalCandidates = z.object({
-  candidateAmount: z
-    .number({
-      required_error: 'Candidate Amount is required!',
-      invalid_type_error: 'Field value must be a number!',
-    } as any)
-    .min(1, { message: 'Candidate Amount must be greater than 0!' }),
+  shortlist: z.array(
+    z.object({
+      role: z.string().nonempty('Role Required!'),
+      candidateAmount: z
+        .number({
+          required_error: 'Candidate Amount is required!',
+          invalid_type_error: 'Field value must be a number!',
+        } as any)
+        .min(1, { message: 'Candidate Amount must be greater than 0!' }),
+    }),
+  ),
+  // candidateAmount: z
+  //   .number({
+  //     required_error: 'Candidate Amount is required!',
+  //     invalid_type_error: 'Field value must be a number!',
+  //   } as any)
+  //   .min(1, { message: 'Candidate Amount must be greater than 0!' }),
 });
 
 export const formPortfolioSchema = z.array(

@@ -1,26 +1,25 @@
-import InternServices from '@/Services/InternServices';
-import ResMiddleware from '@/app/middleware/response.middleware';
-import AuthMiddleware from '@/app/middleware/auth.middleware';
+// import InternServices from '@/Services/InternServices';
+import RoleServices from '@/Services/RoleServices';
+import ResMiddleware from '@/app/api/middleware/response.middleware';
+import AuthMiddleware from '@/app/api/middleware/auth.middleware';
+import InvariantError from '@/exceptions/InvariantError';
 
-type InternServicesType = InstanceType<typeof InternServices>;
+type RoleServicesType = InstanceType<typeof RoleServices>;
 
 export default class InternRoleHandler {
-  _service: InternServicesType;
-  constructor(InternService: InternServicesType) {
-    this._service = InternService;
+  _service: RoleServicesType;
+  constructor(RoleService: RoleServicesType) {
+    this._service = RoleService;
   }
 
   POST = ResMiddleware(
     AuthMiddleware(
       async (req: Request) => {
         const payload = await req.json();
-        const newUserId = await this._service.createRole(payload);
+        await this._service.createRole(payload);
         return {
           statusCode: 201,
           message: 'Intern Role Successfully Created',
-          data: {
-            id: newUserId,
-          },
         };
       },
       { authorizeRole: ['Admin'] },
@@ -57,8 +56,14 @@ export default class InternRoleHandler {
     AuthMiddleware(
       async (req: Request) => {
         const payload = await req.json();
-        const { id } = payload;
-        await this._service.deleteRole(id);
+        const { id: roleId } = payload;
+        console.log(roleId);
+        // const { searchParams } = new URL(req.url);
+        // const roleId = searchParams.get('id');
+        // console.log(roleId)
+        if (!roleId)
+          throw new InvariantError("Query params role id doesn't exist");
+        await this._service.deleteRole(roleId);
         return {
           statusCode: 200,
           message: 'Delete Intern Role Success',

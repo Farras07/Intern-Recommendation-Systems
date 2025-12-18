@@ -39,7 +39,9 @@ export default function Login() {
                 variant={'ghost'}
                 className='w-[17rem] border text-center border-slate-800 shadow-xl rounded-3xl text-white'
                 onClick={() =>
-                  signIn('google', { callbackUrl: '/login/handler' })
+                  signIn('google', {
+                    callbackUrl: `/login/handler?role=${role}`,
+                  })
                 }
               >
                 <FcGoogle className='mx-2 text-lg' />

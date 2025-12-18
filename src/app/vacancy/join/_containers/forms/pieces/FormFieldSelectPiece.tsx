@@ -33,6 +33,7 @@ type FormFieldPiece = {
   variantTypo?: keyof typeof TypographyVariant;
   colorTypo?: keyof typeof TypographyColor;
   weightTypo?: keyof typeof FontWeight;
+  disabled?: any;
 };
 
 export default function FormFieldSelectPiece({
@@ -43,6 +44,7 @@ export default function FormFieldSelectPiece({
   variantTypo = 'h5',
   colorTypo = 'blue-sky',
   weightTypo = 'bold',
+  disabled,
 }: FormFieldPiece) {
   return (
     <FormField
@@ -62,7 +64,11 @@ export default function FormFieldSelectPiece({
           </FormLabel>
 
           <FormControl>
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={disabled}
+            >
               <SelectTrigger className='w-[15rem]'>
                 <SelectValue placeholder={label.button} />
               </SelectTrigger>

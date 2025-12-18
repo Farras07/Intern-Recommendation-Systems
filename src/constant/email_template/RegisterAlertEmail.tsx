@@ -32,6 +32,7 @@ const RegisterAlertEmail: React.FC<RegisterAlertEmailProps> = ({ name }) => {
                 color: '#111827',
                 fontWeight: 'bold',
                 marginBottom: '16px',
+                textAlign: 'center',
               }}
             >
               🎉 Thankyou for submit your application 🎉

@@ -9,9 +9,11 @@ import { RegistDataTypes } from '@/types/registDataTypes';
 export default function PieceStages({
   batchId,
   stage,
+  sessionRole,
 }: {
   batchId: string;
   stage: string;
+  sessionRole: string;
 }) {
   const currentIndex = stageOrder.indexOf(stage);
 
@@ -65,7 +67,6 @@ export default function PieceStages({
     }
     mutate({ stage: stageOrder[currentIndex + 1] });
   };
-  console.log(stage);
   return (
     <section className='w-full h-full flex flex-col gap-2 mt-2'>
       <section className='flex gap-7'>
@@ -75,11 +76,12 @@ export default function PieceStages({
         <Button className='cursor-pointer'>
           <a href={`/dashboard/intern?batchId=${batchId}`}>View Registrant</a>
         </Button>
-        {['Registration', 'Interview'].includes(stage) && (
-          <Button className='cursor-pointer' onClick={onSubmit}>
-            Update to Next Stage
-          </Button>
-        )}
+        {sessionRole === 'Admin' &&
+          ['Registration', 'Interview'].includes(stage) && (
+            <Button className='cursor-pointer' onClick={onSubmit}>
+              Update to Next Stage
+            </Button>
+          )}
       </section>
       <div className='flex justify-center items-center gap-2'>
         {stagesIcon.map((stage, index) => {

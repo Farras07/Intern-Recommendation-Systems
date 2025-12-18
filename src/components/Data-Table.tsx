@@ -24,6 +24,7 @@ interface DataTableProps<TData, TValue> {
   className?: {
     table?: string;
     header?: string;
+    parent?: string;
   };
 }
 
@@ -40,7 +41,9 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className='overflow-hidden rounded-md border'>
+    <div
+      className={`w-full flex flex-col gap-3 ${className?.parent} scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}
+    >
       <Table className={className?.table}>
         <TableHeader>
           {table.getHeaderGroups().map(headerGroup => (

@@ -35,6 +35,8 @@ export default class TOPSIS {
           applyId: candidate.applyId,
           candidateName: candidate.candidateName,
           candidateEmail: candidate.candidateEmail,
+          rolePriority: candidate.rolePriority,
+          applyTime: candidate.applyTime,
           matrixLabel: matrixLabel,
           matrix: [exp, portfolioValue, ...skillRate, ...achievementValues],
         };
@@ -139,6 +141,7 @@ export default class TOPSIS {
           applyId: candidate.applyId,
           candidateName: candidate.candidateName,
           candidateEmail: candidate.candidateEmail,
+          rolePriority: candidate.rolePriority,
           matrixLabel: matrixLabel,
           matrix: [
             interviewValue,

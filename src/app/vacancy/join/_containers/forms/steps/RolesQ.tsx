@@ -49,6 +49,7 @@ export default function RolesQ() {
 
   function onNext(values: z.infer<typeof formRoleQVacancySchema>) {
     if (values.vacancy_2 != '' && selectedRoleVacancy.id != data[1]?.id) {
+      console.log(values);
       dispatch(setPushRoleVacancy(selectedRoleVacancy));
     }
     dispatch(setStep({ type: 'Next' }));

@@ -32,7 +32,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { z } from 'zod';
-import { showToast, SUCCESS_TOAST, DANGER_TOAST } from '@/components/Toast';
+import { showToast, DANGER_TOAST } from '@/components/Toast';
 import InvariantError from '@/exceptions/InvariantError';
 import { DialogValueTypes } from '@/types/DialogTypes';
 import { jobRoleType } from '@/types/JobTypes';
@@ -46,6 +46,8 @@ import {
 } from '@/constant/schemas.items';
 import { BatchResponseType } from '@/types/BatchTypes';
 import { combineToUTC } from '@/hooks/date-format.hooks';
+import { useMutation, useQuery } from '@/hooks/useQuery.hooks';
+import { useSession } from 'next-auth/react';
 
 type DialogProps = DialogValueTypes & {
   open: boolean;
@@ -70,10 +72,65 @@ export function DialogPopUp({
   action,
   formState,
 }: DialogProps) {
+  const { data: session } = useSession();
+  if (!session) return null;
+
   const { data } = formState;
   const now = new Date();
   const [batchData, setBatchData] = useState<BatchResponseType[]>([]);
   const [roleData, setRoleData] = useState<jobRoleType[]>([]);
+
+  const { data: dataBatch } = useQuery({
+    path: '/intern/batch',
+    queryKey: ['batch'],
+  });
+  const { data: dataRole } = useQuery({
+    path: '/intern/role',
+    queryKey: ['role'],
+  });
+
+  const { mutate: mutateAddRole } = useMutation({
+    path: '/intern/role',
+    method: 'POST',
+    queryKey: ['role'],
+    successMessage: 'Add Role Success',
+    errorMessage: 'Add Role Failed',
+  });
+  const { mutate: mutatePutRole } = useMutation({
+    path: '/intern/role',
+    method: 'PUT',
+    queryKey: ['role'],
+    successMessage: 'Update Role Success',
+    errorMessage: 'Update Role Failed',
+  });
+  const { mutate: mutateAddBatch } = useMutation({
+    path: '/intern/batch',
+    method: 'POST',
+    queryKey: ['batch'],
+    successMessage: 'Add Batch Success',
+    errorMessage: 'Add Batch Failed',
+  });
+  const { mutate: mutatePutBatch } = useMutation({
+    path: '/intern/batch',
+    method: 'PUT',
+    queryKey: ['batch'],
+    successMessage: 'Update Batch Success',
+    errorMessage: 'Update Batch Failed',
+  });
+  const { mutate: mutateAddVacancy } = useMutation({
+    path: '/intern/vacancy',
+    method: 'POST',
+    queryKey: ['vacancy'],
+    successMessage: 'Add Vacancy Success',
+    errorMessage: 'Add Vacancy Failed',
+  });
+  const { mutate: mutatePutVacancy } = useMutation({
+    path: '/intern/vacancy',
+    method: 'PUT',
+    queryKey: ['vacancy'],
+    successMessage: 'Update Vacancy Success',
+    errorMessage: 'Update Vacancy Failed',
+  });
 
   const formVacancy = useForm<z.infer<typeof formVacancySchema>>({
     resolver: zodResolver(formVacancySchema),
@@ -110,90 +167,65 @@ export function DialogPopUp({
   });
 
   const onSubmitVacancy = async (values: z.infer<typeof formVacancySchema>) => {
-    let toastMessage = '';
     try {
       if (action === 'Add') {
-        await addVacancySubmit(values);
+        mutateAddVacancy(values);
       }
       if (action === 'Edit') {
-        await updateVacancySubmit({ id: data.id, skills: values.skills });
+        mutatePutVacancy({ id: data.id, skills: values.skills });
       }
-
-      toastMessage = `${action} ${target} Success`;
-      showToast(toastMessage, SUCCESS_TOAST);
     } catch (error) {
       if (error instanceof InvariantError) {
-        toastMessage = error.message;
-      } else {
-        toastMessage = `${action} ${target} failed`;
+        showToast(error.message, DANGER_TOAST);
       }
-      showToast(toastMessage, DANGER_TOAST);
     } finally {
       onOpenChange(false);
     }
   };
 
   const onSubmitBatch = async (values: z.infer<typeof formBatchSchema>) => {
-    let toastMessage = '';
-    const payload = {
-      ...values,
-      batchStartDate: combineToUTC(
-        values.batchStartDate,
-        values.batchStartTime,
-      ),
-      batchEndDate: combineToUTC(values.batchEndDate, values.batchEndTime),
-    };
     try {
-      if (action === 'Add') {
-        await addBatchSubmit(payload);
-      }
-      if (action === 'Edit') {
-        // await updateBatchSubmit({ batchId: data.batchId, ...values });
-        await updateBatchSubmit({ batchId: data.batchId, ...payload });
-      }
+      const payload = {
+        ...values,
+        batchStartDate: combineToUTC(
+          values.batchStartDate,
+          values.batchStartTime,
+        ),
+        batchEndDate: combineToUTC(values.batchEndDate, values.batchEndTime),
+      };
 
-      toastMessage = `${action} ${target} Success`;
-      showToast(toastMessage, SUCCESS_TOAST);
+      if (action === 'Add') mutateAddBatch(payload);
+      if (action === 'Edit')
+        mutatePutBatch({ batchId: data.batchId, ...payload });
     } catch (error) {
       if (error instanceof InvariantError) {
-        toastMessage = error.message;
-      } else {
-        toastMessage = `${action} ${target} failed`;
+        showToast(error.message, DANGER_TOAST);
       }
-      showToast(toastMessage, DANGER_TOAST);
     } finally {
       onOpenChange(false);
     }
   };
 
   const onSubmitRole = async (values: z.infer<typeof formRoleSchema>) => {
-    let toastMessage = '';
-
     try {
       if (target === 'Role') {
         if (action === 'Add') {
-          await addRoleSubmit({
+          mutateAddRole({
             title: values.roleTitle,
             description: values.roleDescription,
           });
         } else if (action === 'Edit') {
-          await updateRoleSubmit({
+          mutatePutRole({
             id: data?.id,
             title: values.roleTitle,
             description: values.roleDescription,
           });
         }
       }
-
-      toastMessage = `${action} ${target} Success`;
-      showToast(toastMessage, SUCCESS_TOAST);
     } catch (error) {
       if (error instanceof InvariantError) {
-        toastMessage = error.message;
-      } else {
-        toastMessage = `${action} ${target} failed`;
+        showToast(error.message, DANGER_TOAST);
       }
-      showToast(toastMessage, DANGER_TOAST);
     } finally {
       onOpenChange(false);
     }
@@ -202,10 +234,8 @@ export function DialogPopUp({
   useEffect(() => {
     const getBatchData = async () => {
       if (target === 'Vacancy') {
-        const batchData = await _Fetch('/intern/batch', 'GET');
-        const roleData = await _Fetch('/intern/role', 'GET');
-        setBatchData(batchData.batches);
-        setRoleData(roleData.roles);
+        setBatchData(dataBatch.batches);
+        setRoleData(dataRole.roles);
       }
     };
     getBatchData();
@@ -403,6 +433,9 @@ export function DialogPopUp({
                           <FormControl>
                             <Input
                               type='number'
+                              min={1}
+                              max={5}
+                              step={1}
                               {...field}
                               onChange={e =>
                                 field.onChange(Number(e.target.value))
@@ -422,7 +455,11 @@ export function DialogPopUp({
                         <FormItem className='col-span-2'>
                           <FormLabel>Skill Name</FormLabel>
                           <FormControl>
-                            <Input placeholder='Type skill' {...field} />
+                            <Input
+                              placeholder='Type skill'
+                              {...field}
+                              disabled={action === 'Edit'}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -432,8 +469,9 @@ export function DialogPopUp({
                     {/* Remove button */}
                     <Button
                       type='button'
+                      disabled={action === 'Edit'}
                       onClick={() => remove(index)}
-                      className='place-self-end'
+                      className='place-self-end cursor-pointer'
                     >
                       Remove
                     </Button>
@@ -443,6 +481,7 @@ export function DialogPopUp({
                 {/* Add new skill */}
                 <Button
                   type='button'
+                  className='cursor-pointer'
                   onClick={() => append({ priority: 0, skillName: '' })}
                 >
                   Add Skill
@@ -450,11 +489,17 @@ export function DialogPopUp({
 
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button variant='outline' type='button'>
+                    <Button
+                      variant='outline'
+                      type='button'
+                      className='cursor-pointer'
+                    >
                       Cancel
                     </Button>
                   </DialogClose>
-                  <Button type='submit'>Save changes</Button>
+                  <Button type='submit' className='cursor-pointer'>
+                    Save changes
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -501,11 +546,17 @@ export function DialogPopUp({
                 />
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button variant='outline' type='button'>
+                    <Button
+                      variant='outline'
+                      type='button'
+                      className='cursor-pointer'
+                    >
                       Cancel
                     </Button>
                   </DialogClose>
-                  <Button type='submit'>Save changes</Button>
+                  <Button type='submit' className='cursor-pointer'>
+                    Save changes
+                  </Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -566,7 +617,11 @@ export function DialogPopUp({
               />
               <DialogFooter>
                 <DialogClose asChild>
-                  <Button variant='outline' type='button'>
+                  <Button
+                    variant='outline'
+                    type='button'
+                    className='cursor-pointer'
+                  >
                     Cancel
                   </Button>
                 </DialogClose>
@@ -582,81 +637,18 @@ export function DialogPopUp({
   );
 }
 
-const addRoleSubmit = async ({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) => {
-  try {
-    const req = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/intern/role`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: title,
-        description: description,
-      }),
-    });
-    const res = await req.json();
-    if (req.status === 400) {
-      throw new InvariantError(res.message);
-    }
-  } catch (error) {
-    throw error;
-  }
-};
-const updateRoleSubmit = async ({ id, title, description }: jobRoleType) => {
-  try {
-    await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/intern/role`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id,
-        title,
-        description,
-      }),
-    });
-  } catch (error) {
-    throw error;
-  }
-};
-const addBatchSubmit = async (payload: any) => {
-  try {
-    console.log(payload);
-    const req = await fetch(`${process.env.NEXT_PUBLIC_BASEURL}/intern/batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const res = await req.json();
-    if (req.status === 400) {
-      throw new InvariantError(res.message);
-    }
-  } catch (error) {
-    throw error;
-  }
-};
-const updateBatchSubmit = async (payload: any) => {
-  try {
-    await _Fetch('/intern/batch', 'PUT', payload);
-  } catch (error) {
-    throw error;
-  }
-};
+// const addVacancySubmit = async (payload: any) => {
+//   try {
+//     await _Fetch('/intern/vacancy', 'POST', payload);
+//   } catch (error) {
+//     throw error;
+//   }
+// };
 
-const addVacancySubmit = async (payload: any) => {
-  try {
-    await _Fetch('/intern/vacancy', 'POST', payload);
-  } catch (error) {
-    throw error;
-  }
-};
-
-const updateVacancySubmit = async (payload: any) => {
-  try {
-    await _Fetch('/intern/vacancy', 'PUT', payload);
-  } catch (error) {
-    throw error;
-  }
-};
+// const updateVacancySubmit = async (payload: any) => {
+//   try {
+//     await _Fetch('/intern/vacancy', 'PUT', payload);
+//   } catch (error) {
+//     throw error;
+//   }
+// };

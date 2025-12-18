@@ -10,10 +10,29 @@ import { userData } from '@/types/UserTypes';
 import { Plus } from 'lucide-react';
 import HomeDialog from '@/components/Home-Dialog';
 import { DialogValueTypes } from '@/types/DialogTypes';
+import { useSession } from 'next-auth/react';
+import Warning from '@/components/Warning';
+
+type dataProps = {
+  data: userData[];
+  unverifiedNum: number;
+};
 
 export default function Team() {
-  const [adminData, setAdminData] = useState<userData[]>([]);
-  const [judgeData, setJudgeData] = useState<userData[]>([]);
+  const { data: session } = useSession();
+
+  if (session?.user.role === 'Judge') {
+    return <Warning message={'You Are not Allowed To Access This Page!'} />;
+  }
+
+  const [adminData, setAdminData] = useState<dataProps>({
+    data: [],
+    unverifiedNum: 0,
+  });
+  const [judgeData, setJudgeData] = useState<dataProps>({
+    data: [],
+    unverifiedNum: 0,
+  });
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [dialogType, setDialogType] = useState<DialogValueTypes>({
     target: null,
@@ -25,11 +44,25 @@ export default function Team() {
   });
   useEffect(() => {
     if (!isLoading && Array.isArray(userData)) {
-      const admins = userData.filter(user => user.role === 'Admin');
-      setAdminData(admins);
+      const admins: userData[] = [];
+      const judges: userData[] = [];
+      let unverifiedAdminCount = 0;
+      let unverifiedJudgeCount = 0;
 
-      const judges = userData.filter(user => user.role === 'Judge');
-      setJudgeData(judges);
+      for (const user of userData) {
+        if (user.role === 'Admin') {
+          admins.push(user);
+          if (!user.verified) unverifiedAdminCount++;
+        }
+
+        if (user.role === 'Judge') {
+          judges.push(user);
+          if (!user.verified) unverifiedJudgeCount++;
+        }
+      }
+
+      setAdminData({ data: admins, unverifiedNum: unverifiedAdminCount });
+      setJudgeData({ data: judges, unverifiedNum: unverifiedJudgeCount });
     }
   }, [isLoading, userData]);
 
@@ -63,23 +96,59 @@ export default function Team() {
         </div>
         <section className='w-full flex'>
           <div className='w-1/2 flex flex-col gap-4 p-3'>
-            <Typography variant='h6' className='text-center' weight='semibold'>
-              Admin
-            </Typography>
+            <section>
+              <Typography
+                variant='h6'
+                className='text-center'
+                weight='semibold'
+              >
+                Admin
+              </Typography>
+              <Typography
+                variant='c2'
+                className='text-center'
+                weight='medium'
+                color='lightgray'
+              >
+                Waiting For Confirmation ({adminData.unverifiedNum})
+              </Typography>
+            </section>
             <DTTeam
               columns={columnsTeamData({ dialogToggle })}
-              data={Array.isArray(adminData) ? adminData : []}
+              data={Array.isArray(adminData.data) ? adminData.data : []}
               isLoading={isLoading}
+              className={{
+                parent:
+                  'max-h-[55vh] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100',
+              }}
             />
           </div>
           <div className='w-1/2 flex flex-col gap-4 p-3'>
-            <Typography variant='h6' className='text-center' weight='semibold'>
-              Judges
-            </Typography>
+            <section>
+              <Typography
+                variant='h6'
+                className='text-center'
+                weight='semibold'
+              >
+                Judges
+              </Typography>
+              <Typography
+                variant='c2'
+                className='text-center'
+                weight='medium'
+                color='lightgray'
+              >
+                Waiting For Confirmation ({judgeData.unverifiedNum})
+              </Typography>
+            </section>
             <DTTeam
               columns={columnsTeamData({ dialogToggle })}
-              data={Array.isArray(judgeData) ? judgeData : []}
+              data={Array.isArray(judgeData.data) ? judgeData.data : []}
               isLoading={isLoading}
+              className={{
+                parent:
+                  'max-h-[55vh] scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100',
+              }}
             />
           </div>
         </section>

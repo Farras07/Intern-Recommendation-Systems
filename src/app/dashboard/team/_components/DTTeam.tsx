@@ -29,8 +29,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ChevronDown } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -40,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   className?: {
     table?: string;
     header?: string;
+    parent?: string;
   };
 }
 
@@ -52,13 +51,14 @@ export default function DTTeam<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'name', desc: false },
+    { id: 'verified', desc: false },
   ]);
 
   const advBatchFilter = batchFilter;
 
-  const [showFilter, setShowFilter] = useState<boolean>(
-    advBatchFilter != '' ? true : false,
-  );
+  // const [showFilter, setShowFilter] = useState<boolean>(
+  //   advBatchFilter != '' ? true : false,
+  // );
 
   const table = useReactTable({
     data,
@@ -77,7 +77,7 @@ export default function DTTeam<TData, TValue>({
   }, [advBatchFilter, table]);
 
   return (
-    <div className='w-full flex flex-col gap-3'>
+    <div className={`w-full flex flex-col gap-3 ${className?.parent}`}>
       <div className='gap-4 flex'>
         <Input
           placeholder='Filter Applier Name...'

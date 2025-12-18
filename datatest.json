@@ -1,0 +1,48 @@
+{
+    "cv":<string>,
+    "email":<string>,
+    "batch":"batch-NsxYC",
+    "name":<string>,
+    "phone":<string>,
+    "educationInstitution" <string>,
+    "vacancy": [
+        {
+            "achievement": {
+                "cert": <string>,
+                "champRate": <string>,
+                "lvlRate": <string>
+            },
+            "exp":<string>,
+            "id":"vacancy-soFcB",
+            "interviewRate": <number>,
+            "lastStage":"Registration",
+            "rolePriority": <number>,
+            "portfolio": {
+                "link": <string>,
+                "rate": <number>,
+            },
+            "skills": [
+                {
+                    "rate": <string>,
+                    "skillName": "Copywriting"
+                },
+                {
+                    "rate": <string>,
+                    "skillName": "Content Analysis"
+                },
+                {
+                    "rate": <string>,
+                    "skillName": "Content Planning"
+                },
+                {
+                    "rate": <string>,
+                    "skillName": "Meta Ads"
+                },
+                {
+                    "rate": <string>,
+                    "skillName": "Tiktok Ads"
+                }
+            ]
+        }
+    ]
+}

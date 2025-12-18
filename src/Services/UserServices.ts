@@ -58,6 +58,7 @@ export default class UserServices {
         return users;
       }
     } catch (error) {
+      console.log(error);
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
       }
@@ -84,9 +85,9 @@ export default class UserServices {
     }
   }
 
-  async updateUserRole(id: string, role: string) {
+  async updateRole(id: string, payload: any) {
     try {
-      await db.collection('users').doc(id).update({ role });
+      await db.collection('users').doc(id).update(payload);
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
@@ -98,6 +99,62 @@ export default class UserServices {
   async deleteUserById(id: string) {
     try {
       await db.collection('users').doc(id).delete();
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+  async getVerifiedUser(role?: string) {
+    try {
+      let snapshot;
+      if (role) {
+        snapshot = await this._db
+          .collection('users')
+          .where('verified', '==', true)
+          .where('role', '==', role)
+          .get();
+      } else {
+        snapshot = await this._db
+          .collection('users')
+          .where('verified', '==', true)
+          .get();
+      }
+      if (snapshot.empty) {
+        throw new NotFoundError(`Not found Error : Data not found`);
+      }
+
+      const result = snapshot.docs.map(doc => doc.data());
+      return result;
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+  async getUnverifiedUser(role?: string) {
+    try {
+      let snapshot;
+      if (role) {
+        snapshot = await this._db
+          .collection('users')
+          .where('verified', '==', false)
+          .where('role', '==', role)
+          .get();
+      } else {
+        snapshot = await this._db
+          .collection('users')
+          .where('verified', '==', false)
+          .get();
+      }
+      if (snapshot.empty) {
+        // throw new NotFoundError(`Not found Error : Data not found`);
+        return [];
+      }
+
+      return snapshot.docs.map(doc => doc.data());
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);

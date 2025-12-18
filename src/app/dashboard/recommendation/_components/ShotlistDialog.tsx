@@ -46,6 +46,7 @@ import { BatchResponseType } from '@/types/BatchTypes';
 import { stageOrder } from '@/constant/stages.items';
 import { userData } from '@/types/UserTypes';
 import { combineToUTC } from '@/hooks/date-format.hooks';
+import { DANGER_TOAST, showToast, SUCCESS_TOAST } from '@/components/Toast';
 
 type DialogProps = {
   open: boolean;
@@ -74,20 +75,20 @@ export default function ShortlistDialog({
     queryKey: ['judge'],
   });
 
-  const { mutate } = useMutation({
-    path: '/recommendation',
-    queryKey: ['registrationData'],
-    method: 'POST',
-    successMessage: 'Shortlist Candidate Success',
-    errorMessage: 'Shortlist Candidate Failed',
-  });
-  const { mutate: mutateFinal } = useMutation({
-    path: '/recommendation?final=true',
-    queryKey: ['registrationData'],
-    method: 'POST',
-    successMessage: 'Shortlist Candidate Success',
-    errorMessage: 'Shortlist Candidate Failed',
-  });
+  // const { mutate } = useMutation({
+  //   path: '/recommendation',
+  //   queryKey: ['shortlist_1'],
+  //   method: 'POST',
+  //   successMessage: 'Shortlist Candidate Success',
+  //   errorMessage: 'Shortlist Candidate Failed',
+  // });
+  // const { mutate: mutateFinal } = useMutation({
+  //   path: '/recommendation?final=true',
+  //   queryKey: ['shortlist_2'],
+  //   method: 'POST',
+  //   successMessage: 'Shortlist Candidate Success',
+  //   errorMessage: 'Shortlist Candidate Failed',
+  // });
 
   const { mutate: mutateBatch } = useMutation({
     path: `/intern/batch/${currentBatch?.batchId}`,
@@ -120,13 +121,17 @@ export default function ShortlistDialog({
   >({
     resolver: zodResolver(formShortlistFinalCandidates),
     defaultValues: {
-      candidateAmount: 0,
+      shortlist: [{ role: '', candidateAmount: 0 }],
     },
   });
 
   const { fields } = useFieldArray({
     control: formShortlist.control,
     name: 'interviewer',
+  });
+  const { fields: finalFields } = useFieldArray({
+    control: formShortlistFinal.control,
+    name: 'shortlist',
   });
 
   useEffect(() => {
@@ -143,7 +148,10 @@ export default function ShortlistDialog({
       });
     }
     formShortlistFinal.reset({
-      candidateAmount: 0,
+      shortlist: recommendation.recommendation.map((rec: any) => ({
+        role: rec.role,
+        candidateAmount: 0,
+      })),
     });
   }, [recommendation]);
 
@@ -152,40 +160,110 @@ export default function ShortlistDialog({
   ) => {
     setConfirmAction(() => async () => {
       try {
-        mutate({
-          session: {
-            accessToken: session?.token.accessToken,
-            name: session?.user.name,
-            email: session?.user.email,
+        // mutate({
+        //   session: {
+        //     accessToken: session?.token.accessToken,
+        //     name: session?.user.name,
+        //     email: session?.user.email,
+        //   },
+        //   values: {
+        //     ...values,
+        //     interviewDate: combineToUTC(
+        //       values.interviewDate,
+        //       values.interviewStartTime,
+        //     ),
+        //   },
+        //   candidates: recommendation,
+        // });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASEURL}/recommendation`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              session: {
+                accessToken: session?.token.accessToken,
+                name: session?.user.name,
+                email: session?.user.email,
+              },
+              values: {
+                ...values,
+                interviewDate: combineToUTC(
+                  values.interviewDate,
+                  values.interviewStartTime,
+                ),
+              },
+              candidates: recommendation,
+            }),
+            headers: { 'Content-Type': 'application/json' },
           },
-          values: {
-            ...values,
-            interviewDate: combineToUTC(
-              values.interviewDate,
-              values.interviewStartTime,
-            ),
-          },
-          candidates: recommendation,
-        });
+        );
+
+        if (!res.ok) throw new Error('Failed to generate meet');
+
+        // Get PDF blob
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        // Trigger download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Interview_List.pdf';
+        a.click();
+        window.URL.revokeObjectURL(url);
+
         const currentStageIndex = stageOrder.indexOf(currentBatch?.stage ?? '');
         mutateBatch({ stage: stageOrder[currentStageIndex + 1] });
+        showToast('Final shortlist created successfully 🎉', SUCCESS_TOAST);
+      } catch (error) {
+        showToast(`Create Shortlist Failed: ${error}`, DANGER_TOAST);
       } finally {
         onOpenChange(false);
       }
     });
     setIsShortlistConfirmDialogOpen(true);
   };
+
   const onSubmitShortlistFinal = async (
     values: z.infer<typeof formShortlistFinal>,
   ) => {
     setConfirmAction(() => async () => {
       try {
-        mutateFinal({
-          values,
-          candidates: recommendation,
-        });
+        // mutateFinal({
+        //   values,
+        //   candidates: recommendation,
+        // });
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASEURL}/recommendation?final=true`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              values,
+              candidates: recommendation,
+            }),
+            headers: { 'Content-Type': 'application/json' },
+          },
+        );
+
+        if (!res.ok) throw new Error('Failed to make final shortlist');
+
+        // Get PDF blob
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        // Trigger download
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Accepted Candidates.pdf';
+        a.click();
+        window.URL.revokeObjectURL(url);
+
         const currentStageIndex = stageOrder.indexOf(currentBatch?.stage ?? '');
         mutateBatch({ stage: stageOrder[currentStageIndex + 1] });
+
+        showToast('Final shortlist created successfully 🎉', SUCCESS_TOAST);
+      } catch (error) {
+        showToast(`Create Final Shortlist Failed: ${error}`, DANGER_TOAST);
       } finally {
         onOpenChange(false);
       }
@@ -213,23 +291,38 @@ export default function ShortlistDialog({
                 )}
                 className='space-y-8'
               >
-                <FormField
-                  control={formShortlistFinal.control}
-                  name='candidateAmount'
-                  render={({ field }) => (
-                    <FormItem className='flex flex-col w-[40%]'>
-                      <FormLabel>Candidates Amount</FormLabel>
-                      <FormControl>
-                        <Input
-                          type='number'
-                          {...field}
-                          onChange={e => field.onChange(Number(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {finalFields.map((field, index) => (
+                  <div
+                    key={field.id}
+                    className='border p-4 rounded-lg space-y-4'
+                  >
+                    <Typography as='h3' variant='c2' className='font-semibold'>
+                      {formShortlistFinal.watch(`shortlist.${index}.role`) ||
+                        `Role #${index + 1}`}
+                    </Typography>
+
+                    <FormField
+                      control={formShortlistFinal.control}
+                      name={`shortlist.${index}.candidateAmount`}
+                      render={({ field }) => (
+                        <FormItem className='flex flex-col w-[40%]'>
+                          <FormLabel>Candidates Amount</FormLabel>
+                          <FormControl>
+                            <Input
+                              type='number'
+                              {...field}
+                              onChange={e =>
+                                field.onChange(Number(e.target.value))
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+
                 <div className='flex justify-end px-4 gap-4'>
                   <Button
                     onClick={() => onOpenChange(false)}

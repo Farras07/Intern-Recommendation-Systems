@@ -2,22 +2,9 @@
 
 import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { userData } from '@/types/UserTypes';
-import { RecommendationType } from '@/types/RecommendationTypes';
 import Typography from '@/components/Typography';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { ArrowUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useDispatch } from 'react-redux';
-import { setTeamData } from '@/lib/redux/slices/teamSlice';
-import { useMutation } from '@/hooks/useQuery.hooks';
 import { DialogValueTypes } from '@/types/DialogTypes';
 
 type DialogToggleType = (props: DialogValueTypes) => void;
@@ -87,9 +74,15 @@ export const columnsRecommendationsData = (
     {
       accessorKey: 'topsisScore',
       header: 'Topsis Score',
-      cell: ({ getValue }) => (
-        <Typography variant='c2'>{getValue<number>().toFixed(3)}</Typography>
-      ),
+      cell: ({ getValue }) => {
+        const value = getValue<number | null>();
+
+        return (
+          <Typography variant='c2'>
+            {typeof value === 'number' ? value.toFixed(3) : '-'}
+          </Typography>
+        );
+      },
     },
     {
       accessorKey: 'rank',

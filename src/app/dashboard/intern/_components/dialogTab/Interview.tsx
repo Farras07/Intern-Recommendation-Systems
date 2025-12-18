@@ -8,7 +8,6 @@ import {
 } from '@/components/ui/card';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
 import { Form } from '@/components/ui/form';
-
 import { Button } from '@/components/ui/button';
 import Typography from '@/components/Typography';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -21,8 +20,8 @@ import FormFieldSelectPiece from '@/app/vacancy/join/_containers/forms/pieces/Fo
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/redux/store';
 import { useMutation } from '@/hooks/useQuery.hooks';
-import { DANGER_TOAST, SUCCESS_TOAST, showToast } from '@/components/Toast';
 import { VacancyRegisType } from '@/types/registDataTypes';
+import { useSession } from 'next-auth/react';
 
 export default function Interview({
   onOpenChange,
@@ -49,6 +48,8 @@ export default function Interview({
     path: `/intern/vacancy/register/${currentApplyId}`,
     queryKey: ['registrationData'],
     method: 'PUT',
+    successMessage: 'Update Registration Data Success',
+    errorMessage: 'Update Registration Data Failed',
   });
 
   const formInterview = useForm<{
@@ -82,29 +83,22 @@ export default function Interview({
   const onSubmit = async (values: {
     interviewList: z.infer<typeof formInterviewSchema>;
   }) => {
-    const toast = { message: '', type: DANGER_TOAST };
     const interviewMap = new Map(
       values.interviewList.map(int => [
         int.idVacancy,
         Number(int.interviewRate),
       ]),
     );
+    const updatedVacancy = vacancy.map(vac => {
+      const { ...rest } = vac;
+      return {
+        ...rest,
+        interviewRate: interviewMap.get(vac.id) || vac.interviewRate,
+      };
+    });
 
-    const updatedVacancy = vacancy.map(vac => ({
-      ...vac,
-      interviewRate: interviewMap.get(vac.id) || vac.interviewRate,
-    }));
-
-    try {
-      mutate({ vacancy: updatedVacancy });
-      toast.message = 'Update Interview Rate Success';
-      toast.type = SUCCESS_TOAST;
-    } catch (error) {
-      toast.message = `Update Interview Rate Failed: ${error}`;
-    } finally {
-      showToast(toast.message, toast.type);
-      onOpenChange(false);
-    }
+    mutate({ vacancy: updatedVacancy });
+    onOpenChange(false);
   };
 
   return (

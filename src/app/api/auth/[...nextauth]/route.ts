@@ -1,3 +1,4 @@
+// AUTH API / Business Layer / Controller
 import NextAuth from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 

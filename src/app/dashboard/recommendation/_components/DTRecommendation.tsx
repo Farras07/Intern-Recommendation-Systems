@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -20,17 +20,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Loading from '@/app/Loading';
-import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { ChevronDown } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -40,6 +29,7 @@ interface DataTableProps<TData, TValue> {
   className?: {
     table?: string;
     header?: string;
+    parent?: string;
   };
 }
 
@@ -48,17 +38,10 @@ export default function DTRecommendation<TData, TValue>({
   data,
   isLoading,
   className,
-  batchFilter,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'rank', desc: false },
   ]);
-
-  const advBatchFilter = batchFilter;
-
-  //   const [showFilter, setShowFilter] = useState<boolean>(
-  //     advBatchFilter != '' ? true : false,
-  //   );
 
   const table = useReactTable({
     data,
@@ -70,48 +53,10 @@ export default function DTRecommendation<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  //   useEffect(() => {
-  //     if (advBatchFilter) {
-  //       table.getColumn('batch')?.setFilterValue(advBatchFilter);
-  //     }
-  //   }, [advBatchFilter, table]);
-
   return (
-    <div className='w-full flex flex-col gap-3'>
-      {/* <div className='gap-4 flex'>
-        <Input
-          placeholder='Filter Applier Name...'
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={event =>
-            table.getColumn('name')?.setFilterValue(event.target.value)
-          }
-          className='max-w-sm'
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='outline' className='ml-auto'>
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            {table
-              .getAllColumns()
-              .filter(column => column.getCanHide())
-              .map(column => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className='capitalize'
-                    checked={column.getIsVisible()}
-                    onCheckedChange={value => column.toggleVisibility(!!value)}
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div> */}
+    <div
+      className={`w-full flex flex-col gap-3 ${className?.parent} scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100`}
+    >
       <Table className={`${className?.table} `}>
         <TableHeader>
           {table.getHeaderGroups().map(headerGroup => (

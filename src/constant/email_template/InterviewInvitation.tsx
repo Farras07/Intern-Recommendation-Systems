@@ -2,7 +2,6 @@ import { Html } from '@react-email/html';
 import { Tailwind } from '@react-email/tailwind';
 import { Section } from '@react-email/section';
 import { Text } from '@react-email/text';
-import { Button } from '@react-email/button';
 import { Img } from '@react-email/img';
 
 type InterviewInviteEmailProps = {
@@ -37,6 +36,7 @@ const InterviewInvitationEmail: React.FC<InterviewInviteEmailProps> = ({
                 color: '#111827',
                 fontWeight: 'bold',
                 marginBottom: '16px',
+                textAlign: 'center',
               }}
             >
               🎉 You Are Invited to Interview 🎉

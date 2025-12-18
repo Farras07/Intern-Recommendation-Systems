@@ -13,7 +13,6 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import z from 'zod';
 import { MoveLeft, MoveRight } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setStep } from '@/lib/redux/slices/formSlice';
 import { RootState } from '@/lib/redux/store';
 import FormFieldInputPiece from '../pieces/FormFieldInputiece';
 import FormFieldDDPiece from '../pieces/FormFieldDDPiece';
@@ -22,9 +21,15 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import { useMutation } from '@/hooks/useQuery.hooks';
-import { showToast, DANGER_TOAST, SUCCESS_TOAST } from '@/components/Toast';
+// import { showToast, DANGER_TOAST, SUCCESS_TOAST } from '@/components/Toast';
+import { setStep, setResetData } from '@/lib/redux/slices/formSlice';
+import { setResetRoleVacancy } from '@/lib/redux/slices/roleVacancySlice';
 
-export default function SkillsQ() {
+export default function SkillsQ({
+  onChangeSetPopup,
+}: {
+  onChangeSetPopup: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const dispatch = useDispatch();
   const roleVacancyPick = useSelector(
     (state: RootState) => state.roleVacancyPick.data,
@@ -35,6 +40,8 @@ export default function SkillsQ() {
     path: '/intern/vacancy/register',
     queryKey: ['register'],
     method: 'POST',
+    successMessage: 'Intern Register Success',
+    errorMessage: 'Intern Register Failed',
   });
 
   const formSkillsQ = useForm<z.infer<typeof formSkillsQVacancySchema>>({
@@ -77,12 +84,13 @@ export default function SkillsQ() {
         return { ...userSkill };
       });
 
-      const { batch: _batch, role: _role, ...restPropVac } = vacancy;
+      const { ...restPropVac } = vacancy;
       return {
         ...restPropVac,
         skills: mergedSkills,
         exp: userData.exp,
         interviewRate: 1,
+        rolePriority: index + 1,
         lastStage: 'Registration',
         portfolio: {
           link: userData.portofolioLink,
@@ -94,14 +102,18 @@ export default function SkillsQ() {
 
     const flattened = newData.flat();
     mutate(
-      { ...formData, batch: batchId, vacancy: flattened },
+      {
+        ...formData,
+        batch: batchId,
+        applyTime: new Date(),
+        vacancy: flattened,
+      },
       {
         onSuccess: () => {
-          showToast('Intern Register Success', SUCCESS_TOAST);
-        },
-        onError: err => {
-          showToast('Error submitting vacancy', DANGER_TOAST);
-          console.error('Error submitting vacancy', err);
+          dispatch(setStep({ type: 'Reset' }));
+          onChangeSetPopup(false);
+          dispatch(setResetRoleVacancy());
+          dispatch(setResetData());
         },
       },
     );

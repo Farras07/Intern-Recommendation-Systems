@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { userData } from '@/types/UserTypes';
 import Typography from '@/components/Typography';
@@ -32,8 +31,10 @@ function TeamActionsCell({
 
   const { mutate } = useMutation({
     path: `/user?id=${row.original.id}`,
-    queryKey: ['user'],
+    queryKey: ['users'],
     method: 'DELETE',
+    successMessage: 'Delete Team Success',
+    errorMessage: 'Delete Team Failed',
   });
 
   const handleEditClick = () => {
@@ -70,6 +71,8 @@ export const columnsTeamData = ({
 }): ColumnDef<userData>[] => [
   {
     accessorKey: 'name',
+    size: 30,
+    enableSorting: true,
     header: ({ column }) => (
       <Button
         variant='ghost'
@@ -79,8 +82,6 @@ export const columnsTeamData = ({
         <ArrowUpDown />
       </Button>
     ),
-    size: 30,
-    enableSorting: true,
     cell: ({ getValue }) => {
       const name = getValue<string>();
       if (!name) return null;
@@ -98,13 +99,30 @@ export const columnsTeamData = ({
     },
   },
   {
-    accessorKey: 'role',
-    header: 'Role',
-    size: 30,
+    id: 'verified',
+    accessorFn: row => row.verified,
+    enableSorting: true,
+    sortingFn: (rowA, rowB) => {
+      const a = rowA.getValue<boolean>('verified') ? 1 : 0;
+      const b = rowB.getValue<boolean>('verified') ? 1 : 0;
+      return a - b;
+    },
+    header: ({ column }) => (
+      <Button
+        variant='ghost'
+        onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+      >
+        Status
+        <ArrowUpDown />
+      </Button>
+    ),
     cell: ({ getValue }) => {
-      const role = getValue<string>();
-      if (!role) return null;
-      return <Typography variant='c2'>{role}</Typography>;
+      const isVerified = getValue<boolean>();
+      return (
+        <Typography variant='c2'>
+          {isVerified ? 'Verified' : 'Waiting confirmation'}
+        </Typography>
+      );
     },
   },
   {

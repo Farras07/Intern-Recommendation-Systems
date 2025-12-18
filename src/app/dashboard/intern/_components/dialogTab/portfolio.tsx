@@ -7,14 +7,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import Typography from '@/components/Typography';
 import { Button } from '@/components/ui/button';
 import { formPortfolioSchema } from '@/constant/schemas.items';
@@ -27,14 +20,17 @@ import FormFieldSelectPiece from '@/app/vacancy/join/_containers/forms/pieces/Fo
 import { useSelector } from 'react-redux';
 import { RootState } from '@/lib/redux/store';
 import { useMutation } from '@/hooks/useQuery.hooks';
-import { DANGER_TOAST, SUCCESS_TOAST, showToast } from '@/components/Toast';
 import { VacancyRegisType } from '@/types/registDataTypes';
+import { useSession } from 'next-auth/react';
 
 export default function Portfolio({
   onOpenChange,
 }: {
   onOpenChange: (open: boolean) => void;
 }) {
+  const { data: session } = useSession();
+  if (!session) return null;
+
   const currentRegisData = useSelector(
     (state: RootState) => state.registerVacancy.regisData,
   );
@@ -47,6 +43,8 @@ export default function Portfolio({
     path: `/intern/vacancy/register/${currentApplyId}`,
     queryKey: ['registrationData'],
     method: 'PUT',
+    successMessage: 'Update Registration Data Success',
+    errorMessage: 'Update Registration Data Failed',
   });
 
   useEffect(() => {
@@ -86,32 +84,26 @@ export default function Portfolio({
   const onSubmit = async (values: {
     portfolioList: z.infer<typeof formPortfolioSchema>;
   }) => {
-    const toast = { message: '', type: DANGER_TOAST };
     const portfolioMap = new Map(
       values.portfolioList.map(int => [
         int.idVacancy,
         Number(int.portfolioRate),
       ]),
     );
-    const updatedVacancy = vacancy.map(vac => ({
-      ...vac,
-      portfolio: {
-        link: vac.portfolio.link,
-        rate: portfolioMap.get(vac.id) || vac.portfolio.rate,
-      },
-    }));
 
-    try {
-      mutate({ vacancy: updatedVacancy });
-      toast.message = 'Update Portfolio Rate Success';
-      toast.type = SUCCESS_TOAST;
-    } catch (error) {
-      toast.message = `Update Portfolio Rate Failed: ${error}`;
-      console.error(error);
-    } finally {
-      showToast(toast.message, toast.type);
-      onOpenChange(false);
-    }
+    const updatedVacancy = vacancy.map(vac => {
+      const { ...rest } = vac;
+      return {
+        ...rest,
+        portfolio: {
+          link: vac.portfolio.link,
+          rate: portfolioMap.get(vac.id) || vac.portfolio.rate,
+        },
+      };
+    });
+
+    mutate({ vacancy: updatedVacancy });
+    onOpenChange(false);
   };
 
   return (
@@ -146,19 +138,22 @@ export default function Portfolio({
                   variantTypo='c2'
                   colorTypo='dark'
                   weightTypo='medium'
+                  disabled={session.user.role === 'Judge'}
                 />
               ))}
             </div>
           </CardContent>
           <DialogFooter>
-            <CardFooter className='flex justify-center gap-2 p-8'>
-              <DialogClose asChild>
-                <Button className='cursor-pointer'>Cancel</Button>
-              </DialogClose>
-              <Button type='submit' className='cursor-pointer'>
-                Save Changes
-              </Button>
-            </CardFooter>
+            {session?.user?.role === 'Admin' && (
+              <CardFooter className='flex justify-center gap-2 p-8'>
+                <DialogClose asChild>
+                  <Button className='cursor-pointer'>Cancel</Button>
+                </DialogClose>
+                <Button type='submit' className='cursor-pointer'>
+                  Save Changes
+                </Button>
+              </CardFooter>
+            )}
           </DialogFooter>
         </Card>
       </form>

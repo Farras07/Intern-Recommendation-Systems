@@ -9,6 +9,7 @@ export interface BatchItemType {
     status: string;
   };
 }
+
 export interface RoleItemType {
   role: {
     id: string;

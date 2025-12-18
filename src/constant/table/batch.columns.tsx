@@ -15,11 +15,67 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DialogValueTypes } from '@/types/DialogTypes';
+import { useMutation } from '@/hooks/useQuery.hooks';
 
 type ColumnsBatchPropsType = {
   dialogToggle: (props: DialogValueTypes) => void;
   setFormState: (props: any) => void;
 };
+
+function ActionBatchCell({
+  row,
+  dialogToggle,
+  setFormState,
+}: {
+  row: any;
+} & ColumnsBatchPropsType) {
+  const { mutate: mutateDeleteBatch } = useMutation({
+    path: `/intern/batch?id=${row.original.batchId}`,
+    queryKey: ['batch'],
+    method: 'DELETE',
+    successMessage: 'Delete Batch Success',
+    errorMessage: 'Delete Batch Failed',
+  });
+
+  const handleDeleteBatch = async () => {
+    mutateDeleteBatch({});
+  };
+
+  const handleEditBatch = async () => {
+    dialogToggle({
+      target: 'Batch',
+      action: 'Edit',
+    });
+    setFormState((prev: any) => ({
+      ...prev,
+      data: {
+        ...row.original,
+        batchStartTime: new Date(row.original.startDate)
+          .toTimeString()
+          .split(' ')[0], // "HH:mm:ss"
+        batchEndTime: new Date(row.original.endDate)
+          .toTimeString()
+          .split(' ')[0], // "HH:mm:ss"
+      },
+    }));
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant='ghost' className='h-8 w-8 p-0'>
+          <span className='sr-only'>Open menu</span>
+          <MoreHorizontal />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align='end'>
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleEditBatch}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleDeleteBatch}>Delete</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 export const columnsBatch = ({
   dialogToggle,
@@ -77,45 +133,34 @@ export const columnsBatch = ({
     id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const handleDeleteBatch = async () => {
-        const body = { batchId: row.original.batchId };
-        await _Fetch('/intern/batch', 'DELETE', body);
-      };
-      const handleEditBatch = async () => {
-        dialogToggle({
-          target: 'Batch',
-          action: 'Edit',
-        });
-        setFormState((prev: any) => ({
-          ...prev,
-          data: {
-            ...row.original,
-            batchStartTime: new Date(row.original.startDate)
-              .toTimeString()
-              .split(' ')[0], // "HH:mm:ss"
-            batchEndTime: new Date(row.original.endDate)
-              .toTimeString()
-              .split(' ')[0], // "HH:mm:ss"
-          },
-        }));
-      };
+      // const handleDeleteBatch = async () => {
+      //   const body = { batchId: row.original.batchId };
+      //   await _Fetch('/intern/batch', 'DELETE', body);
+      // };
+      // const handleEditBatch = async () => {
+      //   dialogToggle({
+      //     target: 'Batch',
+      //     action: 'Edit',
+      //   });
+      //   setFormState((prev: any) => ({
+      //     ...prev,
+      //     data: {
+      //       ...row.original,
+      //       batchStartTime: new Date(row.original.startDate)
+      //         .toTimeString()
+      //         .split(' ')[0], // "HH:mm:ss"
+      //       batchEndTime: new Date(row.original.endDate)
+      //         .toTimeString()
+      //         .split(' ')[0], // "HH:mm:ss"
+      //     },
+      //   }));
+      // };
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleEditBatch}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDeleteBatch}>
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ActionBatchCell
+          row={row}
+          dialogToggle={dialogToggle}
+          setFormState={setFormState}
+        />
       );
     },
   },

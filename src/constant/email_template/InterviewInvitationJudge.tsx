@@ -35,6 +35,7 @@ const InterviewInvitationEmailJudge: React.FC<InterviewInviteEmailProps> = ({
                 color: '#111827',
                 fontWeight: 'bold',
                 marginBottom: '16px',
+                textAlign: 'center',
               }}
             >
               🎉 You Are Invited to Interview 🎉

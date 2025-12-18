@@ -1,24 +1,27 @@
-import InternServices from '@/Services/InternServices';
+// import InternServices from '@/Services/InternServices';
 import { Success, Failed } from '@/types/ResponseTypes';
-import DriveServices from '@/Services/DriveServices';
 import EmailServices from '@/Services/EmailServices';
-import ResMiddleware from '@/app/middleware/response.middleware';
-import AuthMiddleware from '@/app/middleware/auth.middleware';
+import ResMiddleware from '@/app/api/middleware/response.middleware';
+import AuthMiddleware from '@/app/api/middleware/auth.middleware';
+import RegisterServices from '@/Services/RegisterServices';
+import BatchServices from '@/Services/BatchServices';
 
-type InternServicesType = InstanceType<typeof InternServices>;
-type DriveServicesType = InstanceType<typeof DriveServices>;
+// type InternServicesType = InstanceType<typeof InternServices>;
+type BatchServicesType = InstanceType<typeof BatchServices>;
+type RegisterServicesType = InstanceType<typeof RegisterServices>;
 type EmailServicesType = InstanceType<typeof EmailServices>;
 
 export default class InternRegisterHandler {
-  _service: InternServicesType;
-  _drive: DriveServicesType;
+  _service: RegisterServicesType;
   _emailService: EmailServicesType;
+  _batchService: BatchServicesType;
+
   constructor(
-    InternService: InternServicesType,
-    driveService: DriveServicesType,
+    registerService: RegisterServicesType,
+    BatchService: BatchServicesType,
   ) {
-    this._service = InternService;
-    this._drive = driveService;
+    this._service = registerService;
+    this._batchService = BatchService;
     this._emailService = new EmailServices();
   }
 
@@ -47,52 +50,23 @@ export default class InternRegisterHandler {
       async (req: Request) => {
         let registData;
         const { searchParams } = new URL(req.url);
-        // const batchType = searchParams.get('batchType');
         const roleId = searchParams.get('role');
         const batchId = searchParams.get('batchId');
-        // if (batchType == 'active') {
-        //   const activeBatch = await this._service.getActiveBatch();
-        //   if (roleId)
-        //     registData = await this._service.getRegistration(
-        //       activeBatch,
-        //       roleId,
-        //     );
-        //   else registData = await this._service.getRegistration(activeBatch);
-        // } else {
-        //   if (roleId && batchId) {
-        //     const batchData = await this._service.getSpecificBatch(batchId)
-        //     registData = await this._service.getRegistration([batchData], roleId)
-        //   }
-        //   else if (roleId || batchId) {
-        //     if (roleId) {
-        //       const allBatch = await this._service.getBatches();
-        //       registData = await this._service.getRegistration(
-        //         allBatch,
-        //         roleId,
-        //       );
-        //     } else if (batchId) {
-        //       const batchData = await this._service.getSpecificBatch(batchId)
-        //       registData = await this._service.getRegistration([batchData])
-        //     }
-        //   } else {
-        //     const allBatch = await this._service.getBatches();
-        //     registData = await this._service.getRegistration(allBatch);
-        //   }
-        // }
         if (roleId && batchId) {
-          const batchData = await this._service.getSpecificBatch(batchId);
+          const batchData = await this._batchService.getSpecificBatch(batchId);
           registData = await this._service.getRegistration([batchData], roleId);
         } else if (roleId || batchId) {
           if (roleId) {
-            const allBatch = await this._service.getBatches();
+            console.log('brooo');
+            const allBatch = await this._batchService.getBatches();
             registData = await this._service.getRegistration(allBatch, roleId);
           } else if (batchId) {
-            const batchData = await this._service.getSpecificBatch(batchId);
+            const batchData =
+              await this._batchService.getSpecificBatch(batchId);
             registData = await this._service.getRegistration([batchData]);
           }
         } else {
-          console.log('heiii');
-          const allBatch = await this._service.getBatches();
+          const allBatch = await this._batchService.getBatches();
           registData = await this._service.getRegistration(allBatch);
         }
         return {
@@ -101,7 +75,7 @@ export default class InternRegisterHandler {
           data: registData,
         };
       },
-      { authorizeRole: ['Admin'] },
+      { authorizeRole: ['Admin', 'Judge'] },
     ),
   );
 }

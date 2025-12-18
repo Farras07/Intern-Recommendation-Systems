@@ -1,26 +1,25 @@
-// types/next-auth.d.ts
-import { DefaultSession } from 'next-auth';
-import { Timestamp } from 'next/dist/server/lib/cache-handlers/types';
+import NextAuth, { DefaultSession, DefaultUser } from 'next-auth';
 
 declare module 'next-auth' {
   interface Session {
+    user: {
+      id: string;
+      role: string;
+      verified: boolean;
+    } & DefaultSession['user'];
     token: {
       accessToken: string;
       refreshToken: string;
       idToken: string;
-      exp: Timestamp;
+      exp: any;
+      // verified: boolean
     };
-    user: {
-      id: string;
-      role: string;
-      verified: string;
-    } & DefaultSession['user'];
   }
 
-  interface User {
+  interface User extends DefaultUser {
     id: string;
     role: string;
-    verified: string;
+    verified: boolean;
   }
 }
 
@@ -28,5 +27,10 @@ declare module 'next-auth/jwt' {
   interface JWT {
     id: string;
     role: string;
+    verified: boolean;
+    accessToken?: string;
+    refreshToken?: string;
+    idToken?: string;
+    accessTokenExpires?: number;
   }
 }

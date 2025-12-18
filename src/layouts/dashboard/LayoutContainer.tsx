@@ -10,7 +10,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { name }: SessionUserData = session.user as SessionUserData;
 
   return (
-    <div className='bg-ghost-white w-screen '>
+    <div className='bg-ghost-white w-screen'>
       <SidebarProvider>
         <AppSidebar />
         <SidebarTrigger />

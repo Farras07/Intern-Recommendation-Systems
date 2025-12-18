@@ -3,43 +3,26 @@
 import Typography from '@/components/Typography';
 import Herotext from '@/components/ui/Hero_Text';
 import { Badge } from '@/components/ui/badge';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { formVacancyFilterSchema } from '@/constant/schemas.items';
-import { Button } from '@/components/ui/button';
 
 export default function Hero_Join() {
-  const formVacancyFilter = useForm<z.infer<typeof formVacancyFilterSchema>>({
-    resolver: zodResolver(formVacancyFilterSchema),
-    defaultValues: {
-      role: '',
-      batch: '',
-    },
-  });
+  // const formVacancyFilter = useForm<z.infer<typeof formVacancyFilterSchema>>({
+  //   resolver: zodResolver(formVacancyFilterSchema),
+  //   defaultValues: {
+  //     role: '',
+  //     batch: '',
+  //   },
+  // });
 
-  const onSubmitFilter = async (
-    values: z.infer<typeof formVacancyFilterSchema>,
-  ) => {
-    console.log(values);
-  };
+  // const onSubmitFilter = async (
+  //   values: z.infer<typeof formVacancyFilterSchema>,
+  // ) => {
+  //   console.log(values);
+  // };
 
   return (
     <section className='flex flex-col items-center px-4 pt-28 xl:pt-36'>
@@ -63,7 +46,7 @@ export default function Hero_Join() {
         benefits are designed to help you thrive
       </Typography>
 
-      <Form {...formVacancyFilter}>
+      {/* <Form {...formVacancyFilter}>
         <form
           onSubmit={formVacancyFilter.handleSubmit(onSubmitFilter)}
           className='flex flex-col gap-10'
@@ -136,7 +119,7 @@ export default function Hero_Join() {
           </div>
           <Button type='submit'>Filter</Button>
         </form>
-      </Form>
+      </Form> */}
     </section>
   );
 }

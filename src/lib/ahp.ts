@@ -1,5 +1,4 @@
 import InvariantError from '@/exceptions/InvariantError';
-import { SkillsPriorityType } from '@/types/RecommendationTypes';
 import { multiply, sum } from 'mathjs';
 
 export default class AHP {
@@ -62,6 +61,8 @@ export default class AHP {
         this._parentComparisonMatrix.matrix,
         parentweights,
       );
+
+      console.log('CR Parent: ', parentWeightIndicator.CR);
       if (parentWeightIndicator.CR > 0.1)
         throw new InvariantError('AHP Weight is Not Consistent!');
       return { weightResult, resultMatrix: parentweights };
@@ -83,12 +84,13 @@ export default class AHP {
         this._subcriteriaAchievementComparisonMatrix.matrix,
         subAchievementWeight,
       );
+
       if (subAchievementWeightIndicator.CR > 0.1)
         throw new InvariantError('AHP Subcriteria Weight is Not Consistent!');
 
-      const subSkillcomparisonMatrix = vacPriority.map((row, i) =>
+      const subSkillcomparisonMatrix = vacPriority.map(row =>
         vacPriority.map(
-          (col, j) =>
+          col =>
             this.priorityIndexRecord[col.priority] /
             this.priorityIndexRecord[row.priority],
         ),
@@ -103,6 +105,10 @@ export default class AHP {
         subSkillcomparisonMatrix,
         subSkillsWeight,
       );
+
+      console.log('Weight subcriteria Skills: ', subSkillsWeight);
+      console.log('CR subcriteria Skills: ', subSkillsWeightIndicator.CR);
+
       if (subSkillsWeightIndicator.CR > 0.1)
         throw new InvariantError('AHP Subcriteria Weight is Not Consistent!');
 
@@ -182,7 +188,10 @@ export default class AHP {
     const n = matrix.length;
     const Aw = multiply(matrix, weights).valueOf() as number[];
     const lambdaMax = sum(Aw.map((v, i) => v / weights[i])) / n;
+    // console.log('lambda: ', lambdaCoba)
+    // console.log('n: ', n)
     const CI = (lambdaMax - n) / (n - 1);
+    // console.log('RI: ',this.RI[n])
     const CR = CI / this.RI[n];
     return { lambdaMax, CI, CR };
   }

@@ -32,6 +32,7 @@ const RegisterAlertEmail: React.FC<InviteAlertEmailProps> = ({ role }) => {
                 color: '#111827',
                 fontWeight: 'bold',
                 marginBottom: '16px',
+                textAlign: 'center',
               }}
             >
               🎉 Welcome to Fleek Dashboard! 🎉

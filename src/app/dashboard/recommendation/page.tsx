@@ -4,7 +4,7 @@ import CollapsibleContainer from '@/components/CollapsibleContainer';
 import Typography from '@/components/Typography';
 import Filter from './_components/Filter';
 import { useQuery } from '@/hooks/useQuery.hooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { BatchResponseType } from '@/types/BatchTypes';
@@ -19,6 +19,7 @@ import { useDispatch } from 'react-redux';
 import { setShortlistCandidate } from '@/lib/redux/slices/shortlistSlice';
 import InvariantError from '@/exceptions/InvariantError';
 import { useSession } from 'next-auth/react';
+import NotFoundError from '@/exceptions/NotFoundError';
 
 export default function Recommendation() {
   const { data: session } = useSession();
@@ -35,27 +36,35 @@ export default function Recommendation() {
   const [selectedBatch, setSelectedBatch] = useState<BatchResponseType | null>(
     null,
   );
+
   const [generateToggle, setGenerateToggle] = useState<boolean>(false);
   const [alternative, setAlternative] = useState<RecommendationType | []>([]);
   const [matrixLabels, setMatrixLabels] = useState<string[]>([]);
   const [alternativeLoading, setAlternativeLoading] = useState<boolean>(false);
 
   const stage = selectedBatch?.stage?.replace(/\s+/g, '_') || '';
-  const { data: recommendationData, isLoading: isRecommendationLoading } =
-    useQuery({
-      path: selectedBatch
-        ? `/recommendation?batchId=${selectedBatch.batchId}&stage=${stage}`
-        : '',
-      queryKey: [
-        'recommendation',
-        selectedBatch ? selectedBatch.batchId : 'none',
-      ],
-      enabledVar: generateToggle && !!selectedBatch,
-    });
+  const {
+    data: recommendationData,
+    isLoading: isRecommendationLoading,
+    error,
+  } = useQuery({
+    path: selectedBatch
+      ? `/recommendation?batchId=${selectedBatch.batchId}&stage=${stage}`
+      : '',
+    queryKey: [
+      'recommendation',
+      selectedBatch ? selectedBatch.batchId : 'none',
+    ],
+    enabledVar: generateToggle && !!selectedBatch,
+  });
+
+  console.log(recommendationData);
 
   const handleGenerate = () => {
     setIsConfirmDialogOpen(!isConfirmDialogOpen);
   };
+
+  console.log(recommendationData);
 
   const handlePickRole = (alt: any) => {
     setAlternativeLoading(true);
@@ -92,6 +101,12 @@ export default function Recommendation() {
         showToast(error.message, DANGER_TOAST);
     }
   };
+
+  useEffect(() => {
+    if (error instanceof NotFoundError) {
+      showToast('There are no registration data in this batch!', DANGER_TOAST);
+    }
+  }, [error]);
 
   return (
     <Layout>
@@ -143,24 +158,27 @@ export default function Recommendation() {
                     ))}
                 </div>
               </section>
-              <section className='max-h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100'>
+              <section>
                 <DTRecommendation
                   columns={columnsRecommendationsData(matrixLabels)}
                   data={Array.isArray(alternative) ? alternative : []}
                   isLoading={alternativeLoading}
+                  className={{ parent: 'max-h-[38vh]' }}
                 />
               </section>
-              {session && session.user.role === 'Admin' && (
-                <section className='flex justify-center'>
-                  <Button
-                    variant={'hero-card'}
-                    className='cursor-pointer'
-                    onClick={handleShortlist}
-                  >
-                    Shortlist Candidates
-                  </Button>
-                </section>
-              )}
+              {session?.user?.role === 'Admin' &&
+                (selectedBatch?.stage === 'Selection 1' ||
+                  selectedBatch?.stage === 'Selection 2') && (
+                  <section className='flex justify-center'>
+                    <Button
+                      variant='hero-card'
+                      className='cursor-pointer'
+                      onClick={handleShortlist}
+                    >
+                      Shortlist Candidates
+                    </Button>
+                  </section>
+                )}
             </>
           ) : (
             <>

@@ -7,18 +7,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-
+import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import Typography from '@/components/Typography';
 import { useForm } from 'react-hook-form';
 import { formUpdateGeneralVacancySchema } from '@/constant/schemas.items';
@@ -31,15 +21,17 @@ import FormFieldInputPiece from '@/app/vacancy/join/_containers/forms/pieces/For
 import { setRegisData } from '@/lib/redux/slices/registerSlice';
 import { useDispatch } from 'react-redux';
 import { useMutation } from '@/hooks/useQuery.hooks';
-import { DANGER_TOAST, SUCCESS_TOAST, showToast } from '@/components/Toast';
 import Loading from '@/app/Loading';
 import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 
 export default function General({
   onOpenChange,
 }: {
   onOpenChange: (open: boolean) => void;
 }) {
+  const { data: session } = useSession();
+  if (!session) return;
   const dispatch = useDispatch();
   const currentApplyId = useSelector(
     (state: RootState) => state.registerVacancy.currentApplyId,
@@ -49,15 +41,14 @@ export default function General({
     path: `/intern/vacancy/register/${currentApplyId}`,
     queryKey: ['registrationData'],
     method: 'PUT',
+    successMessage: 'Update Registration Data Success',
+    errorMessage: 'Update Registration Data Failed',
   });
 
   const { data, isLoading, isError } = useQuery({
     path: `/intern/vacancy/register/${currentApplyId}`,
     queryKey: ['registrationData'],
   });
-  if (!isLoading && !isError) {
-    dispatch(setRegisData(data));
-  }
 
   const formGeneral = useForm<z.infer<typeof formUpdateGeneralVacancySchema>>({
     resolver: zodResolver(formUpdateGeneralVacancySchema),
@@ -69,18 +60,15 @@ export default function General({
   });
 
   const onSubmit = async (values: z.infer<typeof formGeneral>) => {
-    const toast = { message: '', type: DANGER_TOAST };
-    try {
-      mutate(values);
-      toast.message = 'Update Registration Data Success';
-      toast.type = SUCCESS_TOAST;
-    } catch (error) {
-      toast.message = `Update Registration Data Failed: ${error}`;
-    } finally {
-      showToast(toast.message, toast.type);
-      onOpenChange(false);
-    }
+    mutate(values);
+    onOpenChange(false);
   };
+
+  useEffect(() => {
+    if (!isLoading && !isError && data) {
+      dispatch(setRegisData(data));
+    }
+  }, [isLoading, isError, data, dispatch]);
 
   useEffect(() => {
     if (data) {
@@ -129,6 +117,7 @@ export default function General({
                 variantTypo={'btn'}
                 colorTypo={'dark'}
                 weightTypo={'medium'}
+                disabled={session.user.role === 'Judge'}
               />
             </div>
             <div className='grid gap-3'>
@@ -141,6 +130,7 @@ export default function General({
                 variantTypo={'btn'}
                 colorTypo={'dark'}
                 weightTypo={'medium'}
+                disabled={session.user.role === 'Judge'}
               />
             </div>
             <div className='grid gap-3'>
@@ -153,18 +143,21 @@ export default function General({
                 variantTypo={'btn'}
                 colorTypo={'dark'}
                 weightTypo={'medium'}
+                disabled={session.user.role === 'Judge'}
               />
             </div>
           </CardContent>
           <DialogFooter>
-            <CardFooter className='flex justify-center gap-2 p-8'>
-              <DialogClose asChild>
-                <Button className='cursor-pointer'>Cancel</Button>
-              </DialogClose>
-              <Button type='submit' className='cursor-pointer'>
-                Save Changes
-              </Button>
-            </CardFooter>
+            {session?.user?.role === 'Admin' && (
+              <CardFooter className='flex justify-center gap-2 p-8'>
+                <DialogClose asChild>
+                  <Button className='cursor-pointer'>Cancel</Button>
+                </DialogClose>
+                <Button type='submit' className='cursor-pointer'>
+                  Save Changes
+                </Button>
+              </CardFooter>
+            )}
           </DialogFooter>
         </Card>
       </form>

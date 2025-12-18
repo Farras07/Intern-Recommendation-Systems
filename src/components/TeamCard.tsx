@@ -34,7 +34,7 @@ export default function TeamCard(props: TeamCardProps) {
 
       <figcaption>
         <Typography variant='c1' weight='semibold'>
-          {email}
+          {name}
         </Typography>
         <Typography variant='c1' weight='regular'>
           {role}

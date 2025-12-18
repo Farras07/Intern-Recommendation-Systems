@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Layout from '@/layouts/dashboard/LayoutContainer';
 import CollapsibleContainer from '@/components/CollapsibleContainer';
 import handleToggleCollapsibleContainer from '@/hooks/resize-container.hooks';
@@ -8,156 +8,127 @@ import Typography from '@/components/Typography';
 import { Button } from '@/components/ui/button';
 import { Plus, Trash } from 'lucide-react';
 import { columns } from '@/constant/table/columns.table';
+import { columnsBatch } from '@/constant/table/batch.columns';
 import { DataTable } from '@/components/Data-Table';
-import { jobRoleType, VacancyTypes } from '@/types/JobTypes';
 import { DialogPopUp } from '@/components/Vacancy-Dialog';
-import { DialogValueTypes } from '@/types/DialogTypes';
-import { showToast, DANGER_TOAST, SUCCESS_TOAST } from '@/components/Toast';
 import _Fetch from '@/hooks/request.hooks';
-import { BatchTableTypes } from '@/types/BatchTypes';
-import { columnsBatch } from '@/constant/table//batch.columns';
-import {
-  formatLocalDateTime,
-  UTCToLocalTimezone,
-} from '@/hooks/date-format.hooks';
+import { useMutation, useQuery } from '@/hooks/useQuery.hooks';
+import { UTCToLocalTimezone } from '@/hooks/date-format.hooks';
+import { jobRoleType, VacancyTableTypes } from '@/types/JobTypes';
+import { DialogValueTypes } from '@/types/DialogTypes';
+import { useSession } from 'next-auth/react';
+import Warning from '@/components/Warning';
 
 export default function Vacancy() {
+  const { data: session } = useSession();
+
+  if (session?.user.role === 'Judge') {
+    return <Warning message={'You Are not Allowed To Access This Page!'} />;
+  }
+
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [dialogType, setDialogType] = useState<DialogValueTypes>({
     target: null,
     action: null,
   });
-  const [isActionFinish, setIsActionFinish] = useState<boolean>(false);
-  const [currentBatch, setCurrentBatch] = useState<string>('');
-  const [currentRole, setCurrentRole] = useState<string>('');
-
-  const [rolesData, setRolesData] = useState<jobRoleType[]>([]);
-  const [batchData, setBatchData] = useState<BatchTableTypes[]>([]);
-  const [vacancyData, setVacancyData] = useState<VacancyTypes[]>([]);
-
   const [formState, setFormState] = useState({
-    batch: {
-      currentBatch,
-      onCurrentBatchChange: setCurrentBatch,
-    },
-    role: {
-      currentRole,
-      onCurrentRoleChange: setCurrentRole,
-    },
+    batch: { currentBatch: '', onCurrentBatchChange: () => {} },
+    role: { currentRole: '', onCurrentRoleChange: () => {} },
     data: {},
   });
-  const baseURL = process.env.NEXT_PUBLIC_BASEURL;
+
+  // === Fetching Data ===
+  const { data: dataRole } = useQuery({
+    path: '/intern/role',
+    queryKey: ['role'],
+  });
+  const { data: dataBatch } = useQuery({
+    path: '/intern/batch',
+    queryKey: ['batch'],
+  });
+  const { data: dataVacancy } = useQuery({
+    path: '/intern/vacancy?filter=all',
+    queryKey: ['vacancy', 'batch'],
+  });
+
+  // === Delete Role Mutation ===
+  const { mutate: mutateDeleteRole } = useMutation({
+    path: '/intern/role',
+    method: 'DELETE',
+    queryKey: ['role'],
+    successMessage: 'Role deleted successfully!',
+    errorMessage: 'Failed to delete role!',
+  });
+
+  const dialogToggle = useCallback(({ target, action }: DialogValueTypes) => {
+    setIsDialogOpen(prev => !prev);
+    setDialogType({ target, action });
+  }, []);
+
+  // === Derived Data ===
+  const batchData = useMemo(() => {
+    if (!dataBatch?.batches) return [];
+    return dataBatch.batches.map((b: any, i: number) => {
+      const startDate = UTCToLocalTimezone(b.startDate);
+      const endDate = UTCToLocalTimezone(b.endDate);
+      const now = new Date();
+      const status =
+        now > new Date(b.endDate)
+          ? 'Done'
+          : now > new Date(b.startDate)
+            ? 'Hiring'
+            : 'Pending';
+      return { ...b, startDate, endDate, status, no: i + 1 };
+    });
+  }, [dataBatch]);
+
+  const [vacancyData, setVacancyData] = useState<VacancyTableTypes[]>([]);
 
   useEffect(() => {
-    const sourceRole = new EventSource('/api/intern/role/stream');
-    const sourceBatch = new EventSource('/api/intern/batch/stream');
-    const sourceVacancy = new EventSource('/api/intern/vacancy/stream');
-
-    sourceRole.addEventListener('roles_update', event => {
-      const data = JSON.parse(event.data);
-      setRolesData(data);
-    });
-    sourceVacancy.addEventListener('vacancy_update', async event => {
-      const vacancyData = JSON.parse(event.data);
-
-      const fixData = await Promise.all(
-        vacancyData.map(async (data: any, index: number) => {
-          let status = 'Pending';
-          const { batch } = await _Fetch(
-            `/intern/batch?id=${data.batch}`,
-            'GET',
-          );
-
+    if (!dataVacancy?.vacancy) return;
+    const formatVacancyData = async () => {
+      const formatted = await Promise.all(
+        dataVacancy.vacancy.map(async (v: any, i: number) => {
+          const { batch } = await _Fetch(`/intern/batch?id=${v.batch}`, 'GET');
+          const { role } = await _Fetch(`/intern/role?id=${v.role}`, 'GET');
           const startDate = UTCToLocalTimezone(batch.startDate);
           const endDate = UTCToLocalTimezone(batch.endDate);
-
-          const batchStartDateTime = new Date(batch.startDate);
-          const batchEndDateTime = new Date(batch.endDate);
-          const currentDate = new Date();
-
-          if (currentDate > batchEndDateTime) status = 'Done';
-          if (
-            currentDate < batchEndDateTime &&
-            currentDate > batchStartDateTime
-          )
-            status = 'Hiring';
-          const { role } = await _Fetch(`/intern/role?id=${data.role}`, 'GET');
+          const now = new Date();
+          const status =
+            now > new Date(batch.endDate)
+              ? 'Done'
+              : now > new Date(batch.startDate)
+                ? 'Hiring'
+                : 'Pending';
 
           return {
-            ...data,
+            ...v,
+            no: i + 1,
             batch: batch.batchName,
             role: role.title,
             startDate,
             endDate,
-            no: index + 1,
             status,
           };
         }),
       );
-
-      setVacancyData(fixData);
-    });
-
-    sourceBatch.addEventListener('batch_update', event => {
-      const batchData = JSON.parse(event.data);
-      const fixData = batchData.map((data: any, index: number) => {
-        let status = 'Pending';
-        const startDate = UTCToLocalTimezone(data.startDate);
-        const endDate = UTCToLocalTimezone(data.endDate);
-
-        const batchStartDateTime = new Date(data.startDate);
-        const batchEndDateTime = new Date(data.endDate);
-        const currentDate = new Date();
-
-        if (currentDate > batchEndDateTime) status = 'Done';
-        if (currentDate < batchEndDateTime && currentDate > batchStartDateTime)
-          status = 'Hiring';
-
-        return {
-          ...data,
-          startDate,
-          endDate,
-          no: index + 1,
-          status,
-        };
-      });
-      setBatchData(fixData);
-    });
-
-    return () => {
-      sourceRole.close();
-      sourceBatch.close();
+      setVacancyData(formatted);
     };
-  }, []);
+    formatVacancyData();
+  }, [dataVacancy]);
 
-  const dialogToggle = ({ target, action }: DialogValueTypes) => {
-    setIsDialogOpen(!isDialogOpen);
-    setDialogType({
-      target,
-      action,
-    });
-  };
+  const handleDeleteRole = useCallback(
+    (id: string) => {
+      mutateDeleteRole({ id });
+    },
+    [mutateDeleteRole],
+  );
 
-  const handleDeleteVacancy = async (id: string) => {
-    let toastMessage: string = '';
-    try {
-      await fetch(`${baseURL}/intern/role`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id,
-        }),
-      });
-      toastMessage = 'Delete Vacancy Success';
-      showToast(toastMessage, SUCCESS_TOAST);
-    } catch (error) {
-      toastMessage = `Delete Vacancy Failed: ${error}`;
-      showToast(toastMessage, DANGER_TOAST);
-    }
-  };
+  // === Render ===
   return (
     <Layout>
+      {/* VACANCY SECTION */}
       <CollapsibleContainer
         selfIndex={2}
         onClick={() =>
@@ -170,25 +141,18 @@ export default function Vacancy() {
         rowSpan={7}
         className='row-span-7 col-span-2'
       >
-        <div className='flex gap-4 items-center'>
-          <Typography variant='h6' weight='semibold'>
-            Vacancy
-          </Typography>
-          <Plus
-            color='white'
-            strokeWidth={3}
-            size={20}
-            className='cursor-pointer rounded-full bg-black'
-            onClick={() => dialogToggle({ target: 'Vacancy', action: 'Add' })}
-          />
-        </div>
-        <div className='mt-5 flex flex-col gap-5'>
-          <DataTable
-            columns={columns({ dialogToggle, setFormState })}
-            data={vacancyData}
-          />
-        </div>
+        <Header
+          title='Vacancy'
+          onAdd={() => dialogToggle({ target: 'Vacancy', action: 'Add' })}
+        />
+        <DataTable
+          columns={columns({ dialogToggle, setFormState })}
+          data={vacancyData}
+          className={{ parent: 'max-h-[65vh]' }}
+        />
       </CollapsibleContainer>
+
+      {/* BATCH SECTION */}
       <CollapsibleContainer
         selfIndex={1}
         onClick={() =>
@@ -201,25 +165,20 @@ export default function Vacancy() {
         rowSpan={7}
         className='row-span-4 col-span-2'
       >
-        <div className='flex gap-4 items-center'>
-          <Typography variant='h6' weight='semibold'>
-            Batch
-          </Typography>
-          <Plus
-            color='white'
-            strokeWidth={3}
-            size={20}
-            className='cursor-pointer rounded-full bg-black'
-            onClick={() => dialogToggle({ target: 'Batch', action: 'Add' })}
-          />
-        </div>
-        <div className='mt-5 flex flex-col gap-5'>
-          <DataTable
-            columns={columnsBatch({ dialogToggle, setFormState })}
-            data={batchData}
-          />
-        </div>
+        <Header
+          title='Batch'
+          onAdd={() => dialogToggle({ target: 'Batch', action: 'Add' })}
+        />
+        <DataTable
+          columns={columnsBatch({ dialogToggle, setFormState })}
+          data={batchData}
+          className={{
+            parent: `${activeIndex === 1 ? 'max-h-[65vh]' : 'max-h-[30vh]'}`,
+          }}
+        />
       </CollapsibleContainer>
+
+      {/* ROLE SECTION */}
       <CollapsibleContainer
         collapsible={false}
         selfIndex={3}
@@ -236,75 +195,18 @@ export default function Vacancy() {
           Role
         </Typography>
         <section className='mt-4 flex flex-wrap items-center gap-3'>
-          <Button
-            variant='default'
-            className='cursor-pointer'
+          <AddButton
             onClick={() => dialogToggle({ target: 'Role', action: 'Add' })}
-          >
-            <Plus color='white' strokeWidth={2} />
-            <Typography variant='c2' weight='semibold' color='white'>
-              Add Role
-            </Typography>
-          </Button>
-          {rolesData.length > 0 ? (
-            rolesData.map((role, index) => {
-              if (index < 6) {
-                // Show normal button for the first 6 roles
-                return (
-                  <Button
-                    key={role.id}
-                    className='p-0 pr-2 border-0 group cursor-pointer'
-                  >
-                    <div
-                      className='border border-black bg-background shadow-md rounded-[18px] hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-1 has-[>svg]:px-3 cursor-pointer'
-                      onClick={() => {
-                        setFormState(prev => ({
-                          ...prev,
-                          data: {
-                            id: role.id,
-                            title: role.title,
-                            description: role.description,
-                          },
-                        }));
-                        dialogToggle({ target: 'Role', action: 'Edit' });
-                      }}
-                    >
-                      <Typography variant='c2' weight='semibold'>
-                        {role.title}
-                      </Typography>
-                    </div>
-                    <div
-                      className='p-1 relative hidden group-hover:flex hover:bg-light-gray/[50%] rounded-md shadow-md cursor-pointer'
-                      onClick={() => {
-                        handleDeleteVacancy(role.id);
-                        setIsActionFinish(!isActionFinish);
-                      }}
-                    >
-                      <Trash color='red' />
-                    </div>
-                  </Button>
-                );
-              }
-
-              if (index === 6) {
-                const restRolesLength = rolesData.length - 6;
-                return (
-                  <Button key='more-roles' variant='outline-black'>
-                    <Typography variant='c2' weight='semibold'>
-                      +{restRolesLength}
-                    </Typography>
-                  </Button>
-                );
-              }
-
-              // After index 6, render nothing
-              return null;
-            })
-          ) : (
-            <Typography>No Role</Typography>
-          )}
+          />
+          <RoleList
+            dataRole={dataRole}
+            onDelete={handleDeleteRole}
+            onEdit={dialogToggle}
+            setFormState={setFormState}
+          />
         </section>
       </CollapsibleContainer>
+
       <DialogPopUp
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
@@ -315,3 +217,85 @@ export default function Vacancy() {
     </Layout>
   );
 }
+
+/* === Sub Components === */
+const Header = ({ title, onAdd }: { title: string; onAdd: () => void }) => (
+  <div className='flex gap-4 items-center mb-5'>
+    <Typography variant='h6' weight='semibold'>
+      {title}
+    </Typography>
+    <Plus
+      color='white'
+      strokeWidth={3}
+      size={20}
+      className='cursor-pointer rounded-full bg-black'
+      onClick={onAdd}
+    />
+  </div>
+);
+
+const AddButton = ({ onClick }: { onClick: () => void }) => (
+  <Button variant='default' onClick={onClick}>
+    <Plus color='white' strokeWidth={2} />
+    <Typography variant='c2' weight='semibold' color='white'>
+      Add Role
+    </Typography>
+  </Button>
+);
+
+const RoleList = ({
+  dataRole,
+  onDelete,
+  onEdit,
+  setFormState,
+}: {
+  dataRole: any;
+  onDelete: (id: string) => void;
+  onEdit: ({ target, action }: DialogValueTypes) => void;
+  setFormState: any;
+}) => {
+  if (!dataRole?.roles?.length) return <Typography>No Role</Typography>;
+
+  return (
+    <>
+      {dataRole.roles.slice(0, 6).map((role: jobRoleType) => (
+        <Button
+          key={role.id}
+          className='p-0 pr-2 border-0 group cursor-pointer'
+        >
+          <div
+            className='border border-black bg-background shadow-md rounded-[18px] hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-1 has-[>svg]:px-3 cursor-pointer'
+            onClick={() => {
+              setFormState((prev: any) => ({
+                ...prev,
+                data: {
+                  id: role.id,
+                  title: role.title,
+                  description: role.description,
+                },
+              }));
+              onEdit({ target: 'Role', action: 'Edit' });
+            }}
+          >
+            <Typography variant='c2' weight='semibold'>
+              {role.title}
+            </Typography>
+          </div>
+          <div
+            className='p-1 relative hidden group-hover:flex hover:bg-light-gray/[50%] rounded-md shadow-md cursor-pointer'
+            onClick={() => onDelete(role.id)}
+          >
+            <Trash color='red' />
+          </div>
+        </Button>
+      ))}
+      {dataRole.roles.length > 6 && (
+        <Button variant='outline-black'>
+          <Typography variant='c2' weight='semibold'>
+            +{dataRole.roles.length - 6}
+          </Typography>
+        </Button>
+      )}
+    </>
+  );
+};

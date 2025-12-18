@@ -17,6 +17,8 @@ import {
   RankRecommendationType,
   RecommendationType,
 } from '@/types/RecommendationTypes';
+import { Encrypt, Decrypt } from '@/lib/privacy';
+
 type EmailServicesType = InstanceType<typeof EmailServices>;
 
 export default class InternServices {
@@ -336,6 +338,20 @@ export default class InternServices {
     }
   }
 
+  async getAllVacancy() {
+    try {
+      const vacancySnap = await this._db.collection('vacancy').get();
+      if (vacancySnap.empty) throw new NotFoundError('Vacancies Not Found!');
+      const vacancyData = vacancySnap.docs.map(docs => docs.data());
+      return vacancyData;
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
   async getOpenVacancy() {
     try {
       const currentTime = new Date();
@@ -351,7 +367,11 @@ export default class InternServices {
         .filter(batch => {
           const startDate = new Date(batch.startDate);
           const endDate = new Date(batch.endDate);
-          return startDate <= currentTime && currentTime <= endDate;
+          return (
+            startDate <= currentTime &&
+            currentTime <= endDate &&
+            batch.stage == 'Registration'
+          );
         });
 
       if (openBatches.length === 0) throw new NotFoundError('No open batches!');
@@ -438,12 +458,24 @@ export default class InternServices {
   async registerVacancy(data: any) {
     try {
       const id = `apply-${nanoid(5)}`;
+      const { cv, phone, vacancy, ...rest } = data;
+      const encryptedCV = Encrypt(cv);
+      const encryptedPhone = Encrypt(phone);
+
+      const fixVacancy = vacancy.map((vac: VacancyRegisType) => {
+        vac.achievement.cert = Encrypt(vac.achievement.cert);
+        vac.portfolio.link = Encrypt(vac.portfolio.link);
+        return vac;
+      });
       await this._db
         .collection('register')
         .doc(id)
         .set({
           id,
-          ...data,
+          cv: encryptedCV,
+          phone: encryptedPhone,
+          vacancy: fixVacancy,
+          ...rest,
         });
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -476,8 +508,19 @@ export default class InternServices {
                     roleVac[0].role,
                   );
 
+                  const decryptedCert = Decrypt(vacancy.achievement.cert);
+                  const decryptedLink = Decrypt(vacancy.portfolio.link);
+
                   return {
                     ...vacancy,
+                    achievement: {
+                      ...vacancy.achievement,
+                      cert: decryptedCert,
+                    },
+                    portfolio: {
+                      ...vacancy.portfolio,
+                      link: decryptedLink,
+                    },
                     role: {
                       id: roleData.id,
                       title: roleData.title,
@@ -488,9 +531,10 @@ export default class InternServices {
 
               if (role) {
                 const hasRole = enrichedVacancies.some(v => v.role.id === role);
-                if (!hasRole) return null; // skip this regis if no match
+                if (!hasRole) return null;
               }
-
+              regis.cv = Decrypt(regis.cv);
+              regis.phone = Decrypt(regis.phone);
               return {
                 ...regis,
                 vacancy: enrichedVacancies,
@@ -519,7 +563,14 @@ export default class InternServices {
         .get();
       if (regisSnap.empty) return [];
       const regisData = regisSnap.docs.map(doc => doc.data());
-      return regisData;
+      const fixData = regisData.map((data: any) => {
+        return {
+          ...data,
+          cv: Decrypt(data.cv),
+          phone: Decrypt(data.phone),
+        };
+      });
+      return fixData;
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
@@ -541,6 +592,8 @@ export default class InternServices {
         regisData.vacancy.map(async (data: VacancyRegisType) => {
           const roleVac = await this.getSpecificVacancy(data.id);
           const roleData = await this.getSpecificRoleById(roleVac[0].role);
+          data.portfolio.link = Decrypt(data.portfolio.link);
+          data.achievement.cert = Decrypt(data.achievement.cert);
           return {
             ...data,
             role: {
@@ -550,6 +603,8 @@ export default class InternServices {
           };
         }),
       );
+      regisData.cv = Decrypt(regisData.cv);
+      regisData.phone = Decrypt(regisData.phone);
       return { ...regisData, vacancy: enrichedRegisData };
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -561,6 +616,18 @@ export default class InternServices {
 
   async updateRegistrationData(id: string, data: any) {
     try {
+      if (data.phone) {
+        data.phone = Encrypt(data.phone);
+      }
+      if (data.vacancy) {
+        data.vacancy = data.vacancy.map((vac: VacancyRegisType) => {
+          const { ...restData } = vac;
+          restData.achievement.cert = Encrypt(restData.achievement.cert);
+          restData.portfolio.link = Encrypt(restData.portfolio.link);
+          return restData;
+        });
+      }
+
       await db
         .collection('register')
         .doc(id)
@@ -736,22 +803,44 @@ export default class InternServices {
     });
   }
 
-  async sendAcceptanceEmail(payload: any) {
+  async handleAcceptanceCandidate(payload: any) {
     try {
       const { candidates, values } = payload;
       const { recommendation } = candidates;
+      const excludedCandidates: any[] = [];
+
       const data = recommendation.map((recom: RecommendationType) => {
+        const matched = values.shortlist.find(
+          (s: { role: string; candidateAmount: number }) =>
+            s.role === recom.role,
+        );
+
+        const amount = matched ? matched.candidateAmount : recom.rank.length;
+
         const topRank = recom.rank
           .sort(
             (a: RankRecommendationType, b: RankRecommendationType) =>
               a.rank - b.rank,
           )
-          .slice(0, values.candidateAmount);
+
+          .slice(0, amount);
+
+        const rejectedCandidate = recom.rank.filter(
+          cand =>
+            !topRank.some(top => top.candidateEmail === cand.candidateEmail),
+        );
+
+        // Push rejected ones to global list
+        rejectedCandidate.forEach(rc =>
+          excludedCandidates.push({ ...rc, role: recom.role }),
+        );
+
         return {
           ...recom,
           rank: topRank,
         };
       });
+
       const regisData: any[] = [];
       const pdfBuffer = await generateAcceptedCandidatesPDF(
         data,
@@ -791,12 +880,17 @@ export default class InternServices {
           );
 
           regisData[regisIndex] = { ...regis, vacancy: updatedVacancies };
+          console.log('hehehehe');
+
+          console.log(updatedVacancies);
 
           await this.updateRegistrationData(rankData.applyId, {
             vacancy: updatedVacancies,
           });
+          console.log('waduhh');
         }
       }
+      return { pdfBuffer, rejectedCandidates: excludedCandidates };
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);

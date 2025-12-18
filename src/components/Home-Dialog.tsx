@@ -31,7 +31,7 @@ import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { showToast, SUCCESS_TOAST, DANGER_TOAST } from '@/components/Toast';
+import { showToast, DANGER_TOAST } from '@/components/Toast';
 import InvariantError from '@/exceptions/InvariantError';
 import { DialogValueTypes } from '@/types/DialogTypes';
 import { formTeamInviteSchema } from '@/constant/schemas.items';
@@ -58,6 +58,7 @@ export default function HomeDialogPopUp({
     defaultValues: {
       email: '',
       role: '',
+      verified: false,
     },
   });
 
@@ -67,28 +68,38 @@ export default function HomeDialogPopUp({
         formTeamInvite.reset({
           email: dataUser.email || '',
           role: dataUser.role || '',
+          verified: dataUser.verified || false,
         });
       }
+    } else if (action === 'Add') {
+      formTeamInvite.reset({
+        email: '',
+        role: '',
+        verified: false,
+      });
     }
-  }, [dataUser]);
+  }, [dataUser, action, open]);
 
   const inviteTeamMutate = useMutation({
     path: '/user',
     method: 'POST',
     queryKey: ['users'],
+    successMessage: 'Invite Team Success',
+    errorMessage: 'Invite Team Failed',
   });
   const updateTeamMutate = useMutation({
     path: `/user?id=${dataUser?.id}`,
     method: 'PUT',
     queryKey: ['users'],
+    successMessage: 'Update Team Success',
+    errorMessage: 'Update Team Failed',
   });
   const selectedRole = formTeamInvite.watch('role');
+  const verifiedState = formTeamInvite.watch('verified');
 
   const onSubmitVacancy = async (
     values: z.infer<typeof formTeamInviteSchema>,
   ) => {
-    const toast = { message: '', type: DANGER_TOAST };
-
     try {
       if (action === 'Add') {
         inviteTeamMutate.mutate({
@@ -99,19 +110,14 @@ export default function HomeDialogPopUp({
       } else {
         updateTeamMutate.mutate({
           role: values.role,
+          verified: values.verified,
         });
       }
-
-      toast.message = `${action} ${target} Success`;
-      toast.type = SUCCESS_TOAST;
     } catch (error) {
       if (error instanceof InvariantError) {
-        toast.message = error.message;
-      } else {
-        toast.message = `${action} ${target} failed`;
+        showToast(error.message, DANGER_TOAST);
       }
     } finally {
-      showToast(toast.message, toast.type);
       onOpenChange(false);
     }
   };
@@ -192,6 +198,52 @@ export default function HomeDialogPopUp({
                   </FormItem>
                 )}
               />
+              {action === 'Edit' && (
+                <FormField
+                  control={formTeamInvite.control}
+                  name='verified'
+                  render={() => (
+                    <FormItem className='flex flex-col'>
+                      <FormLabel>Status</FormLabel>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant='outline'>
+                            {`${verifiedState && verifiedState === true ? 'Verified' : 'Not Verified'}` ||
+                              'Verified?'}
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuLabel>Status</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <FormControl>
+                            <DropdownMenuRadioGroup>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  formTeamInvite.setValue('verified', true, {
+                                    shouldValidate: true,
+                                  })
+                                }
+                              >
+                                Verified
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  formTeamInvite.setValue('verified', false, {
+                                    shouldValidate: true,
+                                  })
+                                }
+                              >
+                                Not Verified
+                              </DropdownMenuItem>
+                            </DropdownMenuRadioGroup>
+                          </FormControl>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <DialogFooter>
                 <DialogClose asChild>

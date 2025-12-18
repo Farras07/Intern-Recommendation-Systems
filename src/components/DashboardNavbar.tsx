@@ -1,6 +1,5 @@
 import Typography from './Typography';
 import Image from 'next/image';
-import { Bell } from 'lucide-react';
 
 export default function DashboardNavbar({
   username,
@@ -37,17 +36,6 @@ export default function DashboardNavbar({
             />
           </div>
         </div>
-        <button className='relative flex items-center justify-center p-2 hover:bg-light-gray/[10%] hover:shadow-md cursor-pointer rounded-lg'>
-          {/* Bell icon in a circle */}
-          <div className='rounded-full bg-white p-2 border border-black shadow-md'>
-            <Bell fill='black' strokeWidth={3} size={24} />
-          </div>
-
-          {/* Notification badge */}
-          <span className='relative -top-4 rounded-full bg-white border border-black w-4 h-4 flex items-center justify-center text-[0.6rem] font-bold'>
-            2
-          </span>
-        </button>
       </div>
     </section>
   );

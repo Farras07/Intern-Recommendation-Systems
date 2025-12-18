@@ -22,7 +22,6 @@ export default function DefaultRegistrationPage({
   const searchParams = useSearchParams();
   const batch = searchParams.get('batchId') ?? '';
   const stage = searchParams.get('stage') ? searchParams.get('stage') : '';
-  // const [batchFilter, setBatchFilter] = useState<BatchFilter>('active');
   const [dataIntern, setDataIntern] = useState([]);
   const { data, isError, error, isLoading } = useQuery({
     path: `/intern/vacancy/register?${roleFilter != 'all' ? `&role=${roleFilter}` : ''}`,
@@ -34,7 +33,6 @@ export default function DefaultRegistrationPage({
     queryKey: ['batch', batch],
     timeout: 10000,
   });
-  console.log(batchInfo);
 
   useEffect(() => {
     if (data && stage) {
@@ -87,6 +85,7 @@ export default function DefaultRegistrationPage({
           batchFilter={batch ? batch : ''}
           isError={isError}
           error={error}
+          className={{ parent: 'max-h-[70vh]' }}
         />
       </section>
     </CollapsibleContainer>

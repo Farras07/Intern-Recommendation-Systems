@@ -8,23 +8,25 @@ const privateKey = process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY?.replace(
   '\n',
 );
 
-if (!admin.apps.length) {
-  try {
-    if (!projectId || !clientEmail || !privateKey) {
-      throw new Error('Missing Firebase Admin environment variables');
+if (process.env.NODE_ENV !== 'test') {
+  if (!admin.apps.length) {
+    try {
+      if (!projectId || !clientEmail || !privateKey) {
+        throw new Error('Missing Firebase Admin environment variables');
+      }
+
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey,
+        }),
+      });
+
+      console.log('✅ Firebase Admin initialized successfully');
+    } catch (error) {
+      console.error('❌ Firebase Admin initialization error:', error);
     }
-
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey,
-      }),
-    });
-
-    console.log('✅ Firebase Admin initialized successfully');
-  } catch (error) {
-    console.error('❌ Firebase Admin initialization error:', error);
   }
 }
 

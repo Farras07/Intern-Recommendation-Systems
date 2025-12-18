@@ -58,25 +58,71 @@ export default class InternServices {
     }
   }
 
-  async topsisSelection(payload: any, ahpWeight: any, selectionStepNum: 1 | 2) {
+  async topsisSelection(payload: any, ahpWeight: any) {
     try {
-      if (selectionStepNum === 1) {
-        const topsisCalc = await this._topsisContext.calcTopsisSelection1(
-          payload,
-          ahpWeight,
-        );
-        return topsisCalc;
-      } else {
-        const topsisCalc = await this._topsisContext.calcTopsisSelection2(
-          payload,
-          ahpWeight,
-        );
-        return topsisCalc;
-      }
+      const topsisCalc = await this._topsisContext.calcTopsisSelection2(
+        payload,
+        ahpWeight,
+      );
+      return topsisCalc;
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
       }
+      throw error;
+    }
+  }
+
+  async handleSameTopsisRank(candidate: any) {
+    try {
+      const sortedCandidate = candidate
+        .sort((a: any, b: any) => {
+          // sort by rank
+          if (a.rank !== b.rank) return a.rank - b.rank;
+
+          // sort by choice
+          if (a.rolePriority !== b.rolePriority)
+            return a.rolePriority - b.rolePriority;
+
+          //sort by Interview Value
+          const intvIdxA = a.matrixLabel.indexOf('Interview');
+          const intvIdxB = b.matrixLabel.indexOf('Interview');
+          const diffIntv =
+            intvIdxA !== -1 && intvIdxB !== -1
+              ? b.matrix[intvIdxB] - a.matrix[intvIdxA]
+              : 0;
+          if (diffIntv !== 0) return diffIntv;
+
+          //sort by Experience Value
+          const expIdxA = a.matrixLabel.indexOf('Experience');
+          const expIdxB = b.matrixLabel.indexOf('Experience');
+          const diffExp =
+            expIdxA !== -1 && expIdxB !== -1
+              ? b.matrix[expIdxB] - a.matrix[expIdxA]
+              : 0;
+          if (diffExp !== 0) return diffExp;
+
+          //sort by Portfolio Value
+          const portIdxA = a.matrixLabel.indexOf('Portfolio');
+          const portIdxB = b.matrixLabel.indexOf('Portfolio');
+          const diffPort =
+            portIdxA !== -1 && portIdxB !== -1
+              ? b.matrix[portIdxB] - a.matrix[portIdxA]
+              : 0;
+          if (diffPort !== 0) return diffPort;
+
+          //sort by applyTime
+          return (
+            new Date(a.applyTime).getTime() - new Date(b.applyTime).getTime()
+          );
+        })
+        .map((item: any, index: number) => ({
+          ...item,
+          rank: index + 1,
+        }));
+
+      return sortedCandidate;
+    } catch (error) {
       throw error;
     }
   }

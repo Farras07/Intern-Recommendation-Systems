@@ -26,7 +26,6 @@ export default function ShortlistConfirmationDialog({
 }: DialogProps) {
   const currentStage = stage.replace('_', ' ');
   const currentStageIndex = stageOrder.indexOf(currentStage);
-  console.log(currentStageIndex);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[425px]'>

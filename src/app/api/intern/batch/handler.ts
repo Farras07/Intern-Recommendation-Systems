@@ -1,26 +1,24 @@
-import InternServices from '@/Services/InternServices';
-import ResMiddleware from '@/app/middleware/response.middleware';
-import AuthMiddleware from '@/app/middleware/auth.middleware';
+import BatchServices from '@/Services/BatchServices';
+import ResMiddleware from '@/app/api/middleware/response.middleware';
+import AuthMiddleware from '@/app/api/middleware/auth.middleware';
+import InvariantError from '@/exceptions/InvariantError';
 
-type InternServicesType = InstanceType<typeof InternServices>;
+type BatchServicesType = InstanceType<typeof BatchServices>;
 
 export default class InternBatchHandler {
-  _service: InternServicesType;
-  constructor(InternService: InternServicesType) {
-    this._service = InternService;
+  _service: BatchServicesType;
+  constructor(batchServices: BatchServicesType) {
+    this._service = batchServices;
   }
 
   POST = ResMiddleware(
     AuthMiddleware(
       async (req: Request) => {
         const payload = await req.json();
-        const newBatchId = await this._service.createBatch(payload);
+        await this._service.createBatch(payload);
         return {
           statusCode: 201,
           message: 'Intern Batch Successfully Created',
-          data: {
-            id: newBatchId,
-          },
         };
       },
       { authorizeRole: ['Admin'] },
@@ -60,7 +58,7 @@ export default class InternBatchHandler {
         await this._service.updateBatch(payload);
         return {
           statusCode: 200,
-          message: 'Batch Update Successfully Updated',
+          message: 'Batch Updated Successfully',
         };
       },
       { authorizeRole: ['Admin'] },
@@ -70,13 +68,14 @@ export default class InternBatchHandler {
   DELETE = ResMiddleware(
     AuthMiddleware(
       async (req: Request) => {
-        const payload = await req.json();
-        const { batchId } = payload;
+        const { searchParams } = new URL(req.url);
+        const batchId = searchParams.get('id');
+        if (!batchId)
+          throw new InvariantError("Query Params Batch Id doesn't exist");
         await this._service.deleteBatch(batchId);
         return {
           statusCode: 200,
           message: 'Intern batch Successfully Deleted',
-          data: {},
         };
       },
       { authorizeRole: ['Admin'] },

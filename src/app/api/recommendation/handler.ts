@@ -4,24 +4,40 @@ import InternServices from '@/Services/InternServices';
 import NotFoundError from '@/exceptions/NotFoundError';
 import { VacancyRegisType } from '@/types/registDataTypes';
 import MeetServices from '@/Services/MeetServices';
-import ResMiddleware from '@/app/middleware/response.middleware';
-import AuthMiddleware from '@/app/middleware/auth.middleware';
+import ResMiddleware from '@/app/api/middleware/response.middleware';
+import AuthMiddleware from '@/app/api/middleware/auth.middleware';
 import { stageOrder } from '@/constant/stages.items';
+import { Success, Failed } from '@/types/ResponseTypes';
+import BaseError from '@/exceptions/BaseError';
+import RegisterServices from '@/Services/RegisterServices';
+import { adminDb as db } from '@/lib/firebase-admin';
+import VacancyServices from '@/Services/VacancyServices';
+import RoleServices from '@/Services/RoleServices';
 
 type RecomServicesType = InstanceType<typeof RecommendationServices>;
 type InternServicesType = InstanceType<typeof InternServices>;
 type MeetServicesType = InstanceType<typeof MeetServices>;
+type RegisterServicesType = InstanceType<typeof RegisterServices>;
+type VacancyServicesType = InstanceType<typeof VacancyServices>;
+type RoleServicesType = InstanceType<typeof RoleServices>;
 
 export default class RecommendationHandler {
   _service: RecomServicesType;
   _internService: InternServicesType;
   _meetService: MeetServicesType;
+  _registerService: RegisterServicesType;
+  _vacancyService: VacancyServicesType;
+  _roleService: RoleServicesType;
+
   constructor(
     RecomService: RecomServicesType,
     internService: InternServicesType,
     meetService: MeetServicesType,
   ) {
     this._service = RecomService;
+    this._registerService = new RegisterServices(db);
+    this._vacancyService = new VacancyServices(db);
+    this._roleService = new RoleServices(db);
     this._internService = internService;
     this._meetService = meetService;
   }
@@ -32,48 +48,55 @@ export default class RecommendationHandler {
         const { searchParams } = new URL(req.url);
         const batchId = searchParams.get('batchId') || '';
         const stage = searchParams.get('stage') || '';
-        let altData;
-        if (stage && stage === 'Selection_2') {
-          const internData =
-            await this._internService.getRegistrationByBatchId(batchId);
-          const lastStageIndex = stageOrder.indexOf('Selection 2');
-          altData = internData.filter(candidate => {
-            return candidate.vacancy.some((vac: VacancyRegisType) => {
+        const internData =
+          await this._registerService.getRegistrationByBatchId(batchId);
+        const regStage = stage.replace('_', ' ');
+        const lastStageIndex = stageOrder.indexOf(regStage);
+        const altData = internData.map(candidate => {
+          const filteredVacancy = candidate.vacancy.filter(
+            (vac: VacancyRegisType) => {
               const vacStageIndex = stageOrder.indexOf(vac.lastStage);
-              return vacStageIndex == lastStageIndex;
-            });
-          });
-        } else {
-          altData = await this._internService.getRegistrationByBatchId(batchId);
-        }
+              return vacStageIndex >= lastStageIndex;
+            },
+          );
+
+          return {
+            ...candidate,
+            vacancy: filteredVacancy,
+          };
+        });
+
         if (altData.length === 0)
           throw new NotFoundError('Registration Data Not Found');
         const vacancyIds =
-          await this._internService.getVacancyIdsByBatchId(batchId);
+          await this._vacancyService.getVacancyIdsByBatchId(batchId);
 
-        const vacGroupData = vacancyIds.map(idVac => {
-          const list = altData
-            .map(alt => {
-              const vacancy = alt.vacancy.find(
-                (vac: VacancyRegisType) => vac.id === idVac,
-              );
-              if (vacancy) {
-                return {
-                  applyId: alt.id,
-                  candidateName: alt.name,
-                  candidateEmail: alt.email,
-                  ...vacancy, // merge with the vacancy data
-                };
-              }
-              return null;
-            })
-            .filter(Boolean); // remove nulls
+        const vacGroupData = vacancyIds
+          .map(idVac => {
+            const list = altData
+              .map(alt => {
+                const vacancy = alt.vacancy.find(
+                  (vac: VacancyRegisType) => vac.id === idVac,
+                );
+                if (vacancy) {
+                  return {
+                    applyId: alt.id,
+                    candidateName: alt.name,
+                    candidateEmail: alt.email,
+                    applyTime: alt.applyTime,
+                    ...vacancy,
+                  };
+                }
+                return null;
+              })
+              .filter(Boolean);
 
-          return {
-            id: idVac,
-            list,
-          };
-        });
+            return {
+              id: idVac,
+              list,
+            };
+          })
+          .filter(v => v.list.length > 0);
 
         const {
           weightResult: criteriaWeight,
@@ -83,9 +106,9 @@ export default class RecommendationHandler {
         const recommendation = await Promise.all(
           vacGroupData.map(async vacGroup => {
             const vacancyData = (
-              await this._internService.getSpecificVacancy(vacGroup.id, true)
+              await this._vacancyService.getSpecificVacancy(vacGroup.id, true)
             )[0];
-            const role = await this._internService.getSpecificRoleById(
+            const role = await this._roleService.getSpecificRoleById(
               vacancyData.role,
             );
             const vacancySkills = vacancyData.skills;
@@ -95,23 +118,20 @@ export default class RecommendationHandler {
                 criteriaWeightMatrix,
                 vacancySkills,
               );
-            let topsisRank;
+            console.log('ahpCriteriaWeight :', criteriaWeight);
+            console.log('ahpGlobalWeightResult :', ahpGlobalWeightResult);
+            const topsisRank = await this._service.topsisSelection(
+              vacGroup.list,
+              ahpGlobalWeightResult,
+            );
 
-            if (stage == 'Selection_1')
-              topsisRank = await this._service.topsisSelection(
-                vacGroup.list,
-                ahpGlobalWeightResult,
-                1,
-              );
-            else if (stage == 'Selection_2')
-              topsisRank = await this._service.topsisSelection(
-                vacGroup.list,
-                ahpGlobalWeightResult,
-                2,
-              );
-            else throw new InvariantError('Stage Query Param is Wrong!!');
-
-            return { id: vacGroup.id, role: role.title, rank: topsisRank };
+            const fixSortedCandidate =
+              await this._service.handleSameTopsisRank(topsisRank);
+            return {
+              id: vacGroup.id,
+              role: role.title,
+              rank: fixSortedCandidate,
+            };
           }),
         );
 
@@ -125,23 +145,58 @@ export default class RecommendationHandler {
     ),
   );
 
-  POST = ResMiddleware(
-    AuthMiddleware(
-      async (req: Request) => {
+  POST = AuthMiddleware(
+    async (req: Request) => {
+      try {
         const payload = await req.json();
         const { searchParams } = new URL(req.url);
         const stageFinal = searchParams.get('final') || '';
+        const { candidates } = payload;
+
         if (stageFinal) {
-          await this._internService.sendAcceptanceEmail(payload);
+          const { pdfBuffer, rejectedCandidates } =
+            await this._internService.handleAcceptanceCandidate(payload);
+          await this._meetService._sendRejectionEmails(
+            rejectedCandidates,
+            candidates.batch,
+          );
+
+          return new Response(pdfBuffer, {
+            headers: {
+              'Content-Type': 'application/pdf',
+              'Content-Disposition':
+                'attachment; filename="Accepted_Candidates.pdf"',
+            },
+          });
+
+          // return Success({
+          //   statusCode: 200,
+          //   message: 'Acceptance email has been sent to participant',
+          // })
         } else {
-          await this._meetService.createMeet(payload);
-          return {
-            statusCode: 200,
-            message: 'Create Meet Room Success',
-          };
+          const pdfBuffer = await this._meetService.createMeet(payload);
+          return new Response(pdfBuffer, {
+            headers: {
+              'Content-Type': 'application/pdf',
+              'Content-Disposition':
+                'attachment; filename="Interview_List.pdf"',
+            },
+          });
         }
-      },
-      { authorizeRole: ['Admin'] },
-    ),
+      } catch (error: any) {
+        console.log(error);
+        if (error instanceof BaseError) {
+          return Failed({
+            statusCode: error.statusCode,
+            message: error.message,
+          });
+        }
+        return Failed({
+          statusCode: 500,
+          message: `Internal Server Error: ${error}`,
+        });
+      }
+    },
+    { authorizeRole: ['Admin'] },
   );
 }

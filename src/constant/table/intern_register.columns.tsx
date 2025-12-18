@@ -23,6 +23,7 @@ import { useDispatch } from 'react-redux';
 import { setCurrentApplyId } from '@/lib/redux/slices/registerSlice';
 import { useMutation } from '@/hooks/useQuery.hooks';
 import { stageOrder } from '../stages.items';
+import { useSession } from 'next-auth/react';
 
 export const columnsRegisterData = ({
   dialogToggle,
@@ -235,10 +236,15 @@ export function ActionPart({
   row: any;
   dialogToggle: () => void;
 }) {
+  const { data: session } = useSession();
+  if (!session) return;
+
   const { mutate } = useMutation({
     path: `/intern/vacancy/register/${row.original.id}`,
     queryKey: ['registrationData'],
     method: 'DELETE',
+    successMessage: 'Delete Registration Data Success',
+    errorMessage: 'Delete Registration Data Failed',
   });
   const dispatch = useDispatch();
   const handleEditClick = () => {
@@ -261,7 +267,11 @@ export function ActionPart({
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleEditClick}>Edit</DropdownMenuItem>
-        <DropdownMenuItem onClick={handleDeleteClick}>Delete</DropdownMenuItem>
+        {session.user.role === 'Admin' && (
+          <DropdownMenuItem onClick={handleDeleteClick}>
+            Delete
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

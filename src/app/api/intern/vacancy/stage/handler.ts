@@ -1,14 +1,14 @@
-import InternServices from '@/Services/InternServices';
-import { Success, Failed } from '@/types/ResponseTypes';
-import ResMiddleware from '@/app/middleware/response.middleware';
-import AuthMiddleware from '@/app/middleware/auth.middleware';
+// import InternServices from '@/Services/InternServices';
+import ResMiddleware from '@/app/api/middleware/response.middleware';
+import AuthMiddleware from '@/app/api/middleware/auth.middleware';
+import BatchServices from '@/Services/BatchServices';
 
-type InternServicesType = InstanceType<typeof InternServices>;
+type BatchServicesType = InstanceType<typeof BatchServices>;
 
 export default class InternStageHandler {
-  _service: InternServicesType;
-  constructor(InternService: InternServicesType) {
-    this._service = InternService;
+  _service: BatchServicesType;
+  constructor(batchService: BatchServicesType) {
+    this._service = batchService;
   }
 
   GET = ResMiddleware(

@@ -6,7 +6,7 @@ import {
   RecommendationType,
   ShortlistRecommendationType,
 } from '@/types/RecommendationTypes';
-import { addMinutesUTC, UTCToLocalTimezone } from '@/hooks/date-format.hooks';
+import { addMinutesUTC } from '@/hooks/date-format.hooks';
 import EmailServices from './EmailServices';
 import InternServices from './InternServices';
 import { generateTopRankPDF } from '@/lib/pdfGenerator';
@@ -36,7 +36,7 @@ export default class MeetServices {
     this._internServices = internServices;
   }
 
-  // ✅ Main Entry
+  // ✅ Main entry point
   async createMeet(payload: CreateMeetProps) {
     try {
       const { session, values, candidates } = payload;
@@ -46,17 +46,18 @@ export default class MeetServices {
 
       const calendar = google.calendar({ version: 'v3', auth });
 
-      // Base start time in UTC
-
-      const recomData = await this._createCalendarEvents(
-        calendar,
-        candidates.recommendation,
-        values,
-      );
+      // Create calendar events and get both top-ranked and excluded candidates
+      const { recomData, excludedCandidates } =
+        await this._createCalendarEvents(
+          calendar,
+          candidates.recommendation,
+          values,
+        );
 
       const pdfBuffer = await generateTopRankPDF(recomData, candidates.batch);
       const regisData: any[] = [];
 
+      // Handle interview invitation emails & DB update
       await this._handleEmailsAndRegistrationUpdates(
         recomData,
         regisData,
@@ -64,6 +65,11 @@ export default class MeetServices {
         values.interviewer,
         pdfBuffer,
       );
+
+      // ✅ Handle rejection emails for excluded candidates
+      await this._sendRejectionEmails(excludedCandidates, candidates.batch);
+
+      return pdfBuffer;
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);
@@ -72,20 +78,28 @@ export default class MeetServices {
     }
   }
 
-  // 🗓️ Handle Google Meet creation for all roles
+  // 🗓️ Create Google Meet events for each role
   private async _createCalendarEvents(
     calendar: any,
     recommendations: RecommendationType[],
-    // baseStartTimeUTC: string, // UTC ISO
     values: ShortlistRecommendationType,
   ) {
     const recomData: RecommendationType[] = [];
+    const excludedCandidates: any[] = [];
 
     for (const recom of recommendations) {
+      // Top N candidates
       const topRank = recom.rank
         .sort((a, b) => a.rank - b.rank)
         .slice(0, values.candidateAmount);
 
+      // Others (excluded)
+      const rejectedCandidate = recom.rank.filter(
+        cand =>
+          !topRank.some(top => top.candidateEmail === cand.candidateEmail),
+      );
+
+      // Schedule meets for top-ranked
       let currentStartUTC = values.interviewDate;
       let remainingSession = 60;
       let batchEmails: { email: string }[] = [];
@@ -106,8 +120,8 @@ export default class MeetServices {
         }
 
         remainingSession -= values.durationTime;
-
         const isLast = i === topRank.length - 1;
+
         if (remainingSession <= 0 || isLast) {
           const meetEvent = await this._createMeetEvent(
             calendar,
@@ -126,7 +140,7 @@ export default class MeetServices {
             sessionTimeUTC = addMinutesUTC(sessionTimeUTC, values.durationTime);
           }
 
-          // Prepare for next session batch
+          // Reset for next session batch
           currentStartUTC = addMinutesUTC(currentStartUTC, 60);
           remainingSession = 60;
           batchEmails = [];
@@ -136,16 +150,21 @@ export default class MeetServices {
       recom.interviewDate = values.interviewDate; // store UTC
       recom.rank = topRank;
       recomData.push(recom);
+
+      // Push rejected ones to global list
+      rejectedCandidate.forEach(rc =>
+        excludedCandidates.push({ ...rc, role: recom.role }),
+      );
     }
 
-    return recomData;
+    return { recomData, excludedCandidates };
   }
 
   // 📅 Create Google Meet Event
   private async _createMeetEvent(
     calendar: any,
     role: string,
-    startTimeUTC: string, // UTC ISO
+    startTimeUTC: string,
     attendees: { email: string }[],
   ) {
     const endTimeUTC = addMinutesUTC(startTimeUTC, 60);
@@ -153,14 +172,8 @@ export default class MeetServices {
     const event = {
       summary: `Interview for ${role}`,
       description: `Interview session for ${role} candidates`,
-      start: {
-        dateTime: startTimeUTC, // ISO string
-        timeZone: 'Asia/Jakarta', // This is key
-      },
-      end: {
-        dateTime: endTimeUTC,
-        timeZone: 'Asia/Jakarta',
-      },
+      start: { dateTime: startTimeUTC, timeZone: 'Asia/Jakarta' },
+      end: { dateTime: endTimeUTC, timeZone: 'Asia/Jakarta' },
       attendees,
       conferenceData: {
         createRequest: {
@@ -179,7 +192,7 @@ export default class MeetServices {
     return response.data;
   }
 
-  // 💌 Handle Email Sending + Registration DB Updates
+  // 💌 Handle interview invitation & DB update
   private async _handleEmailsAndRegistrationUpdates(
     recomData: RecommendationType[],
     regisData: any[],
@@ -197,6 +210,8 @@ export default class MeetServices {
             );
           regisData.push(registrationData);
         }
+
+        // Send interview invitation to candidate
         await this._emailServices.sendInterviewInvitationEmail(
           rankData.candidateName,
           rankData.candidateEmail,
@@ -205,21 +220,23 @@ export default class MeetServices {
           pdfBuffer,
         );
       }
-      judges.map(async (judge: InterviewerType) => {
+
+      // Send interview invitation to judges
+      for (const judge of judges) {
         if (judge.role === recom.role) {
-          judge.judgesEmail.map(async email => {
+          for (const email of judge.judgesEmail) {
             await this._emailServices.sendInterviewInvitationEmailJudge(
               email,
               candidates.batch,
               recom.role,
               pdfBuffer,
             );
-          });
+          }
         }
-      });
+      }
     }
 
-    // Update vacancies in DB
+    // Update DB for interview stage
     for (const recom of recomData) {
       for (const rankData of recom.rank) {
         const regisIndex = regisData.findIndex(r => r.id === rankData.applyId);
@@ -233,11 +250,22 @@ export default class MeetServices {
         );
 
         regisData[regisIndex] = { ...regis, vacancy: updatedVacancies };
-
         await this._internServices.updateRegistrationData(rankData.applyId, {
           vacancy: updatedVacancies,
         });
       }
+    }
+  }
+
+  // ❌ Send rejection emails to excluded candidates
+  async _sendRejectionEmails(excludedCandidates: any[], batch: string) {
+    for (const candidate of excludedCandidates) {
+      await this._emailServices.sendRejectionIntern(
+        candidate.candidateName,
+        candidate.candidateEmail,
+        batch,
+        candidate.role,
+      );
     }
   }
 }

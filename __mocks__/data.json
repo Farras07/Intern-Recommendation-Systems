@@ -1,0 +1,250 @@
+{
+  "users": [
+    {
+      "id": "user-123",
+      "email": "test1@example.com",
+      "role": "Judge",
+      "image": "https://lh3.googleusercontent.com/a/r3ff3ef3r3vv",
+      "verified": true,
+      "name": "John Doe",
+      "createdAt": {
+        "_seconds": 1762064307,
+        "_nanoseconds": 724000000
+      }
+    },
+    {
+      "id": "user-223",
+      "email": "test2@example.com",
+      "role": "Admin",
+      "image": "https://lh3.googleusercontent.com/a/r3ff3ef3r3vv",
+      "verified": true,
+      "name": "John Doe",
+      "createdAt": {
+        "_seconds": 1762064307,
+        "_nanoseconds": 724000000
+      }
+    }
+  ],
+  "batch": [
+    {
+      "batchId": "batch-123",
+      "batchName": "Rekrutment Batch 1 - 2024",
+      "endDate": "2025-12-19T17:00:00.000Z",
+      "stage": "Registration",
+      "startDate": "2025-10-27T20:00:00.000Z"
+    },
+    {
+      "batchId": "batch-124",
+      "batchName": "Rekrutment Batch 2 - 2024",
+      "endDate": "2025-12-19T17:00:00.000Z",
+      "stage": "Interview",
+      "startDate": "2025-10-27T20:00:00.000Z"
+    }
+  ],
+  "role": [
+    {
+      "id": "role-123",
+      "title": "Operational",
+      "description": "Menjalankan operasional bisnis proses perusahaan dengan sigap"
+    },
+    {
+      "id": "role-124",
+      "title": "Social Media Specialist",
+      "description": "Menjalankan operasional bisnis proses perusahaan dengan sigap"
+    }
+  ],
+  "vacancy": [
+    {
+      "id": "vacancy-1234",
+      "batch": "batch-123",
+      "role": "role-123",
+      "skills": [
+        {
+          "priority": 1,
+          "skillName": "Copywriting"
+        },
+        {
+          "priority": 2,
+          "skillName": "Word"
+        },
+        {
+          "priority": 3,
+          "skillName": "Excel"
+        }
+      ]
+    },
+    {
+      "id": "vacancy-12345",
+      "batch": "batch-124",
+      "role": "role-124",
+      "skills": [
+        {
+          "priority": 1,
+          "skillName": "Copywriting"
+        },
+        {
+          "priority": 2,
+          "skillName": "Content Planning"
+        },
+        {
+          "priority": 2,
+          "skillName": "Content Creation"
+        }
+      ]
+    }
+  ],
+  "register": [
+    {
+      "id": "apply-5v254",
+      "cv": "https://google.com",
+      "name": "Example1",
+      "email": "rfrvnevrf3r@gmail.com",
+      "educationInstitution": "UPN Veteran Jawa Timur",
+      "batch": "batch-123",
+      "applyTime": "2025-11-09T22:46:09.508Z",
+      "phone": "081240232324",
+      "vacancy": [
+        {
+          "interviewRate": 1,
+          "id": "vacancy-1234",
+          "achievement": {
+            "lvlRate": "1",
+            "cert": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376",
+            "champRate": "1"
+          },
+          "rolePriority": 1,
+          "portfolio": {
+            "rate": 1,
+            "link": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376"
+          },
+          "lastStage": "Interview",
+          "exp": "2",
+          "skills": [
+            {
+              "skillName": "Word",
+              "rate": "2"
+            },
+            {
+              "skillName": "Excel",
+              "rate": "2"
+            }
+          ],
+          "role": {
+            "id": "role-123",
+            "title": "Operational"
+          }
+        },
+        {
+          "portfolio": {
+            "link": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376",
+            "rate": 1
+          },
+          "exp": "2",
+          "interviewRate": 1,
+          "rolePriority": 2,
+          "achievement": {
+            "cert": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376",
+            "lvlRate": "1",
+            "champRate": "1"
+          },
+          "lastStage": "Interview",
+          "skills": [
+            {
+              "skillName": "Capcut",
+              "rate": "2"
+            },
+            {
+              "skillName": "Adobe Premiere",
+              "rate": "2"
+            },
+            {
+              "skillName": "Adobe Illustrator",
+              "rate": "2"
+            }
+          ],
+          "id": "vacancy-12345",
+          "role": {
+            "id": "role-1234",
+            "title": "Social Media Specialist"
+          }
+        }
+      ]
+    },
+    {
+      "id": "apply-1234",
+      "cv": "https://google.com",
+      "name": "Example2",
+      "email": "example2@gmail.com",
+      "educationInstitution": "UPN Veteran Jawa Timur",
+      "batch": "batch-123",
+      "applyTime": "2025-11-09T22:46:09.508Z",
+      "phone": "081240232324",
+      "vacancy": [
+        {
+          "interviewRate": 1,
+          "id": "vacancy-1234",
+          "achievement": {
+            "lvlRate": "1",
+            "cert": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376",
+            "champRate": "1"
+          },
+          "rolePriority": 1,
+          "portfolio": {
+            "rate": 1,
+            "link": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376"
+          },
+          "lastStage": "Interview",
+          "exp": "2",
+          "skills": [
+            {
+              "skillName": "Word",
+              "rate": "2"
+            },
+            {
+              "skillName": "Excel",
+              "rate": "2"
+            }
+          ],
+          "role": {
+            "id": "role-123",
+            "title": "Operational"
+          }
+        },
+        {
+          "portfolio": {
+            "link": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376",
+            "rate": 1
+          },
+          "exp": "2",
+          "interviewRate": 1,
+          "rolePriority": 2,
+          "achievement": {
+            "cert": "8d0249633d879ecbe057fa63658b51262d6eedea31b9486a8921cdd6c89eb376",
+            "lvlRate": "1",
+            "champRate": "1"
+          },
+          "lastStage": "Interview",
+          "skills": [
+            {
+              "skillName": "Capcut",
+              "rate": "2"
+            },
+            {
+              "skillName": "Adobe Premiere",
+              "rate": "2"
+            },
+            {
+              "skillName": "Adobe Illustrator",
+              "rate": "2"
+            }
+          ],
+          "id": "vacancy-12345",
+          "role": {
+            "id": "role-1234",
+            "title": "Social Media Specialist"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,32 +1,38 @@
-import InternServices from '@/Services/InternServices';
+// import InternServices from '@/Services/InternServices';
 import InvariantError from '@/exceptions/InvariantError';
-import ResMiddleware from '@/app/middleware/response.middleware';
-import AuthMiddleware from '@/app/middleware/auth.middleware';
+import ResMiddleware from '@/app/api/middleware/response.middleware';
+import AuthMiddleware from '@/app/api/middleware/auth.middleware';
+import VacancyServices from '@/Services/VacancyServices';
 
-type InternServicesType = InstanceType<typeof InternServices>;
+type VacancyServicesType = InstanceType<typeof VacancyServices>;
 
 export default class InternVacancyHandler {
-  _service: InternServicesType;
-  constructor(InternService: InternServicesType) {
-    this._service = InternService;
+  _service: VacancyServicesType;
+  constructor(vacancyService: VacancyServicesType) {
+    this._service = vacancyService;
   }
 
   POST = ResMiddleware(
     AuthMiddleware(async (req: Request) => {
       const payload = await req.json();
-      const newUserId = await this._service.createVacancy(payload);
+      await this._service.createVacancy(payload);
       return {
         statusCode: 201,
         message: 'Intern Vacancy Successfully Created',
-        data: {
-          id: newUserId,
-        },
       };
     }),
   );
 
   GET = ResMiddleware(async (req: Request) => {
-    const vacancy = await this._service.getOpenVacancy();
+    const { searchParams } = new URL(req.url);
+    const filter = searchParams.get('filter');
+
+    let vacancy;
+
+    if (filter && filter === 'all')
+      vacancy = await this._service.getAllVacancy();
+    else vacancy = await this._service.getOpenVacancy();
+
     return {
       statusCode: 200,
       message: 'Intern Vacancy Successfully Retrieved',

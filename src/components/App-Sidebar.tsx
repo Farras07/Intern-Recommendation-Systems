@@ -32,6 +32,12 @@ export function AppSidebar() {
   }
 
   const { name, image, role } = session.user;
+  let navItems = sidebarItems;
+
+  if (role === 'Judge')
+    navItems = navItems.filter(nav => {
+      return nav.title !== 'Team' && nav.title !== 'Vacancy';
+    });
 
   return (
     <Sidebar variant='floating' collapsible='icon'>
@@ -46,7 +52,7 @@ export function AppSidebar() {
               </div>
             </SidebarHeader>
             <SidebarMenu>
-              {sidebarItems.map(item => (
+              {navItems.map(item => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <a href={item.url}>
@@ -97,9 +103,6 @@ export function AppSidebar() {
             side='top'
             className='w-[--radix-popper-anchor-width]'
           >
-            <DropdownMenuItem>
-              <span>Account</span>
-            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => signOut({ callbackUrl: '/login' })}
             >

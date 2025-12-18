@@ -6,6 +6,7 @@ export type RegistDataTypes = {
   id: string;
   name: string;
   phone: string;
+  applyTime: string;
   vacancy: VacancyRegisType[];
 };
 
@@ -18,17 +19,17 @@ export type VacancyRegisType = {
   exp: string;
   id: string;
   lastStage: string;
+  rolePriority: number;
+  role?: {
+    id: string;
+    title: string;
+  };
   portfolio: {
     link: string;
     rate: number;
   };
   interviewRate: string;
-  role?: {
-    id: string;
-    title: string;
-  };
   skills: {
-    priority?: number;
     rate: string;
     skillName: string;
   }[];

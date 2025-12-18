@@ -1,6 +1,18 @@
+import { SkillsItemType } from './OpenVacancyTypes';
+
 export type VacancyTypes = {
   id: string;
   batchId: string;
+  role: string;
+  startDate: string;
+  endDate: string;
+  status: 'Pending' | 'Hiring' | 'Done' | 'Failed';
+};
+
+export type VacancyTableTypes = SkillsItemType & {
+  no: number;
+  id: string;
+  batch: string;
   role: string;
   startDate: string;
   endDate: string;

@@ -36,6 +36,7 @@ const AcceptanceInternEmail: React.FC<InterviewInviteEmailProps> = ({
                 color: '#111827',
                 fontWeight: 'bold',
                 marginBottom: '16px',
+                textAlign: 'center',
               }}
             >
               🎉 Your Application Accepted 🎉

@@ -21,7 +21,7 @@ export function useQuery({
   path,
   queryKey,
   enabledVar,
-  timeout = 10000,
+  timeout = 20000,
 }: UseQueryTypes) {
   return useRQQuery({
     queryKey,
@@ -37,11 +37,6 @@ export function useQuery({
         );
         return response;
       } catch (err) {
-        console.log(err);
-        if (err instanceof BaseError && err.message === 'Request timed out') {
-          // You can handle timeout differently if you want
-          throw err;
-        }
         throw err;
       } finally {
         clearTimeout(timeoutId);
