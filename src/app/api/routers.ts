@@ -8,15 +8,12 @@ import { adminDb as db } from '@/lib/firebase-admin';
 import { drive } from '@/lib/gapi';
 import UserHandler from './user/handler';
 import InternRoleHandler from './intern/role/handler';
-import InternRoleStreamHandler from './intern/role/stream/handler';
 import InternBatchHandler from './intern/batch/handler';
 import InternBatchSlugHandler from './intern/batch/[id]/handler';
 import InternRegisterHandler from './intern/vacancy/register/handler';
 import InternStageHandler from './intern/vacancy/stage/handler';
 import InternRegisterSlugHandler from './intern/vacancy/register/[id]/handler';
-import InternBatchStreamHandler from './intern/batch/stream/handler';
 import InternVacancyHandler from './intern/vacancy/handler';
-import InternVacancyStreamHandler from './intern/vacancy/stream/handler';
 import RecommendationHandler from './recommendation/handler';
 import BatchServices from '@/Services/BatchServices';
 import RoleServices from '@/Services/RoleServices';
@@ -49,12 +46,6 @@ const internRegisterHandler = new InternRegisterHandler(
   registerService,
   batchServices,
 );
-const internBatchStreamHandler = new InternBatchStreamHandler(internServices);
-const internRoleStreamHandler = new InternRoleStreamHandler(internServices);
-const internVacancyStreamHandler = new InternVacancyStreamHandler(
-  internServices,
-);
-
 const recommendationServices = new RecommendationServices(db);
 const recommendationHandler = new RecommendationHandler(
   recommendationServices,
@@ -123,17 +114,5 @@ export function recommendationRouter() {
 }
 export function internStageRouter() {
   const GET = internStageHandler.GET.bind(internStageHandler);
-  return { GET };
-}
-export function internVacancyStreamRouter() {
-  const GET = internVacancyStreamHandler.GET.bind(internVacancyStreamHandler);
-  return { GET };
-}
-export function internBatchStreamRouter() {
-  const GET = internBatchStreamHandler.GET.bind(internBatchStreamHandler);
-  return { GET };
-}
-export function internRoleStreamRouter() {
-  const GET = internRoleStreamHandler.GET.bind(internRoleStreamHandler);
   return { GET };
 }
