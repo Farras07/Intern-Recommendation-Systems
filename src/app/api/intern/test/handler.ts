@@ -30,7 +30,7 @@ export default class InternRegisterHandler {
       const payload = await req.json();
       console.log(payload);
       await Promise.all(
-        payload.map(async data => {
+        payload.map(async (data: any) => {
           await this._service.testRegisterVacancy(data);
         }),
       );
