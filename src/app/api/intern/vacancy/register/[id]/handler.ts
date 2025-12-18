@@ -17,7 +17,7 @@ export default class InternRegisterSlugHandler {
   GET = ResMiddleware(
     AuthMiddleware(
       async (req: Request, { params }: { params: { id: string } }) => {
-        const { id } = await params;
+        const { id } = params;
         const regisData = await this._service.getSpecificRegistration(id);
 
         return {
@@ -32,7 +32,7 @@ export default class InternRegisterSlugHandler {
   PUT = ResMiddleware(
     AuthMiddleware(
       async (req: Request, { params }: { params: { id: string } }) => {
-        const { id } = await params;
+        const { id } = params;
         const payload = await req.json();
         await this._service.updateRegistrationData(id, payload);
         return Success({
@@ -46,7 +46,7 @@ export default class InternRegisterSlugHandler {
   DELETE = ResMiddleware(
     AuthMiddleware(
       async (req: Request, { params }: { params: { id: string } }) => {
-        const { id } = await params;
+        const { id } = params;
         await this._service.deleteRegistrationData(id);
         return Success({
           statusCode: 200,
