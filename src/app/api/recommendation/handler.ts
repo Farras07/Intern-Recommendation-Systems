@@ -1,4 +1,5 @@
-import InvariantError from '@/exceptions/InvariantError';
+export const runtime = 'nodejs';
+
 import RecommendationServices from '@/Services/RecommendationServices';
 import InternServices from '@/Services/InternServices';
 import NotFoundError from '@/exceptions/NotFoundError';

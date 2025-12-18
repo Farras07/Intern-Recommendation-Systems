@@ -1,4 +1,6 @@
 // app/api/user/route.ts
+export const runtime = 'nodejs';
+
 import UserServices from '@/Services/UserServices';
 import DriveServices from '@/Services/DriveServices';
 import InternServices from '@/Services/InternServices';

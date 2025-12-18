@@ -1,3 +1,5 @@
+export const runtime = 'nodejs';
+
 import InternServices from '@/Services/InternServices';
 import { Success } from '@/types/ResponseTypes';
 import ResMiddleware from '@/app/api/middleware/response.middleware';
