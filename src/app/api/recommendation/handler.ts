@@ -7,7 +7,7 @@ import MeetServices from '@/Services/MeetServices';
 import ResMiddleware from '@/app/api/middleware/response.middleware';
 import AuthMiddleware from '@/app/api/middleware/auth.middleware';
 import { stageOrder } from '@/constant/stages.items';
-import { Success, Failed } from '@/types/ResponseTypes';
+import { Failed } from '@/types/ResponseTypes';
 import BaseError from '@/exceptions/BaseError';
 import RegisterServices from '@/Services/RegisterServices';
 import { adminDb as db } from '@/lib/firebase-admin';
@@ -161,7 +161,15 @@ export default class RecommendationHandler {
             candidates.batch,
           );
 
-          return new Response(pdfBuffer, {
+          // return new Response(pdfBuffer, {
+          //   headers: {
+          //     'Content-Type': 'application/pdf',
+          //     'Content-Disposition':
+          //       'attachment; filename="Accepted_Candidates.pdf"',
+          //   },
+          // });
+
+          return new Response(new Uint8Array(pdfBuffer), {
             headers: {
               'Content-Type': 'application/pdf',
               'Content-Disposition':
@@ -175,7 +183,15 @@ export default class RecommendationHandler {
           // })
         } else {
           const pdfBuffer = await this._meetService.createMeet(payload);
-          return new Response(pdfBuffer, {
+          // return new Response(pdfBuffer, {
+          //   headers: {
+          //     'Content-Type': 'application/pdf',
+          //     'Content-Disposition':
+          //       'attachment; filename="Interview_List.pdf"',
+          //   },
+          // });
+
+          return new Response(new Uint8Array(pdfBuffer), {
             headers: {
               'Content-Type': 'application/pdf',
               'Content-Disposition':
