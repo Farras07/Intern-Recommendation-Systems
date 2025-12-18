@@ -1,4 +1,5 @@
 // import InternServices from '@/Services/InternServices';
+export const runtime = 'nodejs';
 import RoleServices from '@/Services/RoleServices';
 import ResMiddleware from '@/app/api/middleware/response.middleware';
 import AuthMiddleware from '@/app/api/middleware/auth.middleware';

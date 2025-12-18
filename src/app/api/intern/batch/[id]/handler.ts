@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import InvariantError from '@/exceptions/InvariantError';
 import BatchServices from '@/Services/BatchServices';
 import ResMiddleware from '@/app/api/middleware/response.middleware';

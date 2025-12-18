@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import BatchServices from '@/Services/BatchServices';
 import ResMiddleware from '@/app/api/middleware/response.middleware';
 import AuthMiddleware from '@/app/api/middleware/auth.middleware';

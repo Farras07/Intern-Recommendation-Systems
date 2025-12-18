@@ -1,4 +1,5 @@
 // import InternServices from '@/Services/InternServices';
+export const runtime = 'nodejs';
 import { Success, Failed } from '@/types/ResponseTypes';
 import EmailServices from '@/Services/EmailServices';
 import ResMiddleware from '@/app/api/middleware/response.middleware';
