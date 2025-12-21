@@ -1,4 +1,4 @@
-import { adminDb as db } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import InternalServerError from '@/exceptions/InternalServerError';
 import NotFoundError from '@/exceptions/NotFoundError';
 import BaseError from '@/exceptions/BaseError';
@@ -9,116 +9,89 @@ import { Encrypt, Decrypt } from '@/lib/privacy';
 import RoleServices from './RoleServices';
 import VacancyServices from './VacancyServices';
 
-type RoleServicesType = InstanceType<typeof RoleServices>;
-type VacancyServicesType = InstanceType<typeof VacancyServices>;
+const db = getAdminDb();
 
 export default class RegisterServices {
-  _db: typeof db;
-  private _roleServices: RoleServicesType;
-  private _vacancyServices: VacancyServicesType;
+  private _db: typeof db;
+  private _roleServices: RoleServices;
+  private _vacancyServices: VacancyServices;
 
-  constructor(database: any) {
+  constructor(database: typeof db) {
     this._db = database;
     this._roleServices = new RoleServices(this._db);
     this._vacancyServices = new VacancyServices(this._db);
   }
 
+  /* ================================
+   * CREATE REGISTRATION
+   * ================================ */
   async registerVacancy(data: any) {
     try {
       const id = `apply-${nanoid(5)}`;
-      const { cv, phone, vacancy, ...rest } = data;
-      const encryptedCV = Encrypt(cv);
-      const encryptedPhone = Encrypt(phone);
+      const { cv, phone, vacancy = [], ...rest } = data;
 
-      const fixVacancy = vacancy.map((vac: VacancyRegisType) => {
-        vac.achievement.cert = Encrypt(vac.achievement.cert);
-        vac.portfolio.link = Encrypt(vac.portfolio.link);
-        return vac;
-      });
+      const encryptedVacancy = vacancy.map((vac: VacancyRegisType) => ({
+        ...vac,
+        achievement: {
+          ...vac.achievement,
+          cert: Encrypt(vac.achievement.cert),
+        },
+        portfolio: {
+          ...vac.portfolio,
+          link: Encrypt(vac.portfolio.link),
+        },
+      }));
+
       await this._db
         .collection('register')
         .doc(id)
         .set({
           id,
-          cv: encryptedCV,
-          phone: encryptedPhone,
-          vacancy: fixVacancy,
+          cv: Encrypt(cv),
+          phone: Encrypt(phone),
+          vacancy: encryptedVacancy,
           ...rest,
         });
     } catch (error) {
-      if (!(error instanceof BaseError)) {
-        throw new InternalServerError(`Internal Server Error: ${error}`);
-      }
-      throw error;
-    }
-  }
-  async testRegisterVacancy(data: any) {
-    try {
-      const id = `apply-${nanoid(5)}`;
-      const { cv, phone, vacancy, ...rest } = data;
-      const encryptedCV = Encrypt(cv);
-      const encryptedPhone = Encrypt(phone);
-
-      const fixVacancy = vacancy.map((vac: VacancyRegisType) => {
-        vac.achievement.cert = Encrypt(vac.achievement.cert);
-        vac.portfolio.link = Encrypt(vac.portfolio.link);
-        return vac;
-      });
-      await this._db
-        .collection('register')
-        .doc(id)
-        .set({
-          id,
-          cv: encryptedCV,
-          phone: encryptedPhone,
-          vacancy: fixVacancy,
-          ...rest,
-        });
-    } catch (error) {
-      if (!(error instanceof BaseError)) {
-        throw new InternalServerError(`Internal Server Error: ${error}`);
-      }
-      throw error;
+      this._throwError(error);
     }
   }
 
-  async getRegistration(batchData: any, role?: string) {
+  /* ================================
+   * GET REGISTRATION BY BATCH
+   * ================================ */
+  async getRegistration(batchData: BatchResponseType[], role?: string) {
     try {
-      const registData = await Promise.all(
-        batchData.map(async (data: BatchResponseType) => {
-          const batchSnap = await this._db
+      const results = await Promise.all(
+        batchData.map(async batch => {
+          const snap = await this._db
             .collection('register')
-            .where('batch', '==', data.batchId)
+            .where('batch', '==', batch.batchId)
             .get();
 
-          if (batchSnap.empty) return [];
+          if (snap.empty) return [];
 
-          // raw register data
-          const batchRegistData = batchSnap.docs.map(doc => doc.data());
+          return Promise.all(
+            snap.docs.map(async (doc: any) => {
+              const regis = doc.data();
 
-          // enrich vacancy with role
-          const enrichedRegistData = await Promise.all(
-            batchRegistData.map(async regis => {
-              const enrichedVacancies = await Promise.all(
-                (regis.vacancy ?? []).map(async (vacancy: VacancyRegisType) => {
-                  const roleVac =
-                    await this._vacancyServices.getSpecificVacancy(vacancy.id);
+              const enrichedVacancy = await Promise.all(
+                (regis.vacancy ?? []).map(async (vac: VacancyRegisType) => {
+                  const vacancyData =
+                    await this._vacancyServices.getSpecificVacancy(vac.id);
                   const roleData = await this._roleServices.getSpecificRoleById(
-                    roleVac[0].role,
+                    vacancyData[0].role,
                   );
 
-                  const decryptedCert = Decrypt(vacancy.achievement.cert);
-                  const decryptedLink = Decrypt(vacancy.portfolio.link);
-
                   return {
-                    ...vacancy,
+                    ...vac,
                     achievement: {
-                      ...vacancy.achievement,
-                      cert: decryptedCert,
+                      ...vac.achievement,
+                      cert: Decrypt(vac.achievement.cert),
                     },
                     portfolio: {
-                      ...vacancy.portfolio,
-                      link: decryptedLink,
+                      ...vac.portfolio,
+                      link: Decrypt(vac.portfolio.link),
                     },
                     role: {
                       id: roleData.id,
@@ -128,78 +101,85 @@ export default class RegisterServices {
                 }),
               );
 
-              if (role) {
-                const hasRole = enrichedVacancies.some(v => v.role.id === role);
-                if (!hasRole) return null;
+              if (role && !enrichedVacancy.some(v => v.role.id === role)) {
+                return null;
               }
-              regis.cv = Decrypt(regis.cv);
-              regis.phone = Decrypt(regis.phone);
+
               return {
                 ...regis,
-                vacancy: enrichedVacancies,
+                cv: Decrypt(regis.cv),
+                phone: Decrypt(regis.phone),
+                vacancy: enrichedVacancy,
               };
             }),
           );
-
-          return enrichedRegistData.filter(r => r !== null);
         }),
       );
 
-      return registData.flat();
+      return results.flat().filter(Boolean);
     } catch (error) {
-      console.log(error);
-      if (!(error instanceof BaseError)) {
-        throw new InternalServerError(`Internal Server Error: ${error}`);
-      }
-      throw error;
+      this._throwError(error);
     }
   }
 
+  /* ================================
+   * GET BY BATCH ID
+   * ================================ */
   async getRegistrationByBatchId(batchId: string) {
     try {
-      const regisSnap = await this._db
+      const snap = await this._db
         .collection('register')
         .where('batch', '==', batchId)
         .get();
-      if (regisSnap.empty) return [];
-      const regisData = regisSnap.docs.map(doc => doc.data());
-      const fixData = regisData.map((data: any) => {
+
+      if (snap.empty) return [];
+
+      return snap.docs.map((doc: any) => {
+        const data = doc.data();
         return {
           ...data,
           cv: Decrypt(data.cv),
           phone: Decrypt(data.phone),
         };
       });
-      return fixData;
     } catch (error) {
-      if (!(error instanceof BaseError)) {
-        throw new InternalServerError(`Internal Server Error: ${error}`);
-      }
-      throw error;
+      this._throwError(error);
     }
   }
 
+  /* ================================
+   * GET SPECIFIC REGISTRATION
+   * ================================ */
   async getSpecificRegistration(id: string) {
     try {
-      const regisSnap = await this._db
+      const snap = await this._db
         .collection('register')
         .where('id', '==', id)
         .get();
 
-      if (regisSnap.empty) throw new NotFoundError('Data Not Found!');
-      const regisData = regisSnap.docs.map(doc => doc.data())[0];
-      const enrichedRegisData = await Promise.all(
-        regisData.vacancy.map(async (data: VacancyRegisType) => {
-          const roleVac = await this._vacancyServices.getSpecificVacancy(
-            data.id,
+      if (snap.empty) throw new NotFoundError('Data Not Found!');
+
+      const regis = snap.docs[0].data();
+
+      const enrichedVacancy = await Promise.all(
+        regis.vacancy.map(async (vac: VacancyRegisType) => {
+          const vacancyData = await this._vacancyServices.getSpecificVacancy(
+            vac.id,
           );
           const roleData = await this._roleServices.getSpecificRoleById(
-            roleVac[0].role,
+            vacancyData[0].role,
           );
-          data.portfolio.link = Decrypt(data.portfolio.link);
-          data.achievement.cert = Decrypt(data.achievement.cert);
+
           return {
-            ...data,
+            ...vac,
+            achievement: {
+              ...vac.achievement,
+              cert: Decrypt(vac.achievement.cert),
+            },
+            portfolio: {
+              ...vac.portfolio,
+              link: Decrypt(vac.portfolio.link),
+            },
             role: {
               id: roleData.id,
               title: roleData.title,
@@ -207,53 +187,63 @@ export default class RegisterServices {
           };
         }),
       );
-      regisData.cv = Decrypt(regisData.cv);
-      regisData.phone = Decrypt(regisData.phone);
-      return { ...regisData, vacancy: enrichedRegisData };
+
+      return {
+        ...regis,
+        cv: Decrypt(regis.cv),
+        phone: Decrypt(regis.phone),
+        vacancy: enrichedVacancy,
+      };
     } catch (error) {
-      if (!(error instanceof BaseError)) {
-        throw new InternalServerError(`Internal Server Error: ${error}`);
-      }
-      throw error;
+      this._throwError(error);
     }
   }
 
+  /* ================================
+   * UPDATE REGISTRATION
+   * ================================ */
   async updateRegistrationData(id: string, data: any) {
     try {
-      if (data.phone) {
-        data.phone = Encrypt(data.phone);
-      }
-      if (data.vacancy) {
-        data.vacancy = data.vacancy.map((vac: VacancyRegisType) => {
-          const { ...restData } = vac;
-          restData.achievement.cert = Encrypt(restData.achievement.cert);
-          restData.portfolio.link = Encrypt(restData.portfolio.link);
-          return restData;
-        });
+      const payload: any = { ...data };
+
+      if (payload.phone) payload.phone = Encrypt(payload.phone);
+
+      if (payload.vacancy) {
+        payload.vacancy = payload.vacancy.map((vac: VacancyRegisType) => ({
+          ...vac,
+          achievement: {
+            ...vac.achievement,
+            cert: Encrypt(vac.achievement.cert),
+          },
+          portfolio: {
+            ...vac.portfolio,
+            link: Encrypt(vac.portfolio.link),
+          },
+        }));
       }
 
-      await db
-        .collection('register')
-        .doc(id)
-        .update({
-          ...data,
-        });
+      await this._db.collection('register').doc(id).update(payload);
     } catch (error) {
-      if (!(error instanceof BaseError)) {
-        throw new InternalServerError(`Internal Server Error: ${error}`);
-      }
-      throw error;
+      this._throwError(error);
     }
   }
 
+  /* ================================
+   * DELETE REGISTRATION
+   * ================================ */
   async deleteRegistrationData(id: string) {
     try {
-      await db.collection('register').doc(id).delete();
+      await this._db.collection('register').doc(id).delete();
     } catch (error) {
-      if (!(error instanceof BaseError)) {
-        throw new InternalServerError(`Internal Server Error: ${error}`);
-      }
-      throw error;
+      this._throwError(error);
     }
+  }
+
+  /* ================================
+   * ERROR HANDLER
+   * ================================ */
+  private _throwError(error: unknown): never {
+    if (error instanceof BaseError) throw error;
+    throw new InternalServerError(`Internal Server Error: ${error}`);
   }
 }

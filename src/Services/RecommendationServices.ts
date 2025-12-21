@@ -1,8 +1,10 @@
-import { adminDb as db } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import InternalServerError from '@/exceptions/InternalServerError';
 import BaseError from '@/exceptions/BaseError';
 import AHP from '@/lib/ahp';
 import TOPSIS from '@/lib/topsis';
+
+const db = getAdminDb();
 
 export default class InternServices {
   _db: typeof db;

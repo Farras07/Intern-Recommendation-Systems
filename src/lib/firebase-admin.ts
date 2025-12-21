@@ -1,31 +1,31 @@
-// lib/firebase-admin.ts
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import admin from 'firebase-admin';
 
-let adminDb: ReturnType<typeof getFirestore> | null = null;
+let adminDb: FirebaseFirestore.Firestore | null = null;
 
-// Check if we're in build phase
-const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+export function getAdminDb() {
+  if (adminDb) return adminDb;
 
-if (!isBuildPhase && !getApps().length) {
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const projectId = process.env.NEXTAUTH_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.NEXTAUTH_FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.NEXTAUTH_FIREBASE_PRIVATE_KEY?.replace(
+    /\\n/g,
+    '\n',
+  );
 
-  if (
-    process.env.FIREBASE_PROJECT_ID &&
-    process.env.FIREBASE_CLIENT_EMAIL &&
-    privateKey
-  ) {
-    initializeApp({
-      credential: cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: privateKey,
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('Missing Firebase Admin environment variables');
+  }
+
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
       }),
     });
-    adminDb = getFirestore();
-    console.log('✅ Firebase Admin initialized successfully');
   }
-}
 
-// Export the db (will be null during build)
-export { adminDb };
+  adminDb = admin.firestore();
+  return adminDb;
+}

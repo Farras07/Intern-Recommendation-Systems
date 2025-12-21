@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { getAdminDb } from '@/lib/firebase-admin';
 import BaseError from '@/exceptions/BaseError';
 import InternalServerError from '@/exceptions/InternalServerError';
 import {
@@ -10,6 +11,10 @@ import { addMinutesUTC } from '@/hooks/date-format.hooks';
 import EmailServices from './EmailServices';
 import InternServices from './InternServices';
 import { generateTopRankPDF } from '@/lib/pdfGenerator';
+import RegisterServices from './RegisterServices';
+
+const db = getAdminDb();
+const registerServices = new RegisterServices(db);
 
 type CreateMeetProps = {
   session: {
@@ -26,14 +31,17 @@ type CreateMeetProps = {
 
 type EmailServicesType = InstanceType<typeof EmailServices>;
 type InternServicesType = InstanceType<typeof InternServices>;
+type RegisterServicesType = InstanceType<typeof RegisterServices>;
 
 export default class MeetServices {
   private _emailServices: EmailServicesType;
   private _internServices: InternServicesType;
+  private _registerServices: RegisterServicesType;
 
   constructor(internServices: InternServicesType) {
     this._emailServices = new EmailServices();
     this._internServices = internServices;
+    this._registerServices = registerServices;
   }
 
   // ✅ Main entry point
@@ -205,7 +213,7 @@ export default class MeetServices {
         const alreadyFetched = regisData.some(r => r.id === rankData.applyId);
         if (!alreadyFetched) {
           const registrationData =
-            await this._internServices.getSpecificRegistration(
+            await this._registerServices.getSpecificRegistration(
               rankData.applyId,
             );
           regisData.push(registrationData);
@@ -250,7 +258,7 @@ export default class MeetServices {
         );
 
         regisData[regisIndex] = { ...regis, vacancy: updatedVacancies };
-        await this._internServices.updateRegistrationData(rankData.applyId, {
+        await this._registerServices.updateRegistrationData(rankData.applyId, {
           vacancy: updatedVacancies,
         });
       }

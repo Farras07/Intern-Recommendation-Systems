@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import UserServices from '@/Services/UserServices';
-import { adminDb as db } from '@/lib/firebase-admin';
+import { getAdminDb as db } from '@/lib/firebase-admin';
 import { JWT } from 'next-auth/jwt';
 
 const userServices = new UserServices(db);

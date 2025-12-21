@@ -1,13 +1,15 @@
-import { adminDb as db } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import InternalServerError from '@/exceptions/InternalServerError';
 import NotFoundError from '@/exceptions/NotFoundError';
 import BaseError from '@/exceptions/BaseError';
 import { nanoid } from 'nanoid';
 
+const db = getAdminDb();
+
 export default class UserServices {
   _db: typeof db;
-  constructor(database: any) {
-    this._db = database;
+  constructor() {
+    this._db = getAdminDb();
   }
 
   async createUser(payload: any) {

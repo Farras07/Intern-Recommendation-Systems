@@ -1,9 +1,11 @@
-import { adminDb as db } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import InternalServerError from '@/exceptions/InternalServerError';
 import NotFoundError from '@/exceptions/NotFoundError';
 import BaseError from '@/exceptions/BaseError';
 import { nanoid } from 'nanoid';
 import EmailServices from './EmailServices';
+
+const db = getAdminDb();
 
 export default class VacancyServices {
   _db: typeof db;

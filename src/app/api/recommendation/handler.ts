@@ -11,9 +11,9 @@ import { stageOrder } from '@/constant/stages.items';
 import { Failed } from '@/types/ResponseTypes';
 import BaseError from '@/exceptions/BaseError';
 import RegisterServices from '@/Services/RegisterServices';
-import { adminDb as db } from '@/lib/firebase-admin';
 import VacancyServices from '@/Services/VacancyServices';
 import RoleServices from '@/Services/RoleServices';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 type RecomServicesType = InstanceType<typeof RecommendationServices>;
 type InternServicesType = InstanceType<typeof InternServices>;
@@ -21,6 +21,8 @@ type MeetServicesType = InstanceType<typeof MeetServices>;
 type RegisterServicesType = InstanceType<typeof RegisterServices>;
 type VacancyServicesType = InstanceType<typeof VacancyServices>;
 type RoleServicesType = InstanceType<typeof RoleServices>;
+
+const db = getAdminDb();
 
 export default class RecommendationHandler {
   _service: RecomServicesType;
