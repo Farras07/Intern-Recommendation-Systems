@@ -1,3 +1,4 @@
+// app/api/middleware/auth.middleware.ts
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/authOptions';
 import AuthenticationError from '@/exceptions/AuthenticationError';
@@ -34,14 +35,20 @@ export default function AuthMiddleware(
       );
     }
 
+    // ✅ FIX: guard token before accessing exp
+    if (!session.token || typeof session.token.exp !== 'number') {
+      throw new AuthenticationError('Invalid session token. Please relogin.');
+    }
+
     const currentTime = Date.now();
-    const tokenExpired = session?.token.exp * 1000;
-    if (currentTime > tokenExpired)
+    const tokenExpired = session.token.exp * 1000;
+
+    if (currentTime > tokenExpired) {
       throw new AuthenticationError(
         'Your session token expired!. Please Relogin',
       );
+    }
 
-    // pass session to next handler
     return handler(req, ctx, session);
   };
 }
