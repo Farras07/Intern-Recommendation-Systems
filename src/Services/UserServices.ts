@@ -53,7 +53,7 @@ export default class UserServices {
           throw new NotFoundError(`Not found Error : Data not found`);
         }
 
-        const users = snapshot.docs.map(doc => ({
+        const users = snapshot.docs.map((doc: any) => ({
           ...doc.data(),
         }));
 
@@ -77,7 +77,7 @@ export default class UserServices {
 
       if (snapshot.empty)
         throw new NotFoundError(`Not found Error : Data not found`);
-      const users = snapshot.docs.map(doc => doc.data());
+      const users = snapshot.docs.map((doc: any) => doc.data());
       return users;
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -127,7 +127,7 @@ export default class UserServices {
         throw new NotFoundError(`Not found Error : Data not found`);
       }
 
-      const result = snapshot.docs.map(doc => doc.data());
+      const result = snapshot.docs.map((doc: any) => doc.data());
       return result;
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -156,7 +156,7 @@ export default class UserServices {
         return [];
       }
 
-      return snapshot.docs.map(doc => doc.data());
+      return snapshot.docs.map((doc: any) => doc.data());
     } catch (error) {
       if (!(error instanceof BaseError)) {
         throw new InternalServerError(`Internal Server Error: ${error}`);

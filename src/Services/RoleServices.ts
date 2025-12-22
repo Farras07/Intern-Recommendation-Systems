@@ -40,7 +40,7 @@ export default class RoleServices {
     try {
       const snapshot = await this._db.collection('role').get();
       if (snapshot.empty) throw new NotFoundError('Intern Roles Not Found');
-      const internRoles = snapshot.docs.map(doc => ({
+      const internRoles = snapshot.docs.map((doc: any) => ({
         ...doc.data(),
       }));
       return internRoles;
@@ -73,7 +73,7 @@ export default class RoleServices {
         .where('id', '==', id)
         .get();
       if (snapshot.empty) throw new NotFoundError("Role doesn't exist!");
-      const roles = snapshot.docs.map(doc => ({
+      const roles = snapshot.docs.map((doc: any) => ({
         ...doc.data(),
       }));
       return roles[0];
@@ -124,8 +124,8 @@ export default class RoleServices {
         );
 
         // Firestore listener
-        unsubscribe = db.collection('role').onSnapshot(snapshot => {
-          const data = snapshot.docs.map(doc => ({
+        unsubscribe = db.collection('role').onSnapshot((snapshot: any) => {
+          const data = snapshot.docs.map((doc: any) => ({
             id: doc.id,
             ...doc.data(),
           }));

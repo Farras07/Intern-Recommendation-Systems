@@ -3,7 +3,7 @@ import InternalServerError from '@/exceptions/InternalServerError';
 import NotFoundError from '@/exceptions/NotFoundError';
 import BaseError from '@/exceptions/BaseError';
 import { nanoid } from 'nanoid';
-import EmailServices from './EmailServices';
+import { BatchResponseType } from '@/types/BatchTypes';
 
 const db = getAdminDb();
 
@@ -42,7 +42,7 @@ export default class VacancyServices {
           .get();
 
         if (vacancySnap.empty) throw new NotFoundError('Vacancy Not Found!');
-        const vacancyData = vacancySnap.docs.map(docs => docs.data());
+        const vacancyData = vacancySnap.docs.map((docs: any) => docs.data());
         return vacancyData;
       } else {
         const vacancySnap = await this._db
@@ -51,7 +51,7 @@ export default class VacancyServices {
           .select('role')
           .get();
         if (vacancySnap.empty) throw new NotFoundError('Vacancy Not Found!');
-        const vacancyData = vacancySnap.docs.map(docs => docs.data());
+        const vacancyData = vacancySnap.docs.map((docs: any) => docs.data());
         return vacancyData;
       }
     } catch (error) {
@@ -69,7 +69,7 @@ export default class VacancyServices {
         .select('id')
         .get();
       if (vacancySnap.empty) throw new NotFoundError('Vacancy Not Found!');
-      const vacancyData = vacancySnap.docs.map(docs => docs.data().id);
+      const vacancyData = vacancySnap.docs.map((docs: any) => docs.data().id);
       return vacancyData;
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -83,7 +83,7 @@ export default class VacancyServices {
     try {
       const vacancySnap = await this._db.collection('vacancy').get();
       if (vacancySnap.empty) throw new NotFoundError('Vacancies Not Found!');
-      const vacancyData = vacancySnap.docs.map(docs => docs.data());
+      const vacancyData = vacancySnap.docs.map((docs: any) => docs.data());
       return vacancyData;
     } catch (error) {
       if (!(error instanceof BaseError)) {
@@ -104,8 +104,8 @@ export default class VacancyServices {
 
       // Step 2: Filter in-memory by startDate <= now < endDate
       const openBatches = batchSnap.docs
-        .map(doc => doc.data())
-        .filter(batch => {
+        .map((doc: any) => doc.data())
+        .filter((batch: BatchResponseType) => {
           const startDate = new Date(batch.startDate);
           const endDate = new Date(batch.endDate);
           return (
@@ -120,7 +120,7 @@ export default class VacancyServices {
 
       // Step 3: For each batch, fetch its vacancies
       const openVacancies = await Promise.all(
-        openBatches.map(async batch => {
+        openBatches.map(async (batch: BatchResponseType) => {
           const vacancySnap = await this._db
             .collection('vacancy')
             .where('batch', '==', batch.batchId)
@@ -130,7 +130,7 @@ export default class VacancyServices {
 
           // Step 4: For each vacancy, fetch its role
           const vacanciesWithRole = await Promise.all(
-            vacancySnap.docs.map(async vacDoc => {
+            vacancySnap.docs.map(async (vacDoc: any) => {
               const vacancy = vacDoc.data();
 
               const roleSnap = await this._db
@@ -210,8 +210,8 @@ export default class VacancyServices {
         );
 
         // Firestore listener
-        unsubscribe = db.collection('vacancy').onSnapshot(snapshot => {
-          const data = snapshot.docs.map(doc => ({
+        unsubscribe = db.collection('vacancy').onSnapshot((snapshot: any) => {
+          const data = snapshot.docs.map((doc: any) => ({
             id: doc.id,
             ...doc.data(),
           }));
