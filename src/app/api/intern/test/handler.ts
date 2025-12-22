@@ -35,10 +35,7 @@ export default class InternRegisterHandler {
           await this._service.testRegisterVacancy(data);
         }),
       );
-      // await this._emailService.sendEmail({
-      //   email: payload.email,
-      //   name: payload.name,
-      // });
+
       return Success({
         statusCode: 201,
         message: 'Intern Register Success',
@@ -50,38 +47,4 @@ export default class InternRegisterHandler {
       });
     }
   });
-
-  GET = ResMiddleware(
-    AuthMiddleware(
-      async (req: Request) => {
-        let registData;
-        const { searchParams } = new URL(req.url);
-        const roleId = searchParams.get('role');
-        const batchId = searchParams.get('batchId');
-        if (roleId && batchId) {
-          const batchData = await this._batchService.getSpecificBatch(batchId);
-          registData = await this._service.getRegistration([batchData], roleId);
-        } else if (roleId || batchId) {
-          if (roleId) {
-            console.log('brooo');
-            const allBatch = await this._batchService.getBatches();
-            registData = await this._service.getRegistration(allBatch, roleId);
-          } else if (batchId) {
-            const batchData =
-              await this._batchService.getSpecificBatch(batchId);
-            registData = await this._service.getRegistration([batchData]);
-          }
-        } else {
-          const allBatch = await this._batchService.getBatches();
-          registData = await this._service.getRegistration(allBatch);
-        }
-        return {
-          statusCode: 200,
-          message: 'Get Intern Register Success',
-          data: registData,
-        };
-      },
-      { authorizeRole: ['Admin'] },
-    ),
-  );
 }

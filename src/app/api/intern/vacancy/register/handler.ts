@@ -59,7 +59,6 @@ export default class InternRegisterHandler {
           registData = await this._service.getRegistration([batchData], roleId);
         } else if (roleId || batchId) {
           if (roleId) {
-            console.log('brooo');
             const allBatch = await this._batchService.getBatches();
             registData = await this._service.getRegistration(allBatch, roleId);
           } else if (batchId) {

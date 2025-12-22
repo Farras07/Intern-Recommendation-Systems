@@ -38,7 +38,7 @@ function createCommon() {
   const recommendationServices = new RecommendationServices(db);
   const meetServices = new MeetServices(internServices);
   const driveServices = new DriveServices(drive);
-  const userServices = new UserServices(db);
+  const userServices = new UserServices();
 
   return {
     db,
@@ -120,8 +120,8 @@ export function internRegisterRouter() {
 }
 
 export function internRegisterSlugRouter() {
-  const { internServices } = createCommon();
-  const handler = new InternRegisterSlugHandler(internServices);
+  const { registerServices } = createCommon();
+  const handler = new InternRegisterSlugHandler(registerServices);
   return {
     GET: handler.GET.bind(handler),
     PUT: handler.PUT.bind(handler),
@@ -156,6 +156,5 @@ export function testInternRegisterRouter() {
   const handler = new TestRegisterHandler(registerServices, batchServices);
   return {
     POST: handler.POST.bind(handler),
-    GET: handler.GET.bind(handler),
   };
 }

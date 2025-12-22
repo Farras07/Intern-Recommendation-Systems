@@ -15,7 +15,7 @@ export default class InternBatchSlugHandler {
   PUT = ResMiddleware(
     AuthMiddleware(
       async (req: Request, { params }: { params: { id: string } }) => {
-        const { id } = params;
+        const { id } = await params;
         const { stage } = await req.json();
 
         if (!id) throw new InvariantError("id doesn't exist as path url");

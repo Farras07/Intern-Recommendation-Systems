@@ -1,4 +1,4 @@
 export const runtime = 'nodejs';
 import { testInternRegisterRouter } from '@/app/api/routers';
 
-export const { POST, GET } = testInternRegisterRouter();
+export const { POST } = testInternRegisterRouter();

@@ -29,7 +29,7 @@ export default class InternBatchHandler {
   GET = ResMiddleware(
     AuthMiddleware(async (req: Request) => {
       const { searchParams } = new URL(req.url);
-      const batchId = searchParams.get('id');
+      const batchId = searchParams.get('batchId');
       if (!batchId) {
         const batchesData = await this._service.getBatches();
         return {

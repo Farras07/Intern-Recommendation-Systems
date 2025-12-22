@@ -66,11 +66,11 @@ export default function DefaultRegistrationPage({
         <Filter role={roleFilter} setRole={setRoleFilter} />
       </section>
       <section className=' h-[90%] flex flex-col gap-4'>
-        {batch && (
+        {batch && stage && (
           <section>
             <Typography variant='p' color='dark'>
               {!batchInfoIsLoading && stage
-                ? batchInfo.batches[0].batchName
+                ? batchInfo.batch.batchName
                 : 'Wait a second...'}
             </Typography>
             <Typography variant='p' color='blue-sky' className='-mt-1'>

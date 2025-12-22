@@ -57,13 +57,43 @@ export default class RegisterServices {
     }
   }
 
+  async testRegisterVacancy(data: any) {
+    try {
+      const id = `apply-${nanoid(5)}`;
+      const { cv, phone, vacancy, ...rest } = data;
+      const encryptedCV = Encrypt(cv);
+      const encryptedPhone = Encrypt(phone);
+
+      const fixVacancy = vacancy.map((vac: VacancyRegisType) => {
+        vac.achievement.cert = Encrypt(vac.achievement.cert);
+        vac.portfolio.link = Encrypt(vac.portfolio.link);
+        return vac;
+      });
+      await this._db
+        .collection('register')
+        .doc(id)
+        .set({
+          id,
+          cv: encryptedCV,
+          phone: encryptedPhone,
+          vacancy: fixVacancy,
+          ...rest,
+        });
+    } catch (error) {
+      if (!(error instanceof BaseError)) {
+        throw new InternalServerError(`Internal Server Error: ${error}`);
+      }
+      throw error;
+    }
+  }
+
   /* ================================
    * GET REGISTRATION BY BATCH
    * ================================ */
-  async getRegistration(batchData: BatchResponseType[], role?: string) {
+  async getRegistration(batchData: BatchResponseType[] | any, role?: string) {
     try {
       const results = await Promise.all(
-        batchData.map(async batch => {
+        batchData.map(async (batch: any) => {
           const snap = await this._db
             .collection('register')
             .where('batch', '==', batch.batchId)

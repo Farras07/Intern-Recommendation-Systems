@@ -1,23 +1,23 @@
 export const runtime = 'nodejs';
 
-import InternServices from '@/Services/InternServices';
+import RegisterServices from '@/Services/RegisterServices';
 import { Success } from '@/types/ResponseTypes';
 import ResMiddleware from '@/app/api/middleware/response.middleware';
 import AuthMiddleware from '@/app/api/middleware/auth.middleware';
 
-type InternServicesType = InstanceType<typeof InternServices>;
+type RegisterServicesType = InstanceType<typeof RegisterServices>;
 
 export default class InternRegisterSlugHandler {
-  _service: InternServicesType;
+  _service: RegisterServicesType;
 
-  constructor(InternService: InternServicesType) {
-    this._service = InternService;
+  constructor(registerServices: RegisterServicesType) {
+    this._service = registerServices;
   }
 
   GET = ResMiddleware(
     AuthMiddleware(
       async (req: Request, { params }: { params: { id: string } }) => {
-        const { id } = params;
+        const { id } = await params;
         const regisData = await this._service.getSpecificRegistration(id);
 
         return {
@@ -32,7 +32,7 @@ export default class InternRegisterSlugHandler {
   PUT = ResMiddleware(
     AuthMiddleware(
       async (req: Request, { params }: { params: { id: string } }) => {
-        const { id } = params;
+        const { id } = await params;
         const payload = await req.json();
         await this._service.updateRegistrationData(id, payload);
         return Success({
@@ -46,7 +46,7 @@ export default class InternRegisterSlugHandler {
   DELETE = ResMiddleware(
     AuthMiddleware(
       async (req: Request, { params }: { params: { id: string } }) => {
-        const { id } = params;
+        const { id } = await params;
         await this._service.deleteRegistrationData(id);
         return Success({
           statusCode: 200,
