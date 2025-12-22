@@ -29,7 +29,7 @@ export default function DefaultRegistrationPage({
     timeout: 30000,
   });
   const { data: batchInfo, isLoading: batchInfoIsLoading } = useQuery({
-    path: `/intern/batch?batchId=${batch}`,
+    path: `/intern/batch?id=${batch}`,
     queryKey: ['batch', batch],
     timeout: 10000,
   });
