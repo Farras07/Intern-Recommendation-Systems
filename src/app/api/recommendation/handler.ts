@@ -3,7 +3,7 @@ export const runtime = 'nodejs';
 import RecommendationServices from '@/Services/RecommendationServices';
 import InternServices from '@/Services/InternServices';
 import NotFoundError from '@/exceptions/NotFoundError';
-import { VacancyRegisType } from '@/types/registDataTypes';
+import { VacancyRegisType, RegistDataTypes } from '@/types/registDataTypes';
 import MeetServices from '@/Services/MeetServices';
 import ResMiddleware from '@/app/api/middleware/response.middleware';
 import AuthMiddleware from '@/app/api/middleware/auth.middleware';
@@ -55,7 +55,7 @@ export default class RecommendationHandler {
           await this._registerService.getRegistrationByBatchId(batchId);
         const regStage = stage.replace('_', ' ');
         const lastStageIndex = stageOrder.indexOf(regStage);
-        const altData = internData.map(candidate => {
+        const altData = internData.map((candidate: RegistDataTypes) => {
           const filteredVacancy = candidate.vacancy.filter(
             (vac: VacancyRegisType) => {
               const vacStageIndex = stageOrder.indexOf(vac.lastStage);
@@ -75,9 +75,9 @@ export default class RecommendationHandler {
           await this._vacancyService.getVacancyIdsByBatchId(batchId);
 
         const vacGroupData = vacancyIds
-          .map(idVac => {
+          .map((idVac: any) => {
             const list = altData
-              .map(alt => {
+              .map((alt: any) => {
                 const vacancy = alt.vacancy.find(
                   (vac: VacancyRegisType) => vac.id === idVac,
                 );
@@ -99,7 +99,7 @@ export default class RecommendationHandler {
               list,
             };
           })
-          .filter(v => v.list.length > 0);
+          .filter((v: any) => v.list.length > 0);
 
         const {
           weightResult: criteriaWeight,
@@ -107,7 +107,7 @@ export default class RecommendationHandler {
         } = await this._service.ahpCriteriasWeight();
 
         const recommendation = await Promise.all(
-          vacGroupData.map(async vacGroup => {
+          vacGroupData.map(async (vacGroup: any) => {
             const vacancyData = (
               await this._vacancyService.getSpecificVacancy(vacGroup.id, true)
             )[0];
